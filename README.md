@@ -27,12 +27,12 @@ be maintained, the others can be safely discarded.
 * `pacman.py`
 * `pacmanAgents.py`
 * `util.py`
+* `textDisplay.py`
 
 A stripped-down version of the simulator can be downloaded [here](https://mega.co.nz/#!otcGnJAb!IZ6MLmS2fMwu2MPyGWKCGhJMRul4SgiPelk08wEjOP4).
 
 ## Usage
-Running the simulator with the following command allows you to play a Pac-Man game, using the `w`, `a`, `s` and `d` to
-move:
+Simply run the simulator with the following command:
 
 `python pacman.py`
 
