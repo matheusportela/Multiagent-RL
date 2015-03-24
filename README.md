@@ -13,9 +13,15 @@ The Pac-Man AI Projects, by UC Berkeley, provides six Pac-Man-like simulators th
 purposes. The one we will be using is [Project 5: Classification](http://ai.berkeley.edu/classification.html), which
 provides an arena mimicking the complete Pac-Man game, including various ghosts.
 
+Start by installing Python 2.7 and its Tkinter package. In Ubuntu/Debian, this can be achieved by running the following
+command:
+
+`sudo apt-get install python python-tk`
+
 Start installing by downloading the `.zip` file located [here](http://ai.berkeley.edu/classification.html). Not all
-files are necessary for our purposes since most of them are evaluation features. Here is the list of files that should
-be maintained, the others can be safely discarded.
+files are necessary for our purposes since most of them are evaluation features. A stripped-down version of the
+simulator can be downloaded [here](https://mega.co.nz/#!otcGnJAb!IZ6MLmS2fMwu2MPyGWKCGhJMRul4SgiPelk08wEjOP4). Here is
+the list of files that must be maintained, the others can be safely discarded.
 
 * `layouts/` directory
 * `game.py`
@@ -28,8 +34,6 @@ be maintained, the others can be safely discarded.
 * `pacmanAgents.py`
 * `util.py`
 * `textDisplay.py`
-
-A stripped-down version of the simulator can be downloaded [here](https://mega.co.nz/#!otcGnJAb!IZ6MLmS2fMwu2MPyGWKCGhJMRul4SgiPelk08wEjOP4).
 
 ## Usage
 Simply run the simulator with the following command:

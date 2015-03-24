@@ -1,0 +1,19 @@
+Pacman agents:
+* Random
+* Greedy
+* Bayesian (Tiago)
+* Human
+
+Ghost agents:
+* Random
+* Directional
+* Reinforcement Learning (Me)
+
+Metrics:
+* Average score
+* Average number of steps
+* Average absolute time
+
+Maps:
+* Original classic with 4 ghosts
+* CIC/EST (?)

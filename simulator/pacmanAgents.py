@@ -53,31 +53,5 @@ class RandomAgent(game.Agent):
         actions = state.getLegalPacmanActions()
         return random.choice(actions)
 
-class HunterAgent(game.Agent):
-    """Go for capsules first."""
-    def getAction(self, state):
-        actions = state.getLegalPacmanActions()
-        current_position = state.getPacmanPosition()
-        capsulePositions = state.getCapsules()
-        successors = [(state.generatePacmanSuccessor(action), action) for action in actions]
-
-        min_distance = None
-        selected_action = Directions.STOP
-        next_state = None
-
-        for successor in successors:
-            for capsulePosition in capsulePositions:
-                distance = util.manhattanDistance(successor[0].getPacmanPosition(), capsulePosition)
-
-                if min_distance == None or distance < min_distance:
-                    min_distance = distance
-                    selected_action = successor[1]
-                    next_state = successor[0]
-
-        if next_state.getPacmanPosition() == current_position:
-            selected_action = random.choice(actions)
-
-        return selected_action
-
 def scoreEvaluation(state):
     return state.getScore()
