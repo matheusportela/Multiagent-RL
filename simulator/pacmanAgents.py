@@ -57,17 +57,23 @@ class RandomAgent(game.Agent):
 
 
 class QLearnAgent(game.Agent):
+    """Agent with Q-learning algorithm."""
+
     def __init__(self, evalFn='scoreEvaluation'):
         self.adapter = None
         self.previous_state = None
         self.previous_action = 'Stop'
 
     def initializeAdapter(self, state):
+        """Initialize system adapter to use the learning algorithm."""
         width = state.data.layout.width
         height = state.data.layout.height
         self.adapter = learn.PacmanSystemAdapter(width, height)
 
     def convertStateToMeasurements(self, state):
+        """Convert game state to measurement understandable by the learning
+        algorithm.
+        """
         pacman_position = state.getPacmanState().configuration.pos
         ghosts_positions = [ghost.configuration.pos for ghost in state.getGhostStates()]
         reward = state.getScore() - self.previous_state.getScore() if self.previous_state else 0
@@ -81,6 +87,9 @@ class QLearnAgent(game.Agent):
         return measurements
 
     def getAction(self, state):
+        """Execute learning algorithm and select next action to be executed by
+        the Pacman.
+        """
         if not self.adapter:
             self.initializeAdapter(state)
 

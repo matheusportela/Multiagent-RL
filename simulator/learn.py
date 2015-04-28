@@ -39,6 +39,22 @@ class Learner(object):
         raise NotImplementedError
 
 
+class NoLearner(Learner):
+    """Proof-of-concept learning algorithm.
+
+    This learning algorithm actually does not learn, as it ignores the learning
+    cycle and randomly chooses actions.
+    """
+    def __init__(self, num_actions=0):
+        self.actions = range(num_actions)
+
+    def learn(self, state, action, reward):
+        pass
+
+    def act(self, state):
+        return random.choice(self.actions)
+
+
 class QLearner(Learner):
     """Q-learning algorithm implementation.
 
@@ -197,6 +213,8 @@ class PacmanMeasurements(object):
     Instance variables:
     pacman_position -- Current Pacman position.
     ghosts_positions -- Current position for each ghost.
+    action -- Action that actually has been executed by the system.
+    reward -- Reward received in the last step.
     """
 
     def __init__(self, pacman_position=None, ghosts_positions=None, action=None,
@@ -232,15 +250,29 @@ class PacmanActions(object):
 
 
 class PacmanSystemAdapter(SystemAdapter):
-    """System adapter for UC Berkeley Pacman game."""
+    """System adapter for UC Berkeley Pacman game.
+
+    Instance variables:
+    width -- Game layout width.
+    height -- Game layout height.
+    action_to_index -- Dictionary to convert action from UC Berkeley Pacman game
+        to index representation in [0, num_actions] interval.
+    index_to_action -- Dictionary to convert action from index to UC Berkeley
+        Pacman game representation.
+    learning_algorithm -- Algorithm used to learn, implemented with Learner
+        interface.
+    """
 
     def __init__(self, width, height):
+        """Initializes system adapter for UC Berkeley Pacman game.
+
+        Parameters:
+        width -- Game layout width.
+        height -- Game layout height.
+        """
         self.width = width
         self.height = height
-        num_states = width*height
-        num_actions = 5
-        self.learn_algorithm = QLearner(num_states=num_states,
-            num_actions=num_actions)
+        num_states = self.width*self.height
         self.action_to_index = {
             'Stop': 0,
             'North': 1,
@@ -249,15 +281,61 @@ class PacmanSystemAdapter(SystemAdapter):
             'West': 4,
         }
         self.index_to_action = dict(zip(self.action_to_index.values(), self.action_to_index.keys()))
+        num_actions = len(self.action_to_index)
+        self.learning_algorithm = QLearner(num_states=num_states,
+            num_actions=num_actions)
 
     def convert_position_to_index(self, position):
-        return (position[0]*self.width + position[1])
+        """Convert (x, y) position tuple to list index.
 
-    def run(self, measurements):
+        Parameters:
+        position -- 2-tuple that will be converted to index.
+
+        Returns:
+        Index that represents the position in a linear list.
+        """
+        return (position[0] + position[1]*self.width)
+
+    def unpack_measurements(self, measurements):
+        """Extract data from measurement structure.
+
+        Parameters:
+        measurements -- Container for measurements.
+
+        Returns:
+        3-tuple with state index, action index and reward value.
+        """
         state_index = self.convert_position_to_index(measurements.pacman_position)
         action_index = self.action_to_index[measurements.action]
-        self.learn_algorithm.learn(state_index, action_index, measurements.reward)
-        print str(self.learn_algorithm)
-        new_action_index = self.learn_algorithm.act(state_index)
-        new_action = self.index_to_action[new_action_index]
-        return new_action
+        reward = measurements.reward
+        return state_index, action_index, reward
+
+    def pack_actions(self, action_index):
+        """Convert action to it's representation used by UC Berkeley Pacman game.
+
+        Parameters:
+        action -- Index that represents the action.
+
+        Returns:
+        Action representation for UC Berkeley Pacman game.
+        """
+        action = self.index_to_action[action_index]
+        return action
+
+    def run(self, measurements):
+        """Run learn-act cycle.
+
+        Parameters:
+        measurements -- Measurements from UC Berkeley Pacman game system.
+
+        Returns:
+        Action decided by the learning algorithm.
+        """
+        state, action, reward = self.unpack_measurements(measurements)
+        self.learning_algorithm.learn(state, action, reward)
+
+        print str(self.learning_algorithm)
+
+        new_action = self.learning_algorithm.act(state)
+        packed_action = self.pack_actions(new_action)
+        return packed_action
