@@ -1,6 +1,7 @@
 import unittest
 import learn
 
+
 class TestLearn(unittest.TestCase):
     def test_learn_method_raises_not_implemented_error(self):
         state = None
@@ -225,6 +226,21 @@ class TestQLearn(unittest.TestCase):
         for state, excepted_action in excepted_actions:
             action = ql.act(state)
             self.assertEqual(action, excepted_action)
+
+
+class TestSystemAdapter(unittest.TestCase):
+    def test_unpack_measurements_method_raises_not_implemented_error(self):
+        measurements = None
+        sa = learn.SystemAdapter()
+
+        with self.assertRaises(NotImplementedError):
+            sa.unpack_measurements(measurements)
+
+    def test_pack_actions_method_raises_not_implemented_error(self):
+        sa = learn.SystemAdapter()
+
+        with self.assertRaises(NotImplementedError):
+            sa.pack_actions()
 
 
 if __name__ == '__main__':

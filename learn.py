@@ -35,7 +35,6 @@ class Learner(object):
         Return:
         Action for the current selected by the learning algorith.
         """
-
         raise NotImplementedError
 
 
@@ -108,6 +107,7 @@ class QLearner(Learner):
         """
         return self.q_values.get_max_action(state)
 
+
 class QValues(object):
     """Container for Q values.
 
@@ -158,3 +158,25 @@ class QValues(object):
         """
         max_value = self.get_max_value(state)
         return self.q_values[state].index(max_value)
+
+
+class SystemAdapter(object):
+    """Connects a computational agent to it's simulation or physical system.
+    """
+    def unpack_measurements(self, measurements):
+        """Measurement retrieval interface.
+
+        This method acts as the interface to receive measurements from the
+        system. A measurement includes all necessary information for the system,
+        such as rewards (for a reinforcement learning algorithm), agents
+        positions, environment information etc.
+        """
+        raise NotImplementedError
+
+    def pack_actions(self):
+        """Action fetching interface.
+
+        This method packs actions for all controllable agents in a proper way to
+        send to the system.
+        """
+        raise NotImplementedError
