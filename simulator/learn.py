@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import random
 
 class Learner(object):
     """Learning abstract class.
@@ -107,6 +108,9 @@ class QLearner(Learner):
         """
         return self.q_values.get_max_action(state)
 
+    def __str__(self):
+        return ('Q-learning\n' + str(self.q_values))
+
 
 class QValues(object):
     """Container for Q values.
@@ -157,26 +161,103 @@ class QValues(object):
         state -- State from which to find the action.
         """
         max_value = self.get_max_value(state)
-        return self.q_values[state].index(max_value)
+        actions = [action for action, value in enumerate(self.q_values[state]) if value == max_value]
+        return random.choice(actions)
+
+    def __str__(self):
+        output = []
+
+        for state, actions in enumerate(self.q_values):
+            for action, value in enumerate(actions):
+                if value != 0.0:
+                    output.append('(%d, %d): %d' % (state, action, value))
+
+        return '\n'.join(output)
 
 
 class SystemAdapter(object):
-    """Connects a computational agent to it's simulation or physical system.
-    """
-    def unpack_measurements(self, measurements):
-        """Measurement retrieval interface.
+    """Connects a computational agent to it's simulation or physical system."""
+
+    def run(self, measurements):
+        """System basic sense-think-act cycle.
 
         This method acts as the interface to receive measurements from the
-        system. A measurement includes all necessary information for the system,
-        such as rewards (for a reinforcement learning algorithm), agents
-        positions, environment information etc.
+        system, learn from it and select a new action the be executed.
+
+        A measurement includes all necessary information for the system, such as
+        rewards (for a reinforcement learning algorithm), agents positions,
+        environment information etc.
         """
         raise NotImplementedError
 
-    def pack_actions(self):
-        """Action fetching interface.
 
-        This method packs actions for all controllable agents in a proper way to
-        send to the system.
-        """
-        raise NotImplementedError
+class PacmanMeasurements(object):
+    """Container for measurements in UC Berkeley Pacman game.
+
+    Instance variables:
+    pacman_position -- Current Pacman position.
+    ghosts_positions -- Current position for each ghost.
+    """
+
+    def __init__(self, pacman_position=None, ghosts_positions=None, action=None,
+            reward=None):
+        self.pacman_position = pacman_position
+        self.ghosts_positions = ghosts_positions
+        self.action = action
+        self.reward = reward
+
+
+    def __str__(self):
+        output = []
+        output.append('Measurements:')
+        output.append('Pacman position: %s' % str(self.pacman_position))
+        output.extend(['Ghost %d position: %s' % (i, pos)
+            for i, pos in enumerate(self.ghosts_positions)])
+        output.append('Action: %s' % self.action)
+        output.append('Reward: %d' % self.reward)
+        return '\n'.join(output)
+
+
+class PacmanActions(object):
+    """Container for actions in UC Berkeley Pacman game.
+
+    Instance variables:
+    pacman_action -- Action to be executed by Pacman.
+    ghosts_actions -- Actions to be executed by each ghost.
+    """
+
+    def __init__(self, pacman_action=None, ghosts_actions=None):
+        self.pacman_action = pacman_action
+        self.ghosts_actions = ghosts_actions
+
+
+class PacmanSystemAdapter(SystemAdapter):
+    """System adapter for UC Berkeley Pacman game."""
+
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        num_states = width*height
+        num_actions = 5
+        self.learn_algorithm = QLearner(num_states=num_states,
+            num_actions=num_actions)
+        self.action_to_index = {
+            'Stop': 0,
+            'North': 1,
+            'South': 2,
+            'East': 3,
+            'West': 4,
+        }
+        self.index_to_action = dict(zip(self.action_to_index.values(), self.action_to_index.keys()))
+
+    def convert_position_to_index(self, position):
+        return (position[0]*self.width + position[1])
+
+    def run(self, measurements):
+        state_index = self.convert_position_to_index(measurements.pacman_position)
+        action_index = self.action_to_index[measurements.action]
+        self.learn_algorithm.learn(state_index, action_index, measurements.reward)
+        print str(self.learn_algorithm)
+        new_action_index = self.learn_algorithm.act(state_index)
+        new_action = self.index_to_action[new_action_index]
+        return new_action

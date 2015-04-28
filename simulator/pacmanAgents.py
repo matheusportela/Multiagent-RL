@@ -18,6 +18,8 @@ import random
 import game
 import util
 
+import learn
+
 class LeftTurnAgent(game.Agent):
     "An agent that turns left at every opportunity"
 
@@ -52,6 +54,48 @@ class RandomAgent(game.Agent):
     def getAction(self, state):
         actions = state.getLegalPacmanActions()
         return random.choice(actions)
+
+
+class QLearnAgent(game.Agent):
+    def __init__(self, evalFn='scoreEvaluation'):
+        self.adapter = None
+        self.previous_state = None
+        self.previous_action = 'Stop'
+
+    def initializeAdapter(self, state):
+        width = state.data.layout.width
+        height = state.data.layout.height
+        self.adapter = learn.PacmanSystemAdapter(width, height)
+
+    def convertStateToMeasurements(self, state):
+        pacman_position = state.getPacmanState().configuration.pos
+        ghosts_positions = [ghost.configuration.pos for ghost in state.getGhostStates()]
+        reward = state.getScore() - self.previous_state.getScore() if self.previous_state else 0
+        measurements = learn.PacmanMeasurements(
+            pacman_position=pacman_position,
+            ghosts_positions=ghosts_positions,
+            action=self.previous_action,
+            reward=reward,
+        )
+
+        return measurements
+
+    def getAction(self, state):
+        if not self.adapter:
+            self.initializeAdapter(state)
+
+        measurements = self.convertStateToMeasurements(state)
+        action = self.adapter.run(measurements)
+
+        print measurements
+
+        if action not in state.getLegalPacmanActions():
+            action = 'Stop'
+
+        self.previous_state = state
+        self.previous_action = action
+        return action
+
 
 def scoreEvaluation(state):
     return state.getScore()

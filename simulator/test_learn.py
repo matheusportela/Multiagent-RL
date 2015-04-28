@@ -86,6 +86,7 @@ class TestQValues(unittest.TestCase):
 
         self.assertEqual(actions, [1, 0])
 
+
 class TestQLearn(unittest.TestCase):
     def test_default_current_state(self):
         expected_current_state = 0
@@ -229,18 +230,44 @@ class TestQLearn(unittest.TestCase):
 
 
 class TestSystemAdapter(unittest.TestCase):
-    def test_unpack_measurements_method_raises_not_implemented_error(self):
+    def test_run_method_raises_not_implemented_error(self):
         measurements = None
         sa = learn.SystemAdapter()
 
         with self.assertRaises(NotImplementedError):
-            sa.unpack_measurements(measurements)
+            sa.run(measurements)
 
-    def test_pack_actions_method_raises_not_implemented_error(self):
-        sa = learn.SystemAdapter()
 
-        with self.assertRaises(NotImplementedError):
-            sa.pack_actions()
+class TestPacmanMeasurements(unittest.TestCase):
+    def test_pack_measurements(self):
+        measurements = learn.PacmanMeasurements(
+            pacman_position=(10, 10),
+            ghosts_positions=[
+                (0, 0),
+                (0, 1),
+                (2, 5),
+            ],
+            reward=5,
+        )
+
+        self.assertEqual(measurements.pacman_position, (10, 10))
+        self.assertEqual(measurements.ghosts_positions, [(0, 0), (0, 1), (2, 5)])
+        self.assertEqual(measurements.reward, 5)
+
+
+class TestPacmanActions(unittest.TestCase):
+    def test_pack_actions(self):
+        actions = learn.PacmanActions(
+            pacman_action='North',
+            ghosts_actions=[
+                'South',
+                'West',
+                'East',
+            ],
+        )
+
+        self.assertEqual(actions.pacman_action, 'North')
+        self.assertEqual(actions.ghosts_actions, ['South', 'West', 'East'])
 
 
 if __name__ == '__main__':
