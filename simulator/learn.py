@@ -2,57 +2,129 @@
 
 import random
 
+
+class ProblemController(object):
+    """Controls the execution of episodes in a given problem adapter and with an
+    agent.
+    """
+    def __init__(self, num_episodes, problem_adapter, agent):
+        self.num_episodes = num_episodes
+        self.problem_adapter = problem_adapter
+        self.agent = agent
+
+    def run(self):
+        avg_reward, avg_steps = self.execute_episodes()
+        print 'Average reward:', avg_reward
+        print 'Average steps:', avg_steps
+
+    def execute_episodes(self):
+        episodes_rewards = []
+        episodes_steps = []
+
+        for _ in range(self.num_episodes):
+            cumulative_reward, steps = self.execute_episode(self.problem_adapter, self.agent)
+            episodes_rewards.append(cumulative_reward)
+            episodes_steps.append(steps)
+
+        avg_reward = sum(episodes_rewards)/self.num_episodes
+        avg_steps = sum(episodes_steps)/self.num_episodes
+
+        return avg_reward, avg_steps
+
+    def execute_episode(self, problem_adapter, agent):
+        cumulative_reward = 0
+        steps = 0
+        state = self.problem_adapter.initial_state
+        self.problem_adapter.prepate_new_episode()
+
+        while not self.problem_adapter.is_episode_finished():
+            action = agent.act(state)
+            state = self.problem_adapter.calculate_state(action)
+            reward = self.problem_adapter.calculate_reward(state)
+            agent.learn(action, state, reward)
+
+            cumulative_reward += reward
+            steps += 1
+
+        return cumulative_reward, steps
+
+
+
+class Agent(object):
+    """Agent capable of learning and exploring.
+
+    All action, state and reward variables must be numerical values. Besides,
+    action and state must be an uniquely identified integer.
+    """
+    def __init__(self):
+        self.learning_element = None
+        self.exploration_element = None
+
+    def learn(self, action, state, reward):
+        """Executes the learning algorithm."""
+        self.learning_element.learn(state, action, reward)
+
+    def act(self, state):
+        """Selects an action to be executed by consulting both the learning and
+        exploration algorithms.
+        """
+        suggested_action = self.learning_element.act(state)
+        selected_action = self.exploration_element.select_action(suggested_action)
+        return selected_action
+
+
+class ProblemAdapter(object):
+    """Adapter for a specific learning problem.
+
+    Problem adapter stores specific information about the problem where the
+    agent is running.
+    """
+    def __init__(self, initial_state=0, num_actions=1, num_states=1):
+        self.initial_state = initial_state
+        self.num_actions = num_actions
+        self.num_states = num_states
+
+    def prepare_new_episode(self):
+        """Preparations for a new episode to be executed."""
+        raise NotImplementedError
+
+    def calculate_state(self, action):
+        """Calculate the new agent state for a given action."""
+        raise NotImplementedError
+
+    def calculate_reward(self, state):
+        """Calculate the reward for the given state."""
+        raise NotImplementedError
+
+    def is_episode_finished(self):
+        """Checks whether the current episode has finished."""
+        raise NotImplementedError
+
+
 class Learner(object):
-    """Learning abstract class.
+    """Learning algorithm interface.
 
-    Every learning algorithm must inherit from this class and implement it's
-    methods correctly.
+    A learning algorithm can select the best-suited action for any state and
+    adapt it's belief according to reward information.
     """
-
     def learn(self, state, action, reward):
-        """Basic learning method interface.
-
-        This method is the interface for learning. Given a pair (state, action),
-        the learning algorithm must update it's internals to accomodate the new
-        information.
-
-        Parameters:
-        state -- State where the state went after executing the action.
-        action -- Action executed.
-        reward -- Reward received after executing the action.
-        """
+        """Learn state-action value by incorporating the reward information."""
         raise NotImplementedError
 
     def act(self, state):
-        """Basic action selection method interface.
-
-        This method is the interface for action selection. Given the system
-        state, the learning algorith must select one selection to be executed by
-        the agent following it's own rationality.
-
-        Parameters:
-        state -- Current system state.
-
-        Return:
-        Action for the current selected by the learning algorith.
-        """
+        """Select an action for the given state."""
         raise NotImplementedError
 
 
-class NoLearner(Learner):
-    """Proof-of-concept learning algorithm.
+class Explorer(object):
+    """Exploration algorithm interface.
 
-    This learning algorithm actually does not learn, as it ignores the learning
-    cycle and randomly chooses actions.
+    An exploration algorithm is used by an agent to select actions other than
+    the optimal one, potentially increasing the rewards in the long run.
     """
-    def __init__(self, num_actions=0):
-        self.actions = range(num_actions)
-
-    def learn(self, state, action, reward):
-        pass
-
-    def act(self, state):
-        return random.choice(self.actions)
+    def select_action(self, suggested_action):
+        """Select an action given the one suggested by the learning algorithm."""
+        raise NotImplementedError
 
 
 class QLearner(Learner):
@@ -181,161 +253,132 @@ class QValues(object):
         return random.choice(actions)
 
     def __str__(self):
-        output = []
-
-        for state, actions in enumerate(self.q_values):
-            for action, value in enumerate(actions):
-                if value != 0.0:
-                    output.append('(%d, %d): %d' % (state, action, value))
-
-        return '\n'.join(output)
-
-
-class SystemAdapter(object):
-    """Connects a computational agent to it's simulation or physical system."""
-
-    def run(self, measurements):
-        """System basic sense-think-act cycle.
-
-        This method acts as the interface to receive measurements from the
-        system, learn from it and select a new action the be executed.
-
-        A measurement includes all necessary information for the system, such as
-        rewards (for a reinforcement learning algorithm), agents positions,
-        environment information etc.
-        """
-        raise NotImplementedError
+        output = ['\t%d' % action for action in range(self.num_actions)]
+        output.append('\n')
+        for state, values in enumerate(self.q_values):
+            output.append('%d' % state)
+            for value in values:
+                output.append('\t%1.1f' % value)
+            output.append('\n')
+        return ''.join(output)
 
 
-class PacmanMeasurements(object):
-    """Container for measurements in UC Berkeley Pacman game.
+class EGreedyExplorer(Explorer):
+    """e-greedy exploration algorithm.
 
-    Instance variables:
-    pacman_position -- Current Pacman position.
-    ghosts_positions -- Current position for each ghost.
-    action -- Action that actually has been executed by the system.
-    reward -- Reward received in the last step.
+    Selects the suggested action or another random action with the given
+    exploration_frequency.
     """
+    def __init__(self, num_actions=1, exploration_frequency=0.0):
+        self.actions = range(num_actions)
+        self.exploration_frequency = exploration_frequency
 
-    def __init__(self, pacman_position=None, ghosts_positions=None, action=None,
-            reward=None):
-        self.pacman_position = pacman_position
-        self.ghosts_positions = ghosts_positions
-        self.action = action
-        self.reward = reward
-
-
-    def __str__(self):
-        output = []
-        output.append('Measurements:')
-        output.append('Pacman position: %s' % str(self.pacman_position))
-        output.extend(['Ghost %d position: %s' % (i, pos)
-            for i, pos in enumerate(self.ghosts_positions)])
-        output.append('Action: %s' % self.action)
-        output.append('Reward: %d' % self.reward)
-        return '\n'.join(output)
+    def select_action(self, suggested_action):
+        if random.random() < self.exploration_frequency:
+            return random.choice(self.actions)
+        else:
+            return suggested_action
 
 
-class PacmanActions(object):
-    """Container for actions in UC Berkeley Pacman game.
+class QAgent(Agent):
+    """Example agent with Q-learning and e-greedy exploration algorithms."""
+    def __init__(self, initial_state, num_states, num_actions):
+        self.learning_element = QLearner(
+            initial_state=initial_state,
+            num_states=num_states,
+            num_actions=num_actions,
+            learning_rate=0.9,
+            discount_factor=0.9,
+        )
+        self.exploration_element = EGreedyExplorer(
+            num_actions=num_actions,
+            exploration_frequency=0.1,
+        )
 
-    Instance variables:
-    pacman_action -- Action to be executed by Pacman.
-    ghosts_actions -- Actions to be executed by each ghost.
+
+class WindyWaterAdapter(ProblemAdapter):
+    """Windy water example problem.
+
+    The agent lives in the following world:
+    * * * W W * * * * *
+    S * * * * * * G * *
+    * * * W W * * * * *
+    * * * W W * * * * *
+    * * * * * * * * * *
+    * * * * * * * * * *
+    * * * * * * * * * *
+
+    where:
+    S: initial state
+    W: water that gives penalty
+    G: goal state
+
+    Each step gives a reward of -1, going into the water rewards -100 and
+    reaching the goal state rewards 100.
     """
+    def __init__(self, wind_frequency=0):
+        self.initial_coordinates = [1, 0]
+        self.actions = [[0, 1], [-1, 0], [0, -1], [1, 0]]
+        self.rows = 7
+        self.cols = 10
+        self.goal_coordinates = [1, 7]
+        self.water_coordinates = [[0, 3], [0, 4], [2, 3], [2, 4], [3, 3], [3, 4]]
+        self.wind_frequency = wind_frequency
 
-    def __init__(self, pacman_action=None, ghosts_actions=None):
-        self.pacman_action = pacman_action
-        self.ghosts_actions = ghosts_actions
+        super(WindyWaterAdapter, self).__init__(
+            initial_state=self.coordinates_to_state(self.initial_coordinates),
+            num_actions=len(self.actions),
+            num_states=self.rows*self.cols,
+        )
 
+    def prepate_new_episode(self):
+        self.agent_coordinates = self.initial_coordinates
 
-class PacmanSystemAdapter(SystemAdapter):
-    """System adapter for UC Berkeley Pacman game.
+    def calculate_state(self, action):
+        # wind
+        if random.random() < self.wind_frequency:
+          wind_direction = random.randrange(0, self.num_actions)
+          wind_action = [self.actions[wind_direction][0], self.actions[wind_direction][1]]
+        else:
+          wind_action = [0, 0]
 
-    Instance variables:
-    width -- Game layout width.
-    height -- Game layout height.
-    action_to_index -- Dictionary to convert action from UC Berkeley Pacman game
-        to index representation in [0, num_actions] interval.
-    index_to_action -- Dictionary to convert action from index to UC Berkeley
-        Pacman game representation.
-    learning_algorithm -- Algorithm used to learn, implemented with Learner
-        interface.
-    """
+        # state generation
+        self.agent_coordinates = [
+            min(max(self.agent_coordinates[0] + self.actions[action][0] + wind_action[0], 0), self.rows - 1),
+            min(max(self.agent_coordinates[1] + self.actions[action][1] + wind_action[1], 0), self.cols - 1),
+        ]
+        state = self.coordinates_to_state(self.agent_coordinates)
 
-    def __init__(self, width, height):
-        """Initializes system adapter for UC Berkeley Pacman game.
+        return state
 
-        Parameters:
-        width -- Game layout width.
-        height -- Game layout height.
-        """
-        self.width = width
-        self.height = height
-        num_states = self.width*self.height
-        self.action_to_index = {
-            'Stop': 0,
-            'North': 1,
-            'South': 2,
-            'East': 3,
-            'West': 4,
-        }
-        self.index_to_action = dict(zip(self.action_to_index.values(), self.action_to_index.keys()))
-        num_actions = len(self.action_to_index)
-        self.learning_algorithm = QLearner(num_states=num_states,
-            num_actions=num_actions)
+    def calculate_reward(self, state):
+        if (self.agent_coordinates in self.water_coordinates):
+          reward = -100
+        elif (self.agent_coordinates == self.goal_coordinates):
+          reward = 100
+        else:
+          reward = -1
 
-    def convert_position_to_index(self, position):
-        """Convert (x, y) position tuple to list index.
+        return reward
 
-        Parameters:
-        position -- 2-tuple that will be converted to index.
+    def is_episode_finished(self):
+        return (self.agent_coordinates == self.goal_coordinates)
 
-        Returns:
-        Index that represents the position in a linear list.
-        """
-        return (position[0] + position[1]*self.width)
+    def coordinates_to_state(self, coordinates):
+        return coordinates[0]*self.cols + coordinates[1]
 
-    def unpack_measurements(self, measurements):
-        """Extract data from measurement structure.
-
-        Parameters:
-        measurements -- Container for measurements.
-
-        Returns:
-        3-tuple with state index, action index and reward value.
-        """
-        state_index = self.convert_position_to_index(measurements.pacman_position)
-        action_index = self.action_to_index[measurements.action]
-        reward = measurements.reward
-        return state_index, action_index, reward
-
-    def pack_actions(self, action_index):
-        """Convert action to it's representation used by UC Berkeley Pacman game.
-
-        Parameters:
-        action -- Index that represents the action.
-
-        Returns:
-        Action representation for UC Berkeley Pacman game.
-        """
-        action = self.index_to_action[action_index]
-        return action
-
-    def run(self, measurements):
-        """Run learn-act cycle.
-
-        Parameters:
-        measurements -- Measurements from UC Berkeley Pacman game system.
-
-        Returns:
-        Action decided by the learning algorithm.
-        """
-        state, action, reward = self.unpack_measurements(measurements)
-        self.learning_algorithm.learn(state, action, reward)
-
-        print str(self.learning_algorithm)
-
-        new_action = self.learning_algorithm.act(state)
-        packed_action = self.pack_actions(new_action)
-        return packed_action
+    def print_map(self):
+        print
+        for i in xrange(self.rows):
+            for j in xrange(self.cols):
+                if [i,j] == self.agent_coordinates:
+                    print "A",
+                elif [i,j] == self.initial_coordinates:
+                    print "S",
+                elif [i,j] == self.goal_coordinates:
+                    print "G",
+                elif [i,j] in self.water_coordinates:
+                    print "W",
+                else:
+                    print "*",
+            print
