@@ -18,7 +18,7 @@ import random
 import game
 import util
 
-import learn
+import pacman_learn
 
 class LeftTurnAgent(game.Agent):
     "An agent that turns left at every opportunity"
@@ -104,6 +104,71 @@ class QLearnAgent(game.Agent):
         self.previous_state = state
         self.previous_action = action
         return action
+
+
+class InterfaceAgent(game.Agent):
+    def __init__(self):
+        self.actions = ['North', 'South', 'East', 'West', 'Stop']
+        self.learn_interface = None
+
+    def get_state_dimensions(self, state):
+        # Layout includes the walls, hence, the sizes are larger by 2 when
+        # considering only allowed places
+        width = state.data.layout.width - 2
+        height = state.data.layout.height - 2
+        size = width*height
+        return width, height, size
+
+    def calculate_agent_position_index(self, state, agent_index):
+        width, height, size = self.get_state_dimensions(state)
+
+        if (agent_index == 0):
+            agent_position = state.getPacmanPosition()
+        else:
+            agent_position = state.getGhostPosition(agent_index)
+
+        # Offset to get position in the interval [0, width] and [0, height]
+        x = agent_position[0] - 1
+        y = agent_position[1] - 1
+        index = agent_index*size + y*width + x
+
+        return index
+
+    def calculate_state_index(self, state):
+        state_index = 0
+        
+        for agent_index in xrange(state.getNumAgents()):
+            state_index += self.calculate_agent_position_index(state, agent_index)
+
+        return state_index
+
+    def calculate_num_states(self, state):
+        num_agents = state.getNumAgents()
+        _, _, size = self.get_state_dimensions(state)
+        return size*num_agents
+
+
+    def calculate_action_index(self, action):
+        return self.actions.index(action)
+
+
+    def getAction(self, state):
+        if not self.learn_interface:
+            initial_state = self.calculate_state_index(state)
+            num_actions = len(self.actions)
+            num_states = self.calculate_num_states(state)
+            self.learn_interface = pacman_learn.PacmanProblemAdapter(
+                initial_state=initial_state, num_actions=num_actions,
+                num_states=num_states)
+
+        print 'Getting action'
+        actions = state.getLegalPacmanActions()
+        action = random.choice(actions)
+        print 'Action: ', self.calculate_action_index(action)
+        print 'State:', self.calculate_state_index(state)
+        raw_input()
+        return 'East'
+
 
 
 def scoreEvaluation(state):
