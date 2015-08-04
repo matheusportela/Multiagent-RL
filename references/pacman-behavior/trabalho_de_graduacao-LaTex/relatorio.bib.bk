@@ -1,0 +1,248 @@
+% This file was created with JabRef 2.7.2.
+% Encoding: Cp1252
+
+@PHDTHESIS{Adorno2011,
+  author = {Bruno Vilhena Adorno},
+  title = {Two-arm manipulation: from manipulators to enhanced human-robot collaboration},
+  school = {Université Montpellier 2},
+  year = {2011},
+  timestamp = {2011.11.23}
+}
+
+@ARTICLE{article:akyar:2008,
+  author = {Bedia Akyar},
+  title = {Dual Quaternions in Spatial Kinematics in an Algebraic Sense},
+  journal = {Tubitak},
+  year = {2008},
+  volume = {32},
+  pages = {373-379},
+  owner = {Murilo},
+  timestamp = {2011.11.20}
+}
+
+@ARTICLE{MarianaC.Bernardes2011,
+  author = {Mariana C. Bernardes and Bruno V. Adorno and Philippe Poignet and
+	Geovany A. Borges},
+  title = {Semi-automatic needle steering system with robotic manipulator},
+  journal = {To be seen},
+  year = {2011},
+  owner = {Murilo},
+  timestamp = {2011.12.09}
+}
+
+@BOOK{J.Borenstein1996,
+  title = {Sensors And Methods For Mobile Robot Positioning},
+  publisher = {The University of Michigan},
+  year = {1996},
+  editor = {J. Borenstein and H. R. Everett and L. Feng},
+  author = {J. Borenstein and H. R. Everett and L. Feng},
+  owner = {Murilo},
+  timestamp = {2011.12.10}
+}
+
+@ARTICLE{S.Chiaverini1994,
+  author = {S. Chiaverini and B. Siciliano and O. Egeland},
+  title = {Review of the damped least-squares inverse kinematics with experiments
+	on an industrial robot manipulator},
+  journal = {IEEE Transactions on Control Systems Technology},
+  year = {1994},
+  volume = {2},
+  pages = {123-134},
+  owner = {Murilo},
+  timestamp = {2011.11.28}
+}
+
+@ARTICLE{aticle:clifford:1873,
+  author = {Clifford},
+  title = {Preliminary sketch of biquaternions},
+  journal = {Oxford Journals},
+  year = {1873},
+  volume = {pp.},
+  pages = {381-395},
+  owner = {Murilo},
+  timestamp = {2011.11.20}
+}
+
+@BOOK{book:dombre:2007,
+  title = {Robot Manipulators - Modelling, Performance Analysis and Control},
+  publisher = {Iste},
+  year = {2007},
+  author = {Etienne Dombre and Wisama Khalil},
+  owner = {Murilo},
+  timestamp = {2011.11.20}
+}
+
+@ARTICLE{J.AEngh,
+  author = {J.A Engh and G. Podnar and D. Kondziolka and C. N. Riviere},
+  title = {Toward Effective Needle Steering in Brain Tissue},
+  owner = {Murilo},
+  timestamp = {2011.12.10}
+}
+
+@ARTICLE{J.A.Engh2006,
+  author = {J.A. Engh and G. Podnar and S.Y.Khoo and C.N.Riviere},
+  title = {Flexible needle steering System for Percutaneous
+	
+	Access to Deep Zones of the Brain},
+  year = {2006},
+  owner = {Murilo},
+  timestamp = {2011.12.10}
+}
+
+@ARTICLE{LuizAugustoMarcondesFonseca2010,
+  author = {Luiz Augusto Marcondes Fonseca and José Eluf-Neto and Victor Wunsch
+	Filho},
+  title = {Tendências da mortalidade por câncer nas capitais dos estados do
+	brasil, 1980-2004},
+  year = {2010},
+  owner = {Murilo},
+  timestamp = {2011.12.10}
+}
+
+@ARTICLE{MaximilianoRibeiroGuerra2005,
+  author = {Maximiliano Ribeiro Guerra and Cláudia Vitória de Moura Gallo and
+	Gulnar Azevedo e Silva Mendonça},
+  title = {Risco de Câncer no Brasil: tendências e estudos epidemiológicos mais
+	recentes},
+  journal = {Revista Brasileira de Cancerologia},
+  year = {2005},
+  volume = {51(3)},
+  pages = {227-234},
+  owner = {Murilo},
+  timestamp = {2011.12.10}
+}
+
+@BOOK{book:hamilton:1969,
+  title = {Elements of Quaternions},
+  publisher = {Green Longmans},
+  year = {1969},
+  editor = {William Rowan Hamilton},
+  author = {William Rowan Hamilton},
+  owner = {Murilo},
+  timestamp = {2011.11.20}
+}
+
+@BOOK{INCA2005,
+  title = {Câncer no Brasil - Registros de Base Populacional},
+  publisher = {Ministério da Saúde},
+  year = {2005},
+  editor = {INCA},
+  author = {INCA},
+  owner = {Murilo},
+  timestamp = {2011.12.10}
+}
+
+@MISC{1999-2003,
+  author = {INCA},
+  title = {Atlas de mortalidade por câncer no paraná},
+  howpublished = {Secretaria de estado da saúde do paraá, diretoria de vigilância em
+	saúde e pesquisa, centro de informação e diagnóstico em saúde},
+  year = {1999-2003},
+  owner = {Murilo},
+  timestamp = {2011.12.10}
+}
+
+@ARTICLE{VinuthaKallem2009,
+  author = {Vinutha Kallem and Noah J. Cowan},
+  title = {Image Guidance of Flexible Tip-Steerable Needles},
+  journal = {IEEE Transaction on Robotics},
+  year = {2009},
+  volume = {25},
+  pages = {323-344},
+  owner = {Murilo},
+  timestamp = {2011.12.10}
+}
+
+@BOOK{Meyer,
+  title = {Matrix Analysis and Applied Linear Algebra},
+  publisher = {siam},
+  year = {2000},
+  editor = {Carl D. Meyer},
+  author = {Carl D. Meyer},
+  owner = {Murilo},
+  timestamp = {2011.12.11}
+}
+
+@BOOK{NimalNissanke1997,
+  title = {Realtime Systems},
+  publisher = {Prentice Hall},
+  year = {1997},
+  editor = {Prentice Hall},
+  author = {Nimal Nissanke and Tony Hoare and Richard Bird},
+  owner = {Murilo},
+  timestamp = {2011.11.29}
+}
+
+@ARTICLE{article:bruno:2010,
+  author = {Hoang-Lan Pham and Véronique Perdereau and Bruno Vilhena Adorno and
+	Philippe Fraisse},
+  title = {Position and Orientation Control of Robot Manipulators Using Dual
+	Quaternion Feedback},
+  journal = {IEEE/RSJ International Conference on Intelligent Robots and Systems},
+  year = {2010},
+  volume = {pp.},
+  pages = {658-663},
+  owner = {Murilo},
+  timestamp = {2011.11.20}
+}
+
+@BOOK{WilliamH.Press1992,
+  title = {Numerical Recipes in C - The Art of Scientif Computing},
+  publisher = {Cambridge University Press},
+  year = {1992},
+  author = {William H. Press and Saul A. Teukolsky and William T. Vetterling
+	and Brian P. Flannery},
+  owner = {Murilo},
+  timestamp = {2011.12.11}
+}
+
+@ARTICLE{KyleB.Reed2008,
+  author = {Kyle B. Reed and Vinutha Kallern and Ron Alterovitz and Ken Goldberg
+	and Allison M. Okamura and Noah J. Cowan},
+  title = {Integrated Planning and Image-Guided Control for Planar Needle Steering},
+  journal = {Conference on Biomedical Robotics and Bomechatronics},
+  year = {2008},
+  owner = {Murilo},
+  timestamp = {2011.12.10}
+}
+
+@BOOK{book:siciliano:2009,
+  title = {Robotics - Modelling, Planning and Control},
+  publisher = {Springer},
+  year = {2009},
+  author = {Bruno Siciliano and Lorenzo Sciavicco and Luigi Villani and Giuseppe
+	Oriolo},
+  owner = {Murilo},
+  timestamp = {2011.11.20}
+}
+
+@BOOK{book:spong:,
+  title = {Robot Modeling And Control},
+  publisher = {John Wily \& Sons, INC.},
+  year = {2005},
+  editor = {John Wily \& Sons, INC.},
+  author = {Mark W. Spong and Seth Hutchinson and M. Vidyasagar},
+  owner = {Murilo},
+  timestamp = {2011.11.20}
+}
+
+@ARTICLE{RobertJ.WebsterIII2006,
+  author = {Robert J. {Webster III} and Jin Seob Kim and Noah J. Cowan and Gregory
+	S. Chirikjian and Allison M. Okamura},
+  title = {Nonholonomic Modeling of Needle Steering},
+  journal = {The internation journal of robotics research},
+  year = {2006},
+  owner = {Murilo},
+  timestamp = {2011.12.10}
+}
+
+@comment{jabref-meta: selector_review:}
+
+@comment{jabref-meta: selector_publisher:}
+
+@comment{jabref-meta: selector_author:}
+
+@comment{jabref-meta: selector_journal:}
+
+@comment{jabref-meta: selector_keywords:}
+

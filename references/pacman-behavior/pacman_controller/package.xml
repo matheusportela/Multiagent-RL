@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <name>pacman_controller</name>
+  <version>0.0.0</version>
+  <description>The pacman_controller package</description>
+
+  <maintainer email="tiago@todo.todo">tiago</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>pacman_interface</build_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>pacman_interface</run_depend>
+
+
+  <export>
+  </export>
+</package>

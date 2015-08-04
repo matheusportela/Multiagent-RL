@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package>
+  <name>pacman_game</name>
+  <version>0.0.0</version>
+  <description>The pacman game and gui package</description>
+
+  <maintainer email="t.pimentelms@gmail.com">Tiago Pimentel Martins da Silva</maintainer>
+
+
+  <!-- One license tag required, multiple allowed, one license per tag -->
+  <!-- Commonly used license strings: -->
+  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
+  <license>TODO</license>
+
+
+  <url type="website">http://backup.lara.unb.br/wiki/index.php/Tutorials</url>
+  <url type="repository">https://github.com/lara-unb/amora</url>
+
+
+  <author email="t.pimentelms@gmail.com">Tiago Pimentel Martins da Silva</author>
+
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>pacman_msgs</build_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>pacman_msgs</run_depend>
+
+
+  <export>
+  </export>
+</package>
