@@ -51,7 +51,7 @@ class WindyWaterAgent(pymas.Agent):
 
     simulator_id = None
 
-    def __init__(self, wind_frequency=0):
+    def __init__(self, wind_frequency=0.1):
         super(WindyWaterAgent, self).__init__()
         self.initial_coordinates = [1, 0]
         self.actions = [[0, 1], [-1, 0], [0, -1], [1, 0]]
@@ -62,6 +62,8 @@ class WindyWaterAgent(pymas.Agent):
         self.wind_frequency = wind_frequency
         self.num_actions = len(self.actions)
         self.num_states = self.rows*self.cols
+        self.num_episodes = 10
+        self.current_episode = 0
 
         WindyWaterAgent.simulator_id = self.id
 
@@ -129,14 +131,20 @@ class WindyWaterAgent(pymas.Agent):
         self.print_map()
 
         if self.is_episode_finished():
-            self.stop()
+            self.current_episode += 1
+
+            if self.current_episode == self.num_episodes:
+                self.send_message(pymas.Message(receiver=RandomWorldAgent.agent_id, data='stop'))
+                self.stop()
+            else:
+                self.prepate_new_episode()
 
     def on_stop(self):
-        self.send_message(receiver=RandomWorldAgent.agent_id, data='stop')
+        print 'Finish simulation'
 
 
 if __name__ == '__main__':
     system = pymas.System()
     system.add_agent(WindyWaterAgent)
     system.add_agent(RandomWorldAgent)
-    system.run(sleep=0.1)
+    system.run(sleep=0)

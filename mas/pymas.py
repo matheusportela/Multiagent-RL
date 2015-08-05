@@ -107,4 +107,4 @@ class Message(object):
         self.data = data
 
     def __str__(self):
-        return 'Message: %s' % self.data
+        return 'From: %s To: %s Message: %s' % (self.sender, self.receiver, self.data)
