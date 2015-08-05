@@ -21,18 +21,18 @@ class System(object):
         agent.on_start()
         return agent
 
-    def remove_agent(self, agent):
+    def _remove_agent(self, agent):
         agent.on_stop()
         self.agents.remove(agent)
 
-    def send_message(self, message):
+    def _send_message(self, message):
         if message.receiver not in self.messages:
             self.messages[message.receiver] = []
         self.messages[message.receiver].append(message)
 
     def _route_messages_from_agent(self, agent):
         for message in agent._unsent_messages:
-            self.send_message(message)
+            self._send_message(message)
         agent._clear_unsent_messages()
 
     def _route_messages_to_agent(self, agent):
@@ -52,7 +52,7 @@ class System(object):
                 self._route_messages_from_agent(agent)
 
                 if not agent.is_running:
-                    self.remove_agent(agent)
+                    self._remove_agent(agent)
 
             if self.num_agents == 0:
                 self.stop()
