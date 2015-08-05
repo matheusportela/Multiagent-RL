@@ -64,10 +64,11 @@ class RandomWorldAgent(pymas.Agent):
 
     def on_run(self):
         action = random.randrange(4)
-        self.send_message(pymas.Message(receiver=SimulatorAgent.simulator_id, data=(self.id, action)))
+        self.send_message(pymas.Message(receiver=SimulatorAgent.simulator_id, data=action))
 
     def on_receive_message(self, message):
-        if message == 'stop':
+        if (message.sender == SimulatorAgent.simulator_id
+            and message.data == 'stop'):
             self.stop()
 
 
@@ -106,11 +107,11 @@ class SimulatorAgent(pymas.Agent):
         self.stop()
 
     def on_receive_message(self, message):
-        agent_id, action = message
+        action = message.data
         agent = None
 
         for a in self.agents:
-            if a.id == agent_id:
+            if a.id == message.sender:
                 agent = a
 
         if not agent:

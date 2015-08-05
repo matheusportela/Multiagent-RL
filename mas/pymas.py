@@ -28,7 +28,7 @@ class System(object):
     def send_message(self, message):
         if message.receiver not in self.messages:
             self.messages[message.receiver] = []
-        self.messages[message.receiver].append(message.data)
+        self.messages[message.receiver].append(message)
 
     def _route_messages_from_agent(self, agent):
         for message in agent._unsent_messages:
@@ -92,6 +92,7 @@ class Agent(object):
         pass
 
     def send_message(self, message):
+        message.sender = self.id
         self._unsent_messages.append(message)
 
     def _clear_unsent_messages(self):
@@ -100,8 +101,9 @@ class Agent(object):
 
 class Message(object):
     """Communication packet used by agents."""
-    def __init__(self, receiver=None, data=None):
+    def __init__(self, receiver=None, sender=None, data=None):
         self.receiver = receiver
+        self.sender = sender
         self.data = data
 
     def __str__(self):
