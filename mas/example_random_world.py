@@ -20,9 +20,11 @@ class Cell(object):
     def remove(self, object):
         self.objects = [o for o in self.objects if id(o) != id(object)]
 
+
 class EmptyCell(Cell):
     def __init__(self):
         super(EmptyCell, self).__init__()
+
 
 class Map(object):
     empty = None
@@ -64,14 +66,19 @@ class RandomWorldAgent(pymas.Agent):
         action = random.randrange(4)
         self.send_message(pymas.Message(receiver=SimulatorAgent.simulator_id, data=(self.id, action)))
 
+    def on_receive_message(self, message):
+        if message == 'stop':
+            self.stop()
+
 
 class SimulatorAgent(pymas.Agent):
     simulator_id = 0
 
     def __init__(self):
         super(SimulatorAgent, self).__init__()
-        self.map = Map(25, 25)
+        self.map = Map(7, 7)
         self.agents = []
+        self.goal = (1, 1)
         SimulatorAgent.simulator_id = self.id
 
     def register_agent(self, agent):
@@ -85,6 +92,18 @@ class SimulatorAgent(pymas.Agent):
             self.map.add_object(agent, agent.x, agent.y)
 
         print str(self.map)
+
+        for agent in self.agents:
+            if (agent.x, agent.y) == self.goal:
+                print 'Agent %d reached goal at %d, %d' % (agent.id,
+                    self.goal[0], self.goal[1])
+                self.finish_simulation()
+
+    def finish_simulation(self):
+        for agent in self.agents:
+            self.send_message(pymas.Message(receiver=agent.id, data='stop'))
+
+        self.stop()
 
     def on_receive_message(self, message):
         agent_id, action = message
@@ -119,7 +138,6 @@ class SimulatorAgent(pymas.Agent):
 
 if __name__ == '__main__':
     system = pymas.System()
-    system.add_agent(RandomWorldAgent)
     simulator = system.add_agent(SimulatorAgent)
     simulator.register_agent(system.add_agent(RandomWorldAgent))
     simulator.register_agent(system.add_agent(RandomWorldAgent))
