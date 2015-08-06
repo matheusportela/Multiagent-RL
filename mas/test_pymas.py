@@ -35,7 +35,7 @@ class TestSystem(unittest.TestCase):
         agent = system.add_agent(pymas.Agent)
         system.add_agent(pymas.Agent)
 
-        system.remove_agent(agent)
+        system._remove_agent(agent)
 
         self.assertEqual(system.num_agents, 2)
         self.assertTrue(agent not in system.agents)
@@ -61,7 +61,7 @@ class TestSystem(unittest.TestCase):
         agent = system.add_agent(TestAgent)
         message = pymas.Message(receiver=agent.id)
 
-        system.send_message(message)
+        system._send_message(message)
         self.assertEqual(system.num_messages, 1)
 
         system.run()
