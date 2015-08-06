@@ -209,17 +209,19 @@ class EGreedyExplorer(object):
 class LearningAgent(pymas.Agent):
     def __init__(self):
         super(LearningAgent, self).__init__()
-        self.x = 0
-        self.y = 0
+        self.predator_x = 0
+        self.predator_y = 0
+        self.prey_x = 0
+        self.prey_y = 0
         self.rows = SimulatorAgent.map_rows
         self.cols = SimulatorAgent.map_cols
-        self.learner = QLearner(initial_state=0, num_states=self.rows*self.cols,
+        self.learner = QLearner(initial_state=0, num_states=(self.rows*self.cols)**2,
             num_actions=4, learning_rate=0.9, discount_factor=0.9)
         self.explorer = EGreedyExplorer(num_actions=4, exploration_frequency=0.1)
         self.last_action = 0
 
     def on_run(self):
-        state = self.coordinates_to_state((self.x, self.y))
+        state = self.calculate_state()
         suggested_action = self.learner.act(state)
         action = self.explorer.select_action(suggested_action)
         self.last_action = action
@@ -230,11 +232,17 @@ class LearningAgent(pymas.Agent):
             if message.data == 'stop':
                 self.stop()
             else:
-                state = self.coordinates_to_state((self.x, self.y))
-                self.learner.learn(state, self.last_action, message.data)
+                self.predator_x = message.data['predator_x']
+                self.predator_y = message.data['predator_y']
+                self.prey_x = message.data['prey_x']
+                self.prey_y = message.data['prey_y']
+                reward = message.data['reward']
+                state = self.calculate_state()
+                self.learner.learn(state, self.last_action, reward)
 
-    def coordinates_to_state(self, coordinates):
-        return coordinates[0]*self.cols + coordinates[1]
+    def calculate_state(self):
+        return (self.predator_x*self.cols + self.predator_y
+            + self.rows*self.cols*(self.prey_x*self.cols + self.prey_y))
 
 
 class PredatorAgent(LearningAgent):
@@ -265,7 +273,7 @@ class SimulatorAgent(pymas.Agent):
     simulator_id = 0
     map_rows = 7
     map_cols = 7
-    num_episodes = 100
+    num_episodes = 1000
 
     def __init__(self):
         super(SimulatorAgent, self).__init__()
@@ -301,15 +309,43 @@ class SimulatorAgent(pymas.Agent):
 
         if self.current_episode == SimulatorAgent.num_episodes - 1:
             print str(self.map)
-            time.sleep(0.1)
+            time.sleep(0.5)
 
         for predator in self.predator_agents:
             if (predator.x, predator.y) == (self.prey_agent.x, self.prey_agent.y):
-                self.send_message(pymas.Message(receiver=predator.id, data=100))
-                self.send_message(pymas.Message(receiver=self.prey_agent.id, data=1))
+                self.send_message(pymas.Message(receiver=predator.id,
+                    data={
+                        'predator_x': predator.x,
+                        'predator_y': predator.y,
+                        'prey_x': self.prey_agent.x,
+                        'prey_y': self.prey_agent.y,
+                        'reward': 100,
+                    }))
+                self.send_message(pymas.Message(receiver=self.prey_agent.id,
+                    data={
+                        'predator_x': predator.x,
+                        'predator_y': predator.y,
+                        'prey_x': self.prey_agent.x,
+                        'prey_y': self.prey_agent.y,
+                        'reward': -100,
+                    }))
             else:
-                self.send_message(pymas.Message(receiver=predator.id, data=-1))
-                self.send_message(pymas.Message(receiver=self.prey_agent.id, data=-100))
+                self.send_message(pymas.Message(receiver=predator.id,
+                    data={
+                        'predator_x': predator.x,
+                        'predator_y': predator.y,
+                        'prey_x': self.prey_agent.x,
+                        'prey_y': self.prey_agent.y,
+                        'reward': -1,
+                    }))
+                self.send_message(pymas.Message(receiver=self.prey_agent.id,
+                    data={
+                        'predator_x': predator.x,
+                        'predator_y': predator.y,
+                        'prey_x': self.prey_agent.x,
+                        'prey_y': self.prey_agent.y,
+                        'reward': 1,
+                    }))
 
         for predator in self.predator_agents:
             if (predator.x, predator.y) == (self.prey_agent.x, self.prey_agent.y):
