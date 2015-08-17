@@ -3,6 +3,23 @@ from simulator import layout as simulator_layout
 from simulator import textDisplay
 from simulator import graphicsDisplay
 from simulator import myAgents
+from simulator.myAgents import PacmanAgent
+
+import communication as comm
+
+class CommunicatingPacmanAgent(PacmanAgent):
+    def __init__(self):
+        # super(CommunicatingPacmanAgent, self).__init__()
+        self.index = 0
+        self.client = comm.Client()
+
+    def getAction(self, state):
+        print 'Pacman agent: communicating'
+        self.client.send('Request')
+        action = self.client.recv()
+        print 'Received action:', action
+        return action
+
 
 def create_layout(layout_file):
     layout = simulator_layout.getLayout(layout_file)
@@ -13,7 +30,7 @@ def create_layout(layout_file):
     return layout
 
 def create_pacman():
-    return myAgents.RandomPacmanAgent()
+    return CommunicatingPacmanAgent()
 
 def create_ghosts(num_ghosts):
     return [myAgents.RandomGhostAgent(i+1) for i in range(num_ghosts)]
