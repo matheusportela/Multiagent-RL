@@ -6,6 +6,7 @@ from simulator import myAgents
 from simulator.myAgents import PacmanAgent
 
 import communication as comm
+import pickle
 
 class CommunicatingPacmanAgent(PacmanAgent):
     def __init__(self):
@@ -15,10 +16,14 @@ class CommunicatingPacmanAgent(PacmanAgent):
 
     def getAction(self, state):
         print 'Pacman agent: communicating'
-        self.client.send('Request')
+        pacman_position = state.getPacmanState().configuration.pos
+        self.client.send(pickle.dumps(pacman_position))
         action = self.client.recv()
         print 'Received action:', action
-        return action
+
+        if action in state.getLegalPacmanActions():
+            return action
+        return 'Stop'
 
 
 def create_layout(layout_file):
