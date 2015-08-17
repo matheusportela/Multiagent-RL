@@ -49,7 +49,7 @@ class GhostAgent(game.Agent):
             STOP).
         """
         raise NotImplementedError('Ghost agent must contain a getAction method'
-            'to select an action for the current game state.')    
+            'to select an action for the current game state.')
 
 
 class RandomPacmanAgent(PacmanAgent):
@@ -67,3 +67,9 @@ class RandomGhostAgent(GhostAgent):
     def getAction(self, state):
         actions = state.getLegalActions(self.index)
         return random.choice(actions)
+
+
+class CommunicatingPacmanAgent(PacmanAgent):
+    def getAction(self, state):
+        print 'CommunicatingPacmanAgent'
+        return 'Stop'
