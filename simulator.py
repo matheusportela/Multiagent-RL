@@ -18,5 +18,5 @@ if __name__ == '__main__':
         zoom = 1.0
         display = graphicsDisplay.PacmanGraphics(zoom, frameTime=0.1)
     numGames = 1
-    record = True
+    record = False
     pacman_simulator.runGames(layout, pacman, ghosts, display, numGames, record)
