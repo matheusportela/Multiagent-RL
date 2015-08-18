@@ -1,64 +1,46 @@
 #!/usr/bin/env python
 
 from __future__ import division
-from mas import pymas
 import communication as comm
 import pickle
 import random
 
 
-class PacmanAgent(pymas.Agent):
+class RandomActionAgent(object):
     def __init__(self):
-        super(PacmanAgent, self).__init__()
-        self.simulation_agent = None
         self.actions = ['North', 'South', 'East', 'West', 'Stop']
-
-    def register_simulation_agent(self, agent):
-        self.simulation_agent = agent
 
     def choose_action(self, position):
         return random.choice(self.actions)
 
-    def send_action(self, action):
-        msg = pymas.Message(receiver=self.simulation_agent.id, data=action)
-        self.send_message(msg)
 
-    def on_receive_message(self, message):
-        print 'Received message: {}'.format(message)
-        position = message.data
-        action = self.choose_action(position)
-        self.send_action(action)
-
-
-class SimulatorRoutingAgent(pymas.Agent):
+class MessageRouter(object):
     def __init__(self):
-        super(SimulatorRoutingAgent, self).__init__()
         self.pacman_agent = None
+        self.ghost_agents = []
         self.server = comm.Server()
 
     def register_pacman_agent(self, agent):
         self.pacman_agent = agent
 
-    def on_run(self):
-        pacman_position = pickle.loads(self.server.recv())
-        self.send_pacman_position(pacman_position)
+    def register_ghost_agent(self, agent):
+        self.ghost_agents.append(agent)
 
-    def send_pacman_position(self, pacman_position):
-        msg = pymas.Message(receiver=self.pacman_agent.id, data=pacman_position)
-        self.send_message(msg)
+    def run(self):
+        while True:
+            agent_index, agent_position = pickle.loads(self.server.recv())
 
-    def on_receive_message(self, message):
-        print 'Received reply: {}'.format(message)
-        pacman_action = message.data
-        self.server.send(pacman_action)
+            if agent_index == 0:
+                agent_action = self.pacman_agent.choose_action(agent_position)
+            else:
+                agent_action = self.ghost_agents[agent_index].choose_action(agent_position)
 
+            reply = (agent_index, agent_action)
+            self.server.send(pickle.dumps(reply))
 
 if __name__ == '__main__':
-    system = pymas.System()
-    pacman_agent = system.add_agent(PacmanAgent)
-    simulator_agent = system.add_agent(SimulatorRoutingAgent)
-
-    pacman_agent.register_simulation_agent(simulator_agent)
-    simulator_agent.register_pacman_agent(pacman_agent)
-
-    system.run(sleep=0)
+    router = MessageRouter()
+    router.register_pacman_agent(RandomActionAgent())
+    for _ in range(4):
+        router.register_ghost_agent(RandomActionAgent())
+    router.run()

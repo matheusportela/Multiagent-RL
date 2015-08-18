@@ -2,11 +2,11 @@ from simulator import pacman as pacman_simulator
 from simulator import layout as simulator_layout
 from simulator import textDisplay
 from simulator import graphicsDisplay
-from simulator import myAgents
-from simulator.myAgents import PacmanAgent
+from simulator.myAgents import PacmanAgent, GhostAgent
 
 import communication as comm
 import pickle
+import random
 
 class CommunicatingPacmanAgent(PacmanAgent):
     def __init__(self):
@@ -17,14 +17,40 @@ class CommunicatingPacmanAgent(PacmanAgent):
     def getAction(self, state):
         print 'Pacman agent: communicating'
         pacman_position = state.getPacmanState().configuration.pos
-        self.client.send(pickle.dumps(pacman_position))
-        action = self.client.recv()
+        message_data = (self.index, pacman_position)
+        self.client.send(pickle.dumps(message_data))
+        index, action = pickle.loads(self.client.recv())
+        while index != self.index:
+            index, action = pickle.loads(self.client.recv())
+
         print 'Received action:', action
 
         if action in state.getLegalPacmanActions():
             return action
         return 'Stop'
 
+
+class CommunicatingGhostAgent(GhostAgent):
+    def __init__(self, index):
+        # super(CommunicatingGhostAgent, self).__init__()
+        self.index = index
+        self.client = comm.Client()
+
+    def getAction(self, state):
+        print 'Ghost %d agent: communicating' % self.index
+        ghost_position = state.getGhostState(self.index)
+        message_data = (self.index, ghost_position)
+        self.client.send(pickle.dumps(message_data))
+        index, action = pickle.loads(self.client.recv())
+        while index != self.index:
+            index, action = pickle.loads(self.client.recv())
+
+        print 'Received action:', action
+
+        if action in state.getLegalActions(self.index):
+            return action
+        else:
+            return random.choice(state.getLegalActions(self.index))
 
 def create_layout(layout_file):
     layout = simulator_layout.getLayout(layout_file)
@@ -38,7 +64,7 @@ def create_pacman():
     return CommunicatingPacmanAgent()
 
 def create_ghosts(num_ghosts):
-    return [myAgents.RandomGhostAgent(i+1) for i in range(num_ghosts)]
+    return [CommunicatingGhostAgent(i+1) for i in range(num_ghosts)]
 
 def create_display(text_only=False, zoom=1.0, frameTime=0.1):
     if text_only:
