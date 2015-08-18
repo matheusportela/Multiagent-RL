@@ -2,15 +2,15 @@ from simulator import pacman as pacman_simulator
 from simulator import layout as simulator_layout
 from simulator import textDisplay
 from simulator import graphicsDisplay
-from simulator.myAgents import PacmanAgent, GhostAgent
+from simulator import game
 
 import communication as comm
 import pickle
 import random
 
-class CommunicatingPacmanAgent(PacmanAgent):
+class CommunicatingPacmanAgent(game.Agent):
     def __init__(self):
-        # super(CommunicatingPacmanAgent, self).__init__()
+        super(CommunicatingPacmanAgent, self).__init__()
         self.index = 0
         self.client = comm.Client()
 
@@ -30,9 +30,9 @@ class CommunicatingPacmanAgent(PacmanAgent):
         return 'Stop'
 
 
-class CommunicatingGhostAgent(GhostAgent):
+class CommunicatingGhostAgent(game.Agent):
     def __init__(self, index):
-        # super(CommunicatingGhostAgent, self).__init__()
+        super(CommunicatingGhostAgent, self).__init__()
         self.index = index
         self.client = comm.Client()
 
@@ -51,6 +51,7 @@ class CommunicatingGhostAgent(GhostAgent):
             return action
         else:
             return random.choice(state.getLegalActions(self.index))
+
 
 def create_layout(layout_file):
     layout = simulator_layout.getLayout(layout_file)

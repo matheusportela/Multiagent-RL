@@ -3,15 +3,7 @@
 from __future__ import division
 import communication as comm
 import pickle
-import random
-
-
-class RandomActionAgent(object):
-    def __init__(self):
-        self.actions = ['North', 'South', 'East', 'West', 'Stop']
-
-    def choose_action(self, position):
-        return random.choice(self.actions)
+import agents
 
 
 class MessageRouter(object):
@@ -40,7 +32,7 @@ class MessageRouter(object):
 
 if __name__ == '__main__':
     router = MessageRouter()
-    router.register_pacman_agent(RandomActionAgent())
+    router.register_pacman_agent(agents.RandomPacmanAgent())
     for _ in range(4):
-        router.register_ghost_agent(RandomActionAgent())
+        router.register_ghost_agent(agents.RandomGhostAgent())
     router.run()
