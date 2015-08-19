@@ -31,8 +31,9 @@ class MessageRouter(object):
             self.server.send(pickle.dumps(reply))
 
 if __name__ == '__main__':
+    num_ghosts = 4
     router = MessageRouter()
     router.register_pacman_agent(agents.RandomPacmanAgent())
-    for _ in range(4):
+    for _ in range(num_ghosts):
         router.register_ghost_agent(agents.RandomGhostAgent())
     router.run()

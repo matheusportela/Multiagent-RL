@@ -8,6 +8,7 @@ import communication as comm
 import pickle
 import random
 
+
 class CommunicatingPacmanAgent(game.Agent):
     def __init__(self):
         super(CommunicatingPacmanAgent, self).__init__()

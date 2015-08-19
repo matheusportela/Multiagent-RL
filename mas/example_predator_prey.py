@@ -308,6 +308,8 @@ class SimulatorAgent(pymas.Agent):
             self.map.add_object(agent, agent.x, agent.y)
 
         if self.current_episode == SimulatorAgent.num_episodes - 1:
+            for predator in self.predator_agents:
+                predator.explorer.exploration_frequency = 0
             print str(self.map)
             time.sleep(0.5)
 

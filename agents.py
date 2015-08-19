@@ -1,5 +1,6 @@
 import random
 
+
 class PacmanAgent(object):
     """Pacman agent abstract class.
 
