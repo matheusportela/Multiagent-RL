@@ -34,6 +34,22 @@ class TestGrid(unittest.TestCase):
         for value in g:
             self.assertEqual(value, 0.125)
 
+    def test_max_index(self):
+        g = pybayes.Grid(min=0, max=3.5, step=0.5)
+        g[0] = g[0.5] = g[1] = g[2] = g[2.5] = g[3] = g[3.5] = 0
+        g[1.5] = 1
+
+        self.assertEqual(g.max_index(), 1.5)
+
+
+class TestNormalDist(unittest.TestCase):
+    def test_apply(self):
+        grid = pybayes.Grid(max=100)
+
+        grid.apply(pybayes.NormalDistribution(mean=5, var=10))
+
+        self.assertEqual(grid.max_index(), 5)
+
 
 if __name__ == '__main__':
     unittest.main()

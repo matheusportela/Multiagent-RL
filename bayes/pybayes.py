@@ -71,6 +71,18 @@ class Grid(object):
     def __mul__(self, other):
         return (self.cells * other.cells)
 
+    def max_index(self):
+        """Calculate the cell with highest value."""
+        max_i = self.min
+        max_value = self[self.min]
+
+        for i, value in zip(self.indices, self.cells):
+            if value > max_value:
+                max_i = i
+                max_value = value
+
+        return max_i
+
     def normalize(self):
         """Normalize to guarantee all values sum up to 1."""
         self.cells = self.cells/self.cells.sum()
@@ -86,3 +98,26 @@ class Grid(object):
         """Plot grid values."""
         plt.bar(self.indices, self.cells)
         plt.show()
+
+
+class Distribution(object):
+    def calculate(self, x):
+        """Calculate the probability of x given the distribution description."""
+        raise NotImplementedError
+
+
+class NormalDistribution(Distribution):
+    """Normal (or Gaussian) distribution.
+
+    Attributes:
+    mean -- Mean value, where the Normal distribution is centered.
+    var -- Variance, defining the spread of the distribution curve.
+    """
+    def __init__(self, mean=0, var=1):
+        self.mean = mean
+        self.var = var
+
+    def calculate(self, x):
+        denom = np.sqrt(2*np.pi*self.var)
+        num = np.exp(-(x-self.mean)**2/(2*self.var))
+        return num/denom
