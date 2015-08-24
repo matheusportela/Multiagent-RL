@@ -99,7 +99,7 @@ class Grid(object):
         plt.bar(self.indices, self.cells, self.step)
         plt.ylabel('Probability')
         plt.ylim([0, 1])
-        plt.xlim([self.min, self.max])
+        plt.xlim([self.min, self.max + self.step])
         plt.show()
 
 
