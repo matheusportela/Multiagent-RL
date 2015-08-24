@@ -5,53 +5,45 @@ from simulator import graphicsDisplay
 from simulator import game
 
 import communication as comm
+import messages
 import pickle
 import random
 
 
-class CommunicatingPacmanAgent(game.Agent):
-    def __init__(self):
-        super(CommunicatingPacmanAgent, self).__init__()
-        self.index = 0
-        self.client = comm.Client()
-
-    def getAction(self, state):
-        print 'Pacman agent: communicating'
-        pacman_position = state.getPacmanState().configuration.pos
-        message_data = (self.index, pacman_position)
-        self.client.send(pickle.dumps(message_data))
-        index, action = pickle.loads(self.client.recv())
-        while index != self.index:
-            index, action = pickle.loads(self.client.recv())
-
-        print 'Received action:', action
-
-        if action in state.getLegalPacmanActions():
-            return action
-        return 'Stop'
-
-
-class CommunicatingGhostAgent(game.Agent):
+class CommunicatingAgent(game.Agent):
     def __init__(self, index):
-        super(CommunicatingGhostAgent, self).__init__()
+        super(CommunicatingAgent, self).__init__()
         self.index = index
         self.client = comm.Client()
 
     def getAction(self, state):
-        print 'Ghost %d agent: communicating' % self.index
-        ghost_position = state.getGhostState(self.index)
-        message_data = (self.index, ghost_position)
-        self.client.send(pickle.dumps(message_data))
+        print '%d agent communicating' % self.index
+        message_type = 'Positions'
+        pacman_position = state.getPacmanPosition()
+        ghost_positions = state.getGhostPositions()
+        legal_actions = state.getLegalActions(self.index)
+        # message_data = (self.index, pacman_position, ghost_positions, legal_actions)
+
+        message_data = messages.State(
+            index=self.index,
+            pacman_position=pacman_position,
+            ghost_positions=ghost_positions,
+            legal_actions=legal_actions)
+
+        message = (message_type, message_data)
+        self.client.send(pickle.dumps(message))
         index, action = pickle.loads(self.client.recv())
         while index != self.index:
             index, action = pickle.loads(self.client.recv())
 
         print 'Received action:', action
 
-        if action in state.getLegalActions(self.index):
-            return action
-        else:
-            return random.choice(state.getLegalActions(self.index))
+        return action
+
+
+class CommunicatingPacmanAgent(CommunicatingAgent):
+    def __init__(self):
+        super(CommunicatingPacmanAgent, self).__init__(0)
 
 
 def create_layout(layout_file):
@@ -66,7 +58,7 @@ def create_pacman():
     return CommunicatingPacmanAgent()
 
 def create_ghosts(num_ghosts):
-    return [CommunicatingGhostAgent(i+1) for i in range(num_ghosts)]
+    return [CommunicatingAgent(i+1) for i in range(num_ghosts)]
 
 def create_display(text_only=False, zoom=1.0, frameTime=0.1):
     if text_only:

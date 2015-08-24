@@ -4,6 +4,7 @@ from __future__ import division
 import communication as comm
 import pickle
 import agents
+import messages
 
 
 class MessageRouter(object):
@@ -20,20 +21,25 @@ class MessageRouter(object):
 
     def run(self):
         while True:
-            agent_index, agent_position = pickle.loads(self.server.recv())
+            message_type, message_data = pickle.loads(self.server.recv())
 
-            if agent_index == 0:
-                agent_action = self.pacman_agent.choose_action(agent_position)
-            else:
-                agent_action = self.ghost_agents[agent_index].choose_action(agent_position)
+            if message_type == 'Positions':
+                # agent_index, pacman_position, ghosts_position, legal_actions = message_data
 
-            reply = (agent_index, agent_action)
-            self.server.send(pickle.dumps(reply))
+                if message_data.index == 0:
+                    agent_action = self.pacman_agent.choose_action(message_data.legal_actions)
+                else:
+                    agent_action = self.ghost_agents[message_data.index].choose_action(message_data.legal_actions)
+
+                reply = (message_data.index, agent_action)
+                self.server.send(pickle.dumps(reply))
+            elif message_type == 'Begin':
+                print 'Beginning game'
 
 if __name__ == '__main__':
     num_ghosts = 4
     router = MessageRouter()
-    router.register_pacman_agent(agents.RandomPacmanAgent())
+    router.register_pacman_agent(agents.LearningPacmanAgent())
     for _ in range(num_ghosts):
         router.register_ghost_agent(agents.RandomGhostAgent())
     router.run()

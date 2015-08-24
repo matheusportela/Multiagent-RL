@@ -1,4 +1,5 @@
 import random
+import learning
 
 
 class PacmanAgent(object):
@@ -51,11 +52,21 @@ class GhostAgent(object):
 
 class RandomPacmanAgent(PacmanAgent):
     """Agent that randomly selects an action."""
-    def choose_action(self, state):
-        return random.choice(self.actions)
+    def choose_action(self, legal_actions):
+        return random.choice(legal_actions)
 
 
 class RandomGhostAgent(GhostAgent):
     """Agent that randomly selects an action."""
-    def choose_action(self, state):
-        return random.choice(self.actions)
+    def choose_action(self, legal_actions):
+        return random.choice(legal_actions)
+
+
+class LearningPacmanAgent(PacmanAgent):
+    def __init__(self):
+        super(LearningPacmanAgent, self).__init__()
+        self.learning = learning.QLearning(learning_rate=0.9, discount_factor=0.9,
+            actions=self.actions)
+
+    def choose_action(self, legal_actions):
+        return random.choice(legal_actions)
