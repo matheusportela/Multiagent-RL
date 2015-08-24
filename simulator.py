@@ -7,7 +7,6 @@ from simulator import game
 import communication as comm
 import messages
 import pickle
-import random
 
 
 class CommunicatingAgent(game.Agent):
@@ -16,29 +15,36 @@ class CommunicatingAgent(game.Agent):
         self.index = index
         self.client = comm.Client()
 
-    def getAction(self, state):
-        print '%d agent communicating' % self.index
-        message_type = 'Positions'
+    def create_message(self, state):
         pacman_position = state.getPacmanPosition()
         ghost_positions = state.getGhostPositions()
         legal_actions = state.getLegalActions(self.index)
-        # message_data = (self.index, pacman_position, ghost_positions, legal_actions)
 
-        message_data = messages.State(
+        message = messages.StateMessage(
+            msg_type = messages.STATE,
             index=self.index,
             pacman_position=pacman_position,
             ghost_positions=ghost_positions,
             legal_actions=legal_actions)
 
-        message = (message_type, message_data)
+        return message
+
+    def send_message(self, message):
         self.client.send(pickle.dumps(message))
-        index, action = pickle.loads(self.client.recv())
-        while index != self.index:
-            index, action = pickle.loads(self.client.recv())
 
-        print 'Received action:', action
+    def receive_message(self):
+        return pickle.loads(self.client.recv())
 
-        return action
+    def getAction(self, state):
+        message = self.create_message(state)
+        self.send_message(message)
+
+        message = self.receive_message()
+        while message.index != self.index:
+            message = self.receive_message()
+
+        print '%d Received action: %s' % (self.index, message.action)
+        return message.action
 
 
 class CommunicatingPacmanAgent(CommunicatingAgent):

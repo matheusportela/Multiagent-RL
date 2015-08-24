@@ -19,22 +19,35 @@ class MessageRouter(object):
     def register_ghost_agent(self, agent):
         self.ghost_agents.append(agent)
 
+    def receive_message(self):
+        return pickle.loads(self.server.recv())
+
+    def create_action_message(self, agent_index, action):
+        message = messages.ActionMessage(
+            msg_type=messages.ACTION,
+            index=agent_index,
+            action=action)
+        return pickle.dumps(message)
+
+    def send_message(self, message):
+        self.server.send(message)
+
+    def choose_action(self, state):
+        if state.index == 0:
+            agent_action = self.pacman_agent.choose_action(state.legal_actions)
+        else:
+            agent_action = self.ghost_agents[state.index].choose_action(state.legal_actions)
+
+        return agent_action
+
     def run(self):
         while True:
-            message_type, message_data = pickle.loads(self.server.recv())
+            received_message = self.receive_message()
 
-            if message_type == 'Positions':
-                # agent_index, pacman_position, ghosts_position, legal_actions = message_data
-
-                if message_data.index == 0:
-                    agent_action = self.pacman_agent.choose_action(message_data.legal_actions)
-                else:
-                    agent_action = self.ghost_agents[message_data.index].choose_action(message_data.legal_actions)
-
-                reply = (message_data.index, agent_action)
-                self.server.send(pickle.dumps(reply))
-            elif message_type == 'Begin':
-                print 'Beginning game'
+            if received_message.msg_type == messages.STATE:
+                agent_action = self.choose_action(received_message)
+                reply_message = self.create_action_message(received_message.index, agent_action)
+                self.send_message(reply_message)
 
 if __name__ == '__main__':
     num_ghosts = 4
