@@ -160,10 +160,16 @@ class QLearning(object):
         self.set_q_value(self.current_state, action, new_value)
         self.update_state(state)
 
-    def act(self, state):
-        """Select an action for the given state.
+    def act(self, state, legal_actions):
+        """Select the best legal action for the given state.
 
         Parameters:
         state -- Agent state to select an action.
         """
-        return self.get_max_action(state)
+        actions = filter(lambda a: a in legal_actions, self.q_values[state])
+        values = [self.q_values[state][action] for action in actions]
+        max_value = max(values)
+        max_actions = [action
+            for action in actions if self.q_values[state][action] == max_value]
+
+        return random.choice(max_actions)

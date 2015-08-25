@@ -68,5 +68,6 @@ class LearningPacmanAgent(PacmanAgent):
         self.learning = learning.QLearning(learning_rate=0.9, discount_factor=0.9,
             actions=self.actions)
 
-    def choose_action(self, legal_actions):
-        return random.choice(legal_actions)
+    def choose_action(self, state, action, reward, legal_actions):
+        self.learning.learn(state, action, reward)
+        return self.learning.act(state, legal_actions)

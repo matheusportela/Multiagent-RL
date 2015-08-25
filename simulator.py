@@ -16,16 +16,13 @@ class CommunicatingAgent(game.Agent):
         self.client = comm.Client()
 
     def create_message(self, state):
-        pacman_position = state.getPacmanPosition()
-        ghost_positions = state.getGhostPositions()
-        legal_actions = state.getLegalActions(self.index)
-
         message = messages.StateMessage(
             msg_type = messages.STATE,
             index=self.index,
-            pacman_position=pacman_position,
-            ghost_positions=ghost_positions,
-            legal_actions=legal_actions)
+            pacman_position=state.getPacmanPosition(),
+            ghost_positions=state.getGhostPositions(),
+            legal_actions=state.getLegalActions(self.index),
+            score=state.getScore())
 
         return message
 
@@ -77,12 +74,13 @@ def create_display(text_only=False, zoom=1.0, frameTime=0.1):
 if __name__ == '__main__':
     layout_file = 'mediumClassic'
     num_ghosts = 4
-    num_games = 1
+    num_games = 100
     record = False
+    text_display = True
 
     layout = create_layout(layout_file)
     pacman = create_pacman()
     ghosts = create_ghosts(num_ghosts)
-    display = create_display(text_only=False)
+    display = create_display(text_only=text_display)
 
     pacman_simulator.runGames(layout, pacman, ghosts, display, num_games, record)
