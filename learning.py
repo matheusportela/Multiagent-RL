@@ -122,6 +122,21 @@ class QLearning(object):
         """
         self.q_values[state][action] = value
 
+    def _get_max_action_from_list(self, state, action_list):
+        """Get the action with maximum estimated value from the given list of
+        actions.
+
+        state -- Environment state.
+        action_list -- Actions to be evaluated.
+        """
+        actions = filter(lambda a: a in action_list, self.q_values[state])
+        values = [self.q_values[state][action] for action in actions]
+        max_value = max(values)
+        max_actions = [action
+            for action in actions if self.q_values[state][action] == max_value]
+
+        return random.choice(max_actions)
+
     def get_max_action(self, state):
         """Get the action with maximum estimated value.
 
@@ -129,15 +144,7 @@ class QLearning(object):
         state -- Environment state.
         """
         self.initialize_unknown_state(state)
-
-        actions = [action for action in self.q_values[state]]
-        values = [self.q_values[state][action]
-            for action in self.q_values[state]]
-        max_value = max(values)
-        max_actions = [action
-            for action in actions if self.q_values[state][action] == max_value]
-
-        return random.choice(max_actions)
+        return self._get_max_action_from_list(state, self.actions)
 
     def get_max_q_value(self, state):
         max_action = self.get_max_action(state)
@@ -165,11 +172,6 @@ class QLearning(object):
 
         Parameters:
         state -- Agent state to select an action.
+        legal_actions -- Actions allowed in the current state.
         """
-        actions = filter(lambda a: a in legal_actions, self.q_values[state])
-        values = [self.q_values[state][action] for action in actions]
-        max_value = max(values)
-        max_actions = [action
-            for action in actions if self.q_values[state][action] == max_value]
-
-        return random.choice(max_actions)
+        return self._get_max_action_from_list(state, legal_actions)
