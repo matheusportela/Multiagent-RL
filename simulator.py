@@ -16,11 +16,18 @@ class CommunicatingAgent(game.Agent):
         self.client = comm.Client()
 
     def create_message(self, state):
+        food_positions = []
+
+        for x, k in enumerate(state.getFood()):
+            for y, l in enumerate(k):
+                food_positions.append((x, y))
+
         message = messages.StateMessage(
             msg_type = messages.STATE,
             index=self.index,
             pacman_position=state.getPacmanPosition(),
             ghost_positions=state.getGhostPositions(),
+            food_positions=food_positions,
             legal_actions=state.getLegalActions(self.index),
             score=state.getScore())
 
@@ -40,7 +47,6 @@ class CommunicatingAgent(game.Agent):
         while message.index != self.index:
             message = self.receive_message()
 
-        print '%d Received action: %s' % (self.index, message.action)
         return message.action
 
 
@@ -63,11 +69,15 @@ def create_pacman():
 def create_ghosts(num_ghosts):
     return [CommunicatingAgent(i+1) for i in range(num_ghosts)]
 
-def create_display(text_only=False, zoom=1.0, frameTime=0.1):
-    if text_only:
+def create_display(display_type='None', zoom=1.0, frameTime=0.1):
+    if display_type == 'Text':
         display = textDisplay.PacmanGraphics()
-    else:
+    elif display_type == 'Graphic':
         display = graphicsDisplay.PacmanGraphics(zoom, frameTime=frameTime)
+    elif display_type == 'None':
+        display = textDisplay.NullGraphics()
+    else:
+        raise ValueError, 'Display type must be either Text, Graphic, or None'
 
     return display
 
@@ -76,11 +86,12 @@ if __name__ == '__main__':
     num_ghosts = 4
     num_games = 100
     record = False
-    text_display = True
+    display_type = 'None'
 
     layout = create_layout(layout_file)
     pacman = create_pacman()
     ghosts = create_ghosts(num_ghosts)
-    display = create_display(text_only=text_display)
+    display = create_display(display_type=display_type)
 
-    pacman_simulator.runGames(layout, pacman, ghosts, display, num_games, record)
+    # pacman_simulator.runGames(layout, pacman, ghosts, display, num_games, record)
+    pacman_simulator.runGames(layout, pacman, ghosts, create_display(display_type='Graphic'), 1, record)

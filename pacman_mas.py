@@ -33,7 +33,7 @@ class MessageRouter(object):
         self.server.send(message)
 
     def choose_action(self, state):
-        agent_state = tuple([state.pacman_position] + [pos for pos in state.ghost_positions])
+        agent_state = tuple([state.pacman_position] + [pos for pos in state.ghost_positions] + state.food_positions)
         executed_action = self.last_action
         reward = state.score - self.previous_score
 
