@@ -62,7 +62,7 @@ class MessageRouter(object):
 if __name__ == '__main__':
     num_ghosts = 4
     router = MessageRouter()
-    router.register_pacman_agent(agents.BehaviorLearningAgent())
+    router.register_pacman_agent(agents.LearningAgent())
     for _ in range(num_ghosts):
         router.register_ghost_agent(agents.RandomGhostAgent())
     router.run()

@@ -63,9 +63,9 @@ class RandomGhostAgent(GhostAgent):
         return random.choice(legal_actions)
 
 
-class LearningPacmanAgent(PacmanAgent):
+class LearningAgent(PacmanAgent):
     def __init__(self):
-        super(LearningPacmanAgent, self).__init__()
+        super(LearningAgent, self).__init__()
         self.exploration_rate = 0.1
         self.learning = learning.QLearning(learning_rate=0.9, discount_factor=0.9,
             actions=self.actions)
