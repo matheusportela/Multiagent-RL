@@ -33,7 +33,7 @@ class MessageRouter(object):
         self.server.send(message)
 
     def choose_action(self, state):
-        agent_state = tuple([state.pacman_position] + [pos for pos in state.ghost_positions] + state.food_positions)
+        agent_state = tuple([state.pacman_position] + [tuple([pos for pos in state.ghost_positions])] + [tuple(state.food_positions)])
         executed_action = self.last_action
         reward = state.score - self.previous_score
 
@@ -62,7 +62,7 @@ class MessageRouter(object):
 if __name__ == '__main__':
     num_ghosts = 4
     router = MessageRouter()
-    router.register_pacman_agent(agents.LearningPacmanAgent())
+    router.register_pacman_agent(agents.BehaviorLearningAgent())
     for _ in range(num_ghosts):
         router.register_ghost_agent(agents.RandomGhostAgent())
     router.run()

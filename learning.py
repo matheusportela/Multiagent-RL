@@ -100,7 +100,7 @@ class QLearning(object):
         if state not in self.q_values:
             self.q_values[state] = {}
             for action_ in self.actions:
-                self.q_values[state][action_] = 0
+                self.q_values[state][action_] = 0.0
 
     def get_q_value(self, state, action):
         """Get the current estimated value for the state-action pair.

@@ -20,7 +20,8 @@ class CommunicatingAgent(game.Agent):
 
         for x, k in enumerate(state.getFood()):
             for y, l in enumerate(k):
-                food_positions.append((x, y))
+                if l:
+                    food_positions.append((x, y))
 
         message = messages.StateMessage(
             msg_type = messages.STATE,
@@ -93,5 +94,5 @@ if __name__ == '__main__':
     ghosts = create_ghosts(num_ghosts)
     display = create_display(display_type=display_type)
 
-    # pacman_simulator.runGames(layout, pacman, ghosts, display, num_games, record)
-    pacman_simulator.runGames(layout, pacman, ghosts, create_display(display_type='Graphic'), 1, record)
+    pacman_simulator.runGames(layout, pacman, ghosts, display, num_games, record)
+    # pacman_simulator.runGames(layout, pacman, ghosts, create_display(display_type='Graphic'), 1, record)
