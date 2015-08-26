@@ -35,10 +35,9 @@ class MessageRouter(object):
     def choose_action(self, state):
         agent_state = tuple([state.pacman_position] + [tuple([pos for pos in state.ghost_positions])] + [tuple(state.food_positions)])
         executed_action = self.last_action
-        reward = state.score - self.previous_score
 
         if state.index == 0:
-            agent_action = self.pacman_agent.choose_action(agent_state, executed_action, reward, state.legal_actions)
+            agent_action = self.pacman_agent.choose_action(agent_state, executed_action, state.reward, state.legal_actions)
         else:
             agent_action = self.ghost_agents[state.index].choose_action(state.legal_actions)
 
@@ -46,7 +45,6 @@ class MessageRouter(object):
 
     def run(self):
         self.last_action = 'Stop'
-        self.previous_score = 0
 
         while True:
             received_message = self.receive_message()
@@ -56,13 +54,12 @@ class MessageRouter(object):
                 reply_message = self.create_action_message(received_message.index, agent_action)
                 self.send_message(reply_message)
 
-                self.previous_score = received_message.score
                 self.last_action = agent_action
 
 if __name__ == '__main__':
     num_ghosts = 4
     router = MessageRouter()
-    router.register_pacman_agent(agents.LearningAgent())
+    router.register_pacman_agent(agents.QLearningAgent())
     for _ in range(num_ghosts):
         router.register_ghost_agent(agents.RandomGhostAgent())
     router.run()

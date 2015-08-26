@@ -14,6 +14,7 @@ class CommunicatingAgent(game.Agent):
         super(CommunicatingAgent, self).__init__()
         self.index = index
         self.client = comm.Client()
+        self.previous_score = 0
 
     def create_message(self, state):
         food_positions = []
@@ -23,6 +24,9 @@ class CommunicatingAgent(game.Agent):
                 if l:
                     food_positions.append((x, y))
 
+        reward = state.getScore() - self.previous_score
+        self.previous_score = state.getScore()
+
         message = messages.StateMessage(
             msg_type = messages.STATE,
             index=self.index,
@@ -30,7 +34,7 @@ class CommunicatingAgent(game.Agent):
             ghost_positions=state.getGhostPositions(),
             food_positions=food_positions,
             legal_actions=state.getLegalActions(self.index),
-            score=state.getScore())
+            reward=reward)
 
         return message
 

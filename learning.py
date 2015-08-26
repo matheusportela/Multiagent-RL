@@ -31,7 +31,7 @@ class LearningAlgorithm(object):
             '%s does not implement "act" method' % str(type(self)))
 
 
-class QLearning(object):
+class QLearning(LearningAlgorithm):
     """Q-learning algorithm implementation.
 
     Q-learning is a model free reinforcement learning algorithm that tries and
@@ -61,6 +61,7 @@ class QLearning(object):
         num_states -- Number of states to be represented.
         num_actions -- Number of actions to be represented.
         """
+        super(QLearning, self).__init__()
         self.current_state = initial_state
         self.q_values = {}
         self.learning_rate = learning_rate
@@ -174,4 +175,65 @@ class QLearning(object):
         state -- Agent state to select an action.
         legal_actions -- Actions allowed in the current state.
         """
+        return self._get_max_action_from_list(state, legal_actions)
+
+
+class QLearningWithApproximation(LearningAlgorithm):
+    def __init__(self, actions=None, features=None, learning_rate=1,
+        discount_factor=1):
+        super(QLearningWithApproximation, self).__init__()
+        self.actions = actions
+        self.features = features
+        self.learning_rate = learning_rate
+        self.discount_factor = discount_factor
+        self.current_state = None
+        self.weights = [random.random() for _ in range(len(features))]
+
+    def get_q_value(self, state, action):
+        q_value = 0
+
+        for weight, feature in zip(self.weights, self.features):
+            q_value += weight*feature(state, action)
+
+        return q_value
+
+    def _get_max_action_from_list(self, state, action_list):
+        """Get the action with maximum estimated value from the given list of
+        actions.
+
+        state -- Environment state.
+        action_list -- Actions to be evaluated.
+        """
+        actions = filter(lambda a: a in action_list, self.actions)
+        values = [self.get_q_value(state, action) for action in actions]
+        max_value = max(values)
+        max_actions = [action
+            for action in actions if self.get_q_value(state, action) == max_value]
+
+        if len(max_actions) == 0:
+            for weight, feature in zip(self.weights, self.features):
+                print weight*feature(state, action)
+
+        return random.choice(max_actions)
+
+    def get_max_action(self, state):
+        return self._get_max_action_from_list(state, self.actions)
+
+    def get_max_q_value(self, state):
+        action = self.get_max_action(state)
+        return self.get_q_value(state, action)
+
+    def learn(self, state, action, reward):
+        if self.current_state:
+            delta = reward + self.discount_factor*self.get_max_q_value(state) - self.get_q_value(self.current_state, action)
+        else:
+            delta = reward + self.discount_factor*self.get_max_q_value(state)
+
+        self.weights = [weight + self.learning_rate*delta*feature(state, action) for weight, feature in zip(self.weights, self.features)]
+        # print 'Delta', delta
+        # print 'Weights', self.weights
+        # print 'Q-values', self.get_q_value(state, action)
+        self.current_state = state
+
+    def act(self, state, legal_actions):
         return self._get_max_action_from_list(state, legal_actions)
