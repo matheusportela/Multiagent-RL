@@ -121,10 +121,11 @@ class QLearningWithApproximationAgent(PacmanAgent):
 class BehaviorLearningAgent(PacmanAgent):
     def __init__(self):
         super(BehaviorLearningAgent, self).__init__()
+        self.features = [self.feature_ghost_distance, self.feature_food_distance]
         self.behaviors = [self.eat_food, self.flee_from_ghost, self.hunt_ghost]
         self.exploration_rate = 0.1
-        self.learning = learning.QLearning(learning_rate=0.1, discount_factor=0.9,
-            actions=self.behaviors)
+        self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
+            discount_factor=0.9, actions=self.behaviors, features=self.features)
         self.previous_behavior = self.behaviors[0]
 
     def _find_closest(self, agent_position, position_list):
@@ -140,6 +141,26 @@ class BehaviorLearningAgent(PacmanAgent):
                 closest_positions.append(position)
 
         return random.choice(closest_positions)
+
+    def _find_closest_distance(self, agent_position, position_list):
+        closest_distance = float('inf')
+
+        for position in position_list:
+            distance = math.sqrt((agent_position[0] - position[0])**2 + (agent_position[1] - position[1])**2)
+            if distance < closest_distance:
+                closest_distance = distance
+
+        return closest_distance
+
+    def feature_ghost_distance(self, state, action):
+        pacman_position = state[0]
+        ghost_positions = state[1]
+        return self._find_closest_distance(pacman_position, ghost_positions)
+
+    def feature_food_distance(self, state, action):
+        pacman_position = state[0]
+        food_positions = state[2]
+        return self._find_closest_distance(pacman_position, food_positions)
 
     def eat_food(self, state):
         pacman_position = state[0]
@@ -213,6 +234,7 @@ class BehaviorLearningAgent(PacmanAgent):
     def choose_action(self, state, action, reward, legal_actions):
         self.learning.learn(state, self.previous_behavior, reward)
         behavior = self.learning.act(state, self.behaviors)
+        self.previous_behavior = behavior
         suggested_action = behavior(state)
 
         if suggested_action in legal_actions:

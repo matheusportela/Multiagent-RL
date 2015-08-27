@@ -15,6 +15,7 @@ class CommunicatingAgent(game.Agent):
         self.index = index
         self.client = comm.Client()
         self.previous_score = 0
+        self.previous_action = 'Stop'
 
     def create_message(self, state):
         food_positions = []
@@ -34,7 +35,8 @@ class CommunicatingAgent(game.Agent):
             ghost_positions=state.getGhostPositions(),
             food_positions=food_positions,
             legal_actions=state.getLegalActions(self.index),
-            reward=reward)
+            reward=reward,
+            executed_action=self.previous_action)
 
         return message
 
@@ -52,6 +54,7 @@ class CommunicatingAgent(game.Agent):
         while message.index != self.index:
             message = self.receive_message()
 
+        self.previous_action = message.action
         return message.action
 
 
@@ -89,7 +92,7 @@ def create_display(display_type='None', zoom=1.0, frameTime=0.1):
 if __name__ == '__main__':
     layout_file = 'mediumClassic'
     num_ghosts = 4
-    num_games = 100
+    num_games = 500
     record = False
     display_type = 'None'
 

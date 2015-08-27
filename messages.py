@@ -9,7 +9,7 @@ class BaseMessage(object):
 class StateMessage(BaseMessage):
     def __init__(self, msg_type=None, index=None, pacman_position=None,
         ghost_positions=None, food_positions=None, legal_actions=None,
-        reward=None):
+        reward=None, executed_action=None):
         super(StateMessage, self).__init__(msg_type=msg_type)
         self.index = index
         self.pacman_position = pacman_position
@@ -17,6 +17,7 @@ class StateMessage(BaseMessage):
         self.food_positions = food_positions
         self.legal_actions = legal_actions
         self.reward = reward
+        self.executed_action = executed_action
 
 
 class ActionMessage(BaseMessage):

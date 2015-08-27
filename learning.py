@@ -1,5 +1,6 @@
 """Collection of reinforcement learning algorithms"""
 
+from __future__ import division
 import random
 
 
@@ -39,7 +40,7 @@ class QLearning(LearningAlgorithm):
     discounted reward for the current state.
 
     Instance variables:
-    current_state -- State in which the algorithm currently is.
+    previous_state -- State in which the algorithm currently is.
     q_values -- Storage for (state, action) pair estimated values.
     learning_rate -- Value in [0, 1] interval that determines how much of the
         new information overrides the previous value. Deterministic scenarios
@@ -62,7 +63,7 @@ class QLearning(LearningAlgorithm):
         num_actions -- Number of actions to be represented.
         """
         super(QLearning, self).__init__()
-        self.current_state = initial_state
+        self.previous_state = initial_state
         self.q_values = {}
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
@@ -84,13 +85,13 @@ class QLearning(LearningAlgorithm):
             results.append('\n')
         return ''.join(results)
 
-    def update_state(self, new_state):
+    def update_state(self, state):
         """Update Q Learning current state.
 
         Parameters:
-        new_state -- State to which the learning algorithm is going.
+        state -- State to which the learning algorithm is going.
         """
-        self.current_state = new_state
+        self.previous_state = state
 
     def initialize_unknown_state(self, state):
         """Initialize Q-values for states that were not previously seen.
@@ -162,10 +163,10 @@ class QLearning(LearningAlgorithm):
         action -- Executed action.
         reward -- Reward received after executing the action.
         """
-        old_value = self.get_q_value(self.current_state, action)
+        old_value = self.get_q_value(self.previous_state, action)
         next_expected_value = self.get_max_q_value(state)
         new_value = (old_value + self.learning_rate*(reward + self.discount_factor*next_expected_value - old_value))
-        self.set_q_value(self.current_state, action, new_value)
+        self.set_q_value(self.previous_state, action, new_value)
         self.update_state(state)
 
     def act(self, state, legal_actions):
@@ -186,13 +187,18 @@ class QLearningWithApproximation(LearningAlgorithm):
         self.features = features
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
-        self.current_state = None
-        self.weights = [random.random() for _ in range(len(features))]
+        self.previous_state = None
+        # self.weights = [random.random() for _ in range(len(features))]
+
+        self.weights = {}
+        for action in self.actions:
+            self.weights[action] = [random.random() for _ in range(len(features))]
 
     def get_q_value(self, state, action):
         q_value = 0
 
-        for weight, feature in zip(self.weights, self.features):
+        # for weight, feature in zip(self.weights, self.features):
+        for weight, feature in zip(self.weights[action], self.features):
             q_value += weight*feature(state, action)
 
         return q_value
@@ -210,10 +216,6 @@ class QLearningWithApproximation(LearningAlgorithm):
         max_actions = [action
             for action in actions if self.get_q_value(state, action) == max_value]
 
-        if len(max_actions) == 0:
-            for weight, feature in zip(self.weights, self.features):
-                print weight*feature(state, action)
-
         return random.choice(max_actions)
 
     def get_max_action(self, state):
@@ -224,16 +226,29 @@ class QLearningWithApproximation(LearningAlgorithm):
         return self.get_q_value(state, action)
 
     def learn(self, state, action, reward):
-        if self.current_state:
-            delta = reward + self.discount_factor*self.get_max_q_value(state) - self.get_q_value(self.current_state, action)
-        else:
-            delta = reward + self.discount_factor*self.get_max_q_value(state)
+        delta = reward + self.discount_factor*self.get_max_q_value(state)
 
-        self.weights = [weight + self.learning_rate*delta*feature(state, action) for weight, feature in zip(self.weights, self.features)]
-        # print 'Delta', delta
-        # print 'Weights', self.weights
-        # print 'Q-values', self.get_q_value(state, action)
-        self.current_state = state
+        if self.previous_state:
+            delta += -self.get_q_value(self.previous_state, action)
+
+        # self.weights = [weight + self.learning_rate*delta*feature(state, action) for weight, feature in zip(self.weights, self.features)]
+            self.weights[action] = [weight + self.learning_rate*delta*feature(self.previous_state, action) for weight, feature in zip(self.weights[action], self.features)]
+
+            sum_weights = 0
+            for weight in self.weights[action]:
+                sum_weights += weight
+
+            for i in range(len(self.weights[action])):
+                self.weights[action][i] /= sum_weights
+
+
+        self.previous_state = state
+
+        # print action
+        # print reward
+        # for action in self.weights:
+        #     print action, self.weights[action]
+        # print
 
     def act(self, state, legal_actions):
         return self._get_max_action_from_list(state, legal_actions)
