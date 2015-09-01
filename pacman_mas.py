@@ -56,9 +56,10 @@ class MessageRouter(object):
                 self.last_action = agent_action
 
 if __name__ == '__main__':
-    num_ghosts = 4
+    # num_ghosts = 4
+    num_ghosts = 0
     router = MessageRouter()
-    router.register_pacman_agent(agents.QLearningWithApproximationAgent())
+    router.register_pacman_agent(agents.QLearningAgent())
     for _ in range(num_ghosts):
         router.register_ghost_agent(agents.RandomGhostAgent())
     router.run()
