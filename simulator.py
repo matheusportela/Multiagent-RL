@@ -16,6 +16,7 @@ class CommunicatingAgent(game.Agent):
         self.client = comm.Client()
         self.previous_score = 0
         self.previous_action = 'Stop'
+        self.invalid_action = False
 
     def create_message(self, state):
         food_positions = []
@@ -25,7 +26,11 @@ class CommunicatingAgent(game.Agent):
                 if l:
                     food_positions.append((x, y))
 
-        reward = state.getScore() - self.previous_score
+        if self.invalid_action:
+            # Punish for invalid actions
+            reward = -100
+        else:
+            reward = state.getScore() - self.previous_score
         self.previous_score = state.getScore()
 
         message = messages.StateMessage(
@@ -34,7 +39,7 @@ class CommunicatingAgent(game.Agent):
             pacman_position=state.getPacmanPosition(),
             ghost_positions=state.getGhostPositions(),
             food_positions=food_positions,
-            legal_actions=state.getLegalActions(self.index),
+            legal_actions=['North', 'South', 'East', 'West', 'Stop'],
             reward=reward,
             executed_action=self.previous_action)
 
@@ -55,7 +60,13 @@ class CommunicatingAgent(game.Agent):
             message = self.receive_message()
 
         self.previous_action = message.action
-        return message.action
+
+        if message.action not in state.getLegalActions(self.index):
+            self.invalid_action = True
+            return 'Stop'
+        else:
+            self.invalid_action = False
+            return message.action
 
 
 class CommunicatingPacmanAgent(CommunicatingAgent):
@@ -94,7 +105,7 @@ if __name__ == '__main__':
     layout_file = 'ghostlessMediumClassic'
     # num_ghosts = 4
     num_ghosts = 0
-    num_games = 500
+    num_games = 1000
     record = False
     display_type = 'None'
 
@@ -103,5 +114,21 @@ if __name__ == '__main__':
     ghosts = create_ghosts(num_ghosts)
     display = create_display(display_type=display_type)
 
-    pacman_simulator.runGames(layout, pacman, ghosts, display, num_games, record)
-    # pacman_simulator.runGames(layout, pacman, ghosts, create_display(display_type='Graphic'), 1, record)
+    scores = []
+
+    for i in range(num_games):
+        print '\nGame #%d' % (i+1)
+        games = pacman_simulator.runGames(layout, pacman, ghosts, display, 1, record)
+        # games = pacman_simulator.runGames(layout, pacman, ghosts, create_display(display_type='Graphic'), 1, record)
+
+        # Do this so as Pacman can receive the last reward
+        pacman.getAction(games[0].state)
+
+        scores.append(games[0].state.getScore())
+
+    print scores
+
+    import matplotlib.pylab as plt
+
+    plt.scatter(range(len(scores)), scores)
+    plt.show()

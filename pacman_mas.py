@@ -32,8 +32,32 @@ class MessageRouter(object):
     def send_message(self, message):
         self.server.send(message)
 
+    def generate_agent_state(self, state):
+        # agent_state = tuple([state.pacman_position] + [tuple([pos for pos in state.ghost_positions])] + [tuple(state.food_positions)])
+        # agent_state = tuple([state.pacman_position])
+
+        # Food state indicates whether there is food in places relative to the
+        # agent position.
+        # Example:
+        # Agent position = (3, 3)
+        # Food position = (4, 4)
+        # positions = [(0, 0), (0, 1), (1, 0), (1, 1), (0, -1), (-1, 0), (-1, -1)]
+        # food_state = [False, False, False, True, False, False, False]
+        positions = [(i, j) for i in range(-20, 20) for j in range(-20, 20)]
+        food_state = [False] * len(positions)
+
+        for food_position in state.food_positions:
+            diff = (food_position[0] - state.pacman_position[0], food_position[1] - state.pacman_position[1])
+
+            for i, position in enumerate(positions):
+                if diff == position:
+                    food_state[i] = True
+
+        agent_state = tuple([state.pacman_position] + food_state)
+        return agent_state
+
     def choose_action(self, state):
-        agent_state = tuple([state.pacman_position] + [tuple([pos for pos in state.ghost_positions])] + [tuple(state.food_positions)])
+        agent_state = self.generate_agent_state(self, state)
 
         if state.index == 0:
             agent_action = self.pacman_agent.choose_action(agent_state, state.executed_action, state.reward, state.legal_actions)
