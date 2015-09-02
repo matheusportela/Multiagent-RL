@@ -41,19 +41,29 @@ class MessageRouter(object):
         # Example:
         # Agent position = (3, 3)
         # Food position = (4, 4)
-        # positions = [(0, 0), (0, 1), (1, 0), (1, 1), (0, -1), (-1, 0), (-1, -1)]
+        # food_positions = [(0, 0), (0, 1), (1, 0), (1, 1), (0, -1), (-1, 0), (-1, -1)]
         # food_state = [False, False, False, True, False, False, False]
-        positions = [(i, j) for i in range(-20, 20) for j in range(-20, 20)]
-        food_state = [False] * len(positions)
+        food_positions = [(i, j) for i in range(-20, 20) for j in range(-20, 20)]
+        food_state = [False] * len(food_positions)
 
         for food_position in state.food_positions:
             diff = (food_position[0] - state.pacman_position[0], food_position[1] - state.pacman_position[1])
 
-            for i, position in enumerate(positions):
+            for i, position in enumerate(food_positions):
                 if diff == position:
                     food_state[i] = True
 
-        agent_state = tuple([state.pacman_position] + food_state)
+        ghost_positions = [(i, j) for i in range(-20, 20) for j in range(-20, 20)]
+        ghost_state = [False] * len(ghost_positions)
+
+        for ghost_position in state.ghost_positions:
+            diff = (ghost_position[0] - state.pacman_position[0], ghost_position[1] - state.pacman_position[1])
+
+            for i, position in enumerate(ghost_positions):
+                if diff == position:
+                    ghost_state[i] = True
+
+        agent_state = tuple([state.pacman_position] + ghost_state + food_state)
         return agent_state
 
     def choose_action(self, state):
@@ -80,8 +90,7 @@ class MessageRouter(object):
                 self.last_action = agent_action
 
 if __name__ == '__main__':
-    # num_ghosts = 4
-    num_ghosts = 0
+    num_ghosts = 1
     router = MessageRouter()
     router.register_pacman_agent(agents.QLearningAgent())
     for _ in range(num_ghosts):
