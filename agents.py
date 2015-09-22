@@ -122,116 +122,71 @@ class BehaviorLearningAgent(PacmanAgent):
     def __init__(self):
         super(BehaviorLearningAgent, self).__init__()
         self.features = [self.feature_ghost_distance, self.feature_food_distance]
-        self.behaviors = [self.eat_food, self.flee_from_ghost, self.hunt_ghost]
+        self.behaviors = [self.eat_food, self.flee_from_ghost, self.random]
         self.exploration_rate = 0.1
         self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
             discount_factor=0.9, actions=self.behaviors, features=self.features)
         self.previous_behavior = self.behaviors[0]
 
-    def _find_closest(self, agent_position, position_list):
-        closest_positions = []
-        closest_distance = float('inf')
-
-        for position in position_list:
-            distance = math.sqrt((agent_position[0] - position[0])**2 + (agent_position[1] - position[1])**2)
-            if distance < closest_distance:
-                closest_distance = distance
-                closest_positions = [position]
-            elif distance == closest_distance:
-                closest_positions.append(position)
-
-        return random.choice(closest_positions)
-
-    def _find_closest_distance(self, agent_position, position_list):
-        closest_distance = float('inf')
-
-        for position in position_list:
-            distance = math.sqrt((agent_position[0] - position[0])**2 + (agent_position[1] - position[1])**2)
-            if distance < closest_distance:
-                closest_distance = distance
-
-        return closest_distance
-
     def feature_ghost_distance(self, state, action):
-        pacman_position = state[0]
-        ghost_positions = state[1]
-        return self._find_closest_distance(pacman_position, ghost_positions)
+        pacman_position = state.get_pacman_position()
+        ghost_position = state.get_ghost_position()
+        return math.sqrt((pacman_position[0] - ghost_position[0])**2 + (pacman_position[1] - ghost_position[1])**2)
 
     def feature_food_distance(self, state, action):
-        pacman_position = state[0]
-        food_positions = state[2]
-        return self._find_closest_distance(pacman_position, food_positions)
+        food_distance = state.get_food_distance()
+        return food_distance
+
+    def random(self, state):
+        if self.legal_actions == []:
+            return 'Stop'
+        else:
+            return random.choice(self.legal_actions)
 
     def eat_food(self, state):
-        pacman_position = state[0]
-        food_positions = state[2]
+        pacman_position = state.get_pacman_position()
+        pacman_map = state.agent_maps['pacman']
+        food_map = state.food_map
+        food_prob_threshold = food_map.max() / 2.0
+        best_action = None
+        min_dist = None
 
-        closest_food_position = self._find_closest(pacman_position, food_positions)
+        for action in self.legal_actions:
+            diff = pacman_map.action_to_pos[action]
+            new_position = (pacman_position[0] + diff[0], pacman_position[1] + diff[1])
 
-        diff = (closest_food_position[0] - pacman_position[0],
-                closest_food_position[1] - pacman_position[1])
-        angle = math.atan2(diff[1], diff[0])
+            for x in range(food_map.width):
+                for y in range(food_map.height):
+                    new_distance = math.sqrt((new_position[0] - x)**2 + (new_position[1] - y)**2)
 
-        if -math.pi/4.0 <= angle < math.pi/4.0:
-            action = 'East'
-        elif math.pi/4.0 <= angle < 3*math.pi/4.0:
-            action = 'North'
-        elif 3*math.pi/4.0 <= angle < math.pi or -math.pi <= angle < -3*math.pi/4.0:
-            action = 'West'
-        elif -3*math.pi/4.0 <= angle < math.pi/4.0:
-            action = 'South'
-        else:
-            action = 'Stop'
+                    if (best_action == None) or (food_map[y][x] > food_prob_threshold and new_distance < min_dist):
+                        min_dist = new_distance
+                        best_action = action
 
-        return action
+        return best_action
 
     def flee_from_ghost(self, state):
-        pacman_position = state[0]
-        ghost_positions = state[1]
+        pacman_position = state.get_pacman_position()
+        ghost_position = state.get_ghost_position()
+        pacman_map = state.agent_maps['pacman']
 
-        closest_ghost_position = self._find_closest(pacman_position, ghost_positions)
+        best_action = None
+        max_distance = None
 
-        diff = (closest_ghost_position[0] - pacman_position[0],
-                closest_ghost_position[1] - pacman_position[1])
-        angle = math.atan2(diff[1], diff[0])
+        for action in self.legal_actions:
+            diff = pacman_map.action_to_pos[action]
+            new_position = (pacman_position[0] + diff[0], pacman_position[1] + diff[1])
+            new_distance = math.sqrt((new_position[0] - ghost_position[0])**2 + (new_position[1] - ghost_position[1])**2)
 
-        if -math.pi/4.0 <= angle < math.pi/4.0:
-            action = 'West'
-        elif math.pi/4.0 <= angle < 3*math.pi/4.0:
-            action = 'South'
-        elif 3*math.pi/4.0 <= angle < math.pi or -math.pi <= angle < -3*math.pi/4.0:
-            action = 'East'
-        elif -3*math.pi/4.0 <= angle < math.pi/4.0:
-            action = 'North'
-        else:
-            action = 'Stop'
+            if (best_action == None) or (pacman_map._is_valid_position(new_position) and
+                new_distance > max_distance):
+                best_action = action
+                max_distance = new_distance
 
-        return action
-
-    def hunt_ghost(self, state):
-        pacman_position = state[0]
-        ghost_positions = state[1]
-
-        closest_ghost_position = self._find_closest(pacman_position, ghost_positions)
-
-        diff = (closest_ghost_position[0] - pacman_position[0],
-                closest_ghost_position[1] - pacman_position[1])
-        angle = math.atan2(diff[1], diff[0])
-
-        if -math.pi/4.0 <= angle < math.pi/4.0:
-            action = 'East'
-        elif math.pi/4.0 <= angle < 3*math.pi/4.0:
-            action = 'North'
-        elif 3*math.pi/4.0 <= angle < math.pi or -math.pi <= angle < -3*math.pi/4.0:
-            action = 'West'
-        elif -3*math.pi/4.0 <= angle < math.pi/4.0:
-            action = 'South'
-        else:
-            action = 'Stop'
-
-        return action
+        return best_action
 
     def choose_action(self, state, action, reward, legal_actions):
+        self.legal_actions = legal_actions
         self.learning.learn(state, self.previous_behavior, reward)
         behavior = self.learning.act(state, self.behaviors)
         self.previous_behavior = behavior
@@ -239,5 +194,7 @@ class BehaviorLearningAgent(PacmanAgent):
 
         if suggested_action in legal_actions:
             return suggested_action
+        elif legal_actions == []:
+            return 'Stop'
         else:
             return random.choice(legal_actions)

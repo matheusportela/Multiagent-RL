@@ -5,6 +5,7 @@ import communication as comm
 import pickle
 import agents
 import messages
+import state
 
 
 class MessageRouter(object):
@@ -12,6 +13,7 @@ class MessageRouter(object):
         self.pacman_agent = None
         self.ghost_agents = []
         self.server = comm.Server()
+        self.game_state = state.GameState(20, 11, [])
 
     def register_pacman_agent(self, agent):
         self.pacman_agent = agent
@@ -43,36 +45,33 @@ class MessageRouter(object):
         # Food position = (4, 4)
         # food_positions = [(0, 0), (0, 1), (1, 0), (1, 1), (0, -1), (-1, 0), (-1, -1)]
         # food_state = [False, False, False, True, False, False, False]
-        food_positions = [(i, j) for i in range(-20, 20) for j in range(-20, 20)]
-        food_state = [False] * len(food_positions)
 
-        for food_position in state.food_positions:
-            diff = (food_position[0] - state.pacman_position[0], food_position[1] - state.pacman_position[1])
+        # food_positions = [(i, j) for i in range(-20, 20) for j in range(-20, 20)]
+        # food_state = [False] * len(food_positions)
 
-            for i, position in enumerate(food_positions):
-                if diff == position:
-                    food_state[i] = True
+        # for food_position in state.food_positions:
+        #     diff = (food_position[0] - state.pacman_position[0], food_position[1] - state.pacman_position[1])
 
-        ghost_positions = [(i, j) for i in range(-20, 20) for j in range(-20, 20)]
-        ghost_state = [False] * len(ghost_positions)
+        #     for i, position in enumerate(food_positions):
+        #         if diff == position:
+        #             food_state[i] = True
 
-        for ghost_position in state.ghost_positions:
-            diff = (ghost_position[0] - state.pacman_position[0], ghost_position[1] - state.pacman_position[1])
+        self.game_state.observe_pacman(state.pacman_position)
+        self.game_state.observe_ghost(state.ghost_positions[0])
 
-            for i, position in enumerate(ghost_positions):
-                if diff == position:
-                    ghost_state[i] = True
-
-        agent_state = tuple([state.pacman_position] + ghost_state + food_state)
-        return agent_state
+        # agent_state = tuple([self.game_state.get_pacman_position(), self.game_state.get_ghost_position(), self.game_state.get_food_distance()])
+        # return agent_state
+        return self.game_state
 
     def choose_action(self, state):
         agent_state = self.generate_agent_state(state)
 
         if state.index == 0:
             agent_action = self.pacman_agent.choose_action(agent_state, state.executed_action, state.reward, state.legal_actions)
+            self.game_state.predict_pacman(agent_action)
         else:
             agent_action = self.ghost_agents[state.index - 1].choose_action(state.legal_actions)
+            self.game_state.predict_ghost(agent_action)
 
         return agent_action
 
@@ -83,16 +82,26 @@ class MessageRouter(object):
             received_message = self.receive_message()
 
             if received_message.msg_type == messages.STATE:
+                self.game_state.set_walls(received_message.wall_positions)
+                self.game_state.set_food_positions(received_message.food_positions)
+
                 agent_action = self.choose_action(received_message)
                 reply_message = self.create_action_message(received_message.index, agent_action)
                 self.send_message(reply_message)
 
                 self.last_action = agent_action
+            elif received_message.msg_type == messages.INIT:
+                self.game_state = state.GameState(20, 11, [])
+                message = pickle.dumps(messages.InitMessage(msg_type=messages.INIT))
+                self.send_message(message)
+                # print self.game_state.food_map
+                # print self.game_state.get_ghost_distance()
+                # print self.game_state.get_food_distance()
 
 if __name__ == '__main__':
     num_ghosts = 1
     router = MessageRouter()
-    router.register_pacman_agent(agents.QLearningAgent())
+    router.register_pacman_agent(agents.BehaviorLearningAgent())
     for _ in range(num_ghosts):
         router.register_ghost_agent(agents.RandomGhostAgent())
     router.run()

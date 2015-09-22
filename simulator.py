@@ -19,14 +19,25 @@ class CommunicatingAgent(game.Agent):
         self.previous_action = 'Stop'
         self.invalid_action = False
         self.actions = []
+        self.init = True
 
     def create_message(self, state):
+        pacman_position = state.getPacmanPosition()[::-1]
+        ghost_positions = [g[::-1] for g in state.getGhostPositions()]
+
         food_positions = []
 
         for x, k in enumerate(state.getFood()):
             for y, l in enumerate(k):
                 if l:
-                    food_positions.append((x, y))
+                    food_positions.append((y, x))
+
+        wall_positions = []
+
+        for x, k in enumerate(state.getWalls()):
+            for y, l in enumerate(k):
+                if l:
+                    wall_positions.append((y, x))
 
         if self.invalid_action:
             # Punish for invalid actions
@@ -36,12 +47,14 @@ class CommunicatingAgent(game.Agent):
         self.previous_score = state.getScore()
 
         message = messages.StateMessage(
-            msg_type = messages.STATE,
+            msg_type=messages.STATE,
             index=self.index,
-            pacman_position=state.getPacmanPosition(),
-            ghost_positions=state.getGhostPositions(),
+            pacman_position=pacman_position,
+            ghost_positions=ghost_positions,
             food_positions=food_positions,
-            legal_actions=self.actions,
+            wall_positions=wall_positions,
+            # legal_actions=self.actions,
+            legal_actions=state.getLegalActions(self.index),
             reward=reward,
             executed_action=self.previous_action)
 
@@ -57,6 +70,12 @@ class CommunicatingAgent(game.Agent):
         raise NotImplementedError
 
     def getAction(self, state):
+        if self.init and self.index == 0:
+            self.init = False
+            message = messages.InitMessage(msg_type=messages.INIT)
+            self.send_message(message)
+            self.receive_message()
+
         message = self.create_message(state)
         self.send_message(message)
 
@@ -124,13 +143,11 @@ if __name__ == '__main__':
     # layout_file = 'ghostlessMediumClassic'
     layout_file = 'oneGhostMediumClassic'
     num_ghosts = 1
-    num_games = 1000
+    num_games = 100
     record = False
     display_type = 'None'
 
     layout = create_layout(layout_file)
-    pacman = create_pacman()
-    ghosts = create_ghosts(num_ghosts)
     display = create_display(display_type=display_type)
 
     scores = []
@@ -138,8 +155,10 @@ if __name__ == '__main__':
 
     for i in range(num_games):
         print '\nGame #%d' % (i+1)
-        # games = pacman_simulator.runGames(layout, pacman, ghosts, display, 1, record)
-        games = pacman_simulator.runGames(layout, pacman, ghosts, create_display(display_type='Graphic'), 1, record)
+        pacman = create_pacman()
+        ghosts = create_ghosts(num_ghosts)
+        games = pacman_simulator.runGames(layout, pacman, ghosts, display, 1, record)
+        # games = pacman_simulator.runGames(layout, pacman, ghosts, create_display(display_type='Graphic'), 1, record)
 
         # Do this so as Pacman can receive the last reward
         msg = pacman.create_message(games[0].state)
@@ -150,12 +169,12 @@ if __name__ == '__main__':
         num_steps.append(len(games[0].moveHistory))
 
     print scores
-    # print num_steps
+    print num_steps
 
     import matplotlib.pylab as plt
 
     plt.scatter(range(len(scores)), scores)
     plt.show()
 
-    # plt.scatter(range(len(num_steps)), num_steps)
-    # plt.show()
+    plt.scatter(range(len(num_steps)), num_steps)
+    plt.show()
