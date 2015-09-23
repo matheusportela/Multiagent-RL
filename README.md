@@ -15,13 +15,15 @@ provides an arena mimicking the complete Pac-Man game, including various ghosts.
 
 The project requires the following Python packages:
 
-* *Tkinter*: graphics plotting
+* *Tkinter*: graphical user interfaces
 * *ZeroMQ*: interprocess communication
+* *Matplotlib*: graphics plotting
+* *Numpy*: numerical computation
 
 Install by running the following commands.
 
 ```
-sudo apt-get install python python-pip python-tk libzmq-dev
+sudo apt-get install python python-pip python-tk libzmq-dev python-matplotlib
 sudo pip install pyzmq
 ```
 
