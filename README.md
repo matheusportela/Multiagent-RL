@@ -13,10 +13,41 @@ The Pac-Man AI Projects, by UC Berkeley, provides six Pac-Man-like simulators th
 purposes. The one we will be using is [Project 5: Classification](http://ai.berkeley.edu/classification.html), which
 provides an arena mimicking the complete Pac-Man game, including various ghosts.
 
-Start by installing Python 2.7 and its Tkinter package. In Ubuntu/Debian, this can be achieved by running the following
-command:
+The project requires the following Python packages:
 
-`sudo apt-get install python python-tk`
+* *Tkinter*: graphics plotting
+* *ZeroMQ*: interprocess communication
+
+Install by running the following commands.
+
+```
+sudo apt-get install python python-pip python-tk libzmq-dev
+sudo pip install pyzmq
+```
+
+## Usage
+
+In order to run the system, two parts are necessary: one process that implements agents intelligence, in our case `pacman_mas.py`
+and another that provides an interface to the real agents. Since we are using the Pacman simulator, we interface it in the module
+`simulator.py`.
+
+Hence, run the system my executing the following commands in two different terminals:
+
+```
+python pacman_mas.py
+```
+
+and
+
+```
+python simulator.py
+```
+
+## Extras
+### Simulator standalone installation
+
+This project already includes the simulator adapter to our purposes. However, you might want to give a look at the
+original simulator by yourself.
 
 Start installing by downloading the `.zip` file located [here](http://ai.berkeley.edu/classification.html). Not all
 files are necessary for our purposes since most of them are evaluation features. A stripped-down version of the
@@ -35,7 +66,6 @@ the list of files that must be maintained, the others can be safely discarded.
 * `util.py`
 * `textDisplay.py`
 
-## Usage
 Simply run the simulator with the following command:
 
 `python pacman.py`
