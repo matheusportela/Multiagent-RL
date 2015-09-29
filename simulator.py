@@ -8,6 +8,7 @@ import communication as comm
 import messages
 import pickle
 import random
+import argparse
 
 
 class CommunicatingAgent(game.Agent):
@@ -146,12 +147,20 @@ def create_display(display_type='None', zoom=1.0, frameTime=0.1):
     return display
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Run Pacman simulations.')
+    parser.add_argument('-l', dest='learn', type=int, default=100,
+                       help='number of games to learn from')
+    parser.add_argument('-t', dest='test', type=int, default=100,
+                       help='number of games to test learned policy')
+
+    args = parser.parse_args()
+
     # layout_file = 'mediumClassic'
     # layout_file = 'ghostlessMediumClassic'
     layout_file = 'oneGhostMediumClassic'
     num_ghosts = 1
-    learn_games = 10
-    test_games = 10
+    learn_games = args.learn
+    test_games = args.test
     record = False
     display_type = 'None'
 
@@ -182,9 +191,9 @@ if __name__ == '__main__':
         message = pacman.receive_message()
 
         if i >= learn_games:
-            learn_scores.append(games[0].state.getScore())
-        else:
             test_scores.append(games[0].state.getScore())
+        else:
+            learn_scores.append(games[0].state.getScore())
 
     print learn_scores
     print test_scores
