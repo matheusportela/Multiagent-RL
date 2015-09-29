@@ -169,16 +169,7 @@ if __name__ == '__main__':
         num_steps.append(len(games[0].moveHistory))
 
     print scores
-    print num_steps
-
-    import matplotlib.pylab as plt
 
     with open('scores.txt', 'w') as output:
         for score in scores:
             output.write(str(score) + '\n')
-
-    plt.scatter(range(len(scores)), scores)
-    plt.show()
-
-    plt.scatter(range(len(num_steps)), num_steps)
-    plt.show()
