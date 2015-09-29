@@ -125,7 +125,8 @@ class BehaviorLearningAgent(PacmanAgent):
         self.behaviors = [self.eat_food, self.flee_from_ghost, self.random]
         self.exploration_rate = 0.1
         self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
-            discount_factor=0.9, actions=self.behaviors, features=self.features)
+            discount_factor=0.9, actions=self.behaviors, features=self.features,
+            exploration_rate=self.exploration_rate)
         self.previous_behavior = self.behaviors[0]
 
     def calculate_manhattan_distance(self, point1, point2):
@@ -188,7 +189,12 @@ class BehaviorLearningAgent(PacmanAgent):
 
         return best_action
 
-    def choose_action(self, state, action, reward, legal_actions):
+    def choose_action(self, state, action, reward, legal_actions, explore):
+        if explore:
+            self.enable_exploration()
+        else:
+            self.disable_exploration()
+
         self.legal_actions = legal_actions
         self.learning.learn(state, self.previous_behavior, reward)
         behavior = self.learning.act(state, self.behaviors)
@@ -201,3 +207,9 @@ class BehaviorLearningAgent(PacmanAgent):
             return 'Stop'
         else:
             return random.choice(legal_actions)
+
+    def enable_exploration(self):
+        self.learning.exploration_rate = self.exploration_rate
+
+    def disable_exploration(self):
+        self.learning.exploration_rate = 0

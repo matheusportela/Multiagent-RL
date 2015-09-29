@@ -1,11 +1,17 @@
 import matplotlib.pylab as plt
 
 if __name__ == '__main__':
-    scores = []
+    learn_scores = []
+    test_scores = []
 
-    with open('scores.txt') as f:
+    with open('learn_scores.txt') as f:
         for line in f:
-            scores.append(float(line))
+            learn_scores.append(float(line))
 
-    plt.scatter(range(len(scores)), scores)
+    with open('test_scores.txt') as f:
+        for line in f:
+            test_scores.append(float(line))
+
+    plt.scatter(range(len(learn_scores)), learn_scores, c='b')
+    plt.scatter(range(len(learn_scores), len(learn_scores) + len(test_scores)), test_scores, c='g')
     plt.show()

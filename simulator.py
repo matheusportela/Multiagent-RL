@@ -20,6 +20,13 @@ class CommunicatingAgent(game.Agent):
         self.invalid_action = False
         self.actions = []
         self.init = True
+        self.explore = True
+
+    def enable_explore(self):
+        self.explore = True
+
+    def disable_explore(self):
+        self.explore = False
 
     def create_message(self, state):
         pacman_position = state.getPacmanPosition()[::-1]
@@ -53,10 +60,10 @@ class CommunicatingAgent(game.Agent):
             ghost_positions=ghost_positions,
             food_positions=food_positions,
             wall_positions=wall_positions,
-            # legal_actions=self.actions,
             legal_actions=state.getLegalActions(self.index),
             reward=reward,
-            executed_action=self.previous_action)
+            executed_action=self.previous_action,
+            explore=self.explore)
 
         return message
 
@@ -143,20 +150,29 @@ if __name__ == '__main__':
     # layout_file = 'ghostlessMediumClassic'
     layout_file = 'oneGhostMediumClassic'
     num_ghosts = 1
-    num_games = 10
+    learn_games = 10
+    test_games = 10
     record = False
     display_type = 'None'
 
     layout = create_layout(layout_file)
     display = create_display(display_type=display_type)
 
-    scores = []
-    num_steps = []
+    learn_scores = []
+    test_scores = []
 
-    for i in range(num_games):
+    for i in range(learn_games + test_games):
         print '\nGame #%d' % (i+1)
+
         pacman = create_pacman()
         ghosts = create_ghosts(num_ghosts)
+
+        if i >= learn_games:
+            pacman.enable_explore()
+
+            for ghost in ghosts:
+                ghost.enable_explore()
+
         games = pacman_simulator.runGames(layout, pacman, ghosts, display, 1, record)
         # games = pacman_simulator.runGames(layout, pacman, ghosts, create_display(display_type='Graphic'), 1, record)
 
@@ -165,11 +181,18 @@ if __name__ == '__main__':
         pacman.send_message(msg)
         message = pacman.receive_message()
 
-        scores.append(games[0].state.getScore())
-        num_steps.append(len(games[0].moveHistory))
+        if i >= learn_games:
+            learn_scores.append(games[0].state.getScore())
+        else:
+            test_scores.append(games[0].state.getScore())
 
-    print scores
+    print learn_scores
+    print test_scores
 
-    with open('scores.txt', 'w') as output:
-        for score in scores:
+    with open('learn_scores.txt', 'w') as output:
+        for score in learn_scores:
+            output.write(str(score) + '\n')
+
+    with open('test_scores.txt', 'w') as output:
+        for score in test_scores:
             output.write(str(score) + '\n')

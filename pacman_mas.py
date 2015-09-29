@@ -67,7 +67,7 @@ class MessageRouter(object):
         agent_state = self.generate_agent_state(state)
 
         if state.index == 0:
-            agent_action = self.pacman_agent.choose_action(agent_state, state.executed_action, state.reward, state.legal_actions)
+            agent_action = self.pacman_agent.choose_action(agent_state, state.executed_action, state.reward, state.legal_actions, state.explore)
             self.game_state.predict_pacman(agent_action)
         else:
             agent_action = self.ghost_agents[state.index - 1].choose_action(state.legal_actions)

@@ -181,13 +181,14 @@ class QLearning(LearningAlgorithm):
 
 class QLearningWithApproximation(LearningAlgorithm):
     def __init__(self, actions=None, features=None, learning_rate=1,
-        discount_factor=1):
+        discount_factor=1, exploration_rate=0):
         super(QLearningWithApproximation, self).__init__()
         self.actions = actions
         self.features = features
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.previous_state = None
+        self.exploration_rate = exploration_rate
         # self.weights = [random.random() for _ in range(len(features))]
 
         self.weights = {}
@@ -250,5 +251,16 @@ class QLearningWithApproximation(LearningAlgorithm):
         #     print action, self.weights[action]
         # print
 
-    def act(self, state, legal_actions):
+    def _explore(self, state, legal_actions):
         return self._get_max_action_from_list(state, legal_actions)
+
+    def _exploit(self, state, legal_actions):
+        return random.choice(legal_actions)
+
+    def act(self, state, legal_actions):
+        p = random.random()
+
+        if p < self.exploration_rate:
+            return self._explore(state, legal_actions)
+        else:
+            return self._exploit(state, legal_actions)
