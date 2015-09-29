@@ -220,15 +220,18 @@ class GameState(object):
             for y in range(self.height):
                 self.food_map[y][x] = self.food_map[y][x] * (1 - self.agent_maps['pacman'][y][x])
 
+    def calculate_manhattan_distance(self, point1, point2):
+        return (abs(point1[0] - point2[0]) + abs(point1[1] - point2[1]))
+
     def get_food_distance(self):
-        pacman_y, pacman_x = self.get_pacman_position()
+        pacman_position = self.get_pacman_position()
         food_prob_threshold = self.food_map.max() / 2.0
         min_dist = float('inf')
 
         for x in range(self.width):
             for y in range(self.height):
                 if self.food_map[y][x] > food_prob_threshold:
-                    dist = math.sqrt((pacman_x - x)**2 + (pacman_y - y)**2)
+                    dist = self.calculate_manhattan_distance(pacman_position, (y, x))
 
                     if dist < min_dist:
                         min_dist = dist
@@ -236,9 +239,9 @@ class GameState(object):
         return min_dist
 
     def get_ghost_distance(self):
-        pacman_y, pacman_x = self.get_pacman_position()
-        ghost_y, ghost_x = self.get_ghost_position()
-        return math.sqrt((pacman_x - ghost_x)**2 + (pacman_y - ghost_y)**2)
+        pacman_position = self.get_pacman_position()
+        ghost_position = self.get_ghost_position()
+        return self.calculate_manhattan_distance(pacman_position, ghost_position)
 
 
 if __name__ == '__main__':

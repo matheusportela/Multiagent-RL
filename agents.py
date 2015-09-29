@@ -128,10 +128,13 @@ class BehaviorLearningAgent(PacmanAgent):
             discount_factor=0.9, actions=self.behaviors, features=self.features)
         self.previous_behavior = self.behaviors[0]
 
+    def calculate_manhattan_distance(self, point1, point2):
+        return(abs(point1[0] - point2[0]) + abs(point1[1] - point2[1]))
+
     def feature_ghost_distance(self, state, action):
         pacman_position = state.get_pacman_position()
         ghost_position = state.get_ghost_position()
-        return math.sqrt((pacman_position[0] - ghost_position[0])**2 + (pacman_position[1] - ghost_position[1])**2)
+        return self.calculate_manhattan_distance(pacman_position, ghost_position)
 
     def feature_food_distance(self, state, action):
         food_distance = state.get_food_distance()
@@ -157,7 +160,7 @@ class BehaviorLearningAgent(PacmanAgent):
 
             for x in range(food_map.width):
                 for y in range(food_map.height):
-                    new_distance = math.sqrt((new_position[0] - x)**2 + (new_position[1] - y)**2)
+                    new_distance = self.calculate_manhattan_distance(new_position, (y, x))
 
                     if (best_action == None) or (food_map[y][x] > food_prob_threshold and new_distance < min_dist):
                         min_dist = new_distance
@@ -176,7 +179,7 @@ class BehaviorLearningAgent(PacmanAgent):
         for action in self.legal_actions:
             diff = pacman_map.action_to_pos[action]
             new_position = (pacman_position[0] + diff[0], pacman_position[1] + diff[1])
-            new_distance = math.sqrt((new_position[0] - ghost_position[0])**2 + (new_position[1] - ghost_position[1])**2)
+            new_distance = self.calculate_manhattan_distance(new_position, ghost_position)
 
             if (best_action == None) or (pacman_map._is_valid_position(new_position) and
                 new_distance > max_distance):
