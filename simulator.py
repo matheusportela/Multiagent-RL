@@ -143,7 +143,7 @@ if __name__ == '__main__':
     # layout_file = 'ghostlessMediumClassic'
     layout_file = 'oneGhostMediumClassic'
     num_ghosts = 1
-    num_games = 100
+    num_games = 10
     record = False
     display_type = 'None'
 
@@ -172,6 +172,10 @@ if __name__ == '__main__':
     print num_steps
 
     import matplotlib.pylab as plt
+
+    with open('scores.txt', 'w') as output:
+        for score in scores:
+            output.write(str(score) + '\n')
 
     plt.scatter(range(len(scores)), scores)
     plt.show()
