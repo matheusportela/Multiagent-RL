@@ -17,10 +17,10 @@ class Map(object):
             'West': (0, -1),
             'Stop': (0, 0),
         }
-        self._walls = walls
+        self.paths = None
+        self.walls = walls
         self.cells = self.generate_cells()
         self.normalize()
-        self.paths = None
 
     @property
     def walls(self):
@@ -191,7 +191,10 @@ class Map(object):
             self._calculate_all_paths()
 
         if self._is_valid_position(pos1) and self._is_valid_position(pos2):
-            return len(self.paths[pos1][pos2])
+            if pos1 == pos2:
+                return 0
+            else:
+                return len(self.paths[pos1][pos2])
         else:
             return float('inf')
 
@@ -330,63 +333,13 @@ if __name__ == '__main__':
         'Stop': (0, 0),
     }
 
-    def generate_next_pos(pos):
-        next_pos = {}
-
-        for action, delta in action_to_pos.items():
-            candidate_pos = (pos[0] + delta[0], pos[1] + delta[1])
-
-            if (candidate_pos not in walls
-                and (candidate_pos[0] >= 0 and candidate_pos[0] < game_map.height and
-                     candidate_pos[1] >= 0 and candidate_pos[1] < game_map.width)):
-                next_pos[candidate_pos] = action
-
-        return next_pos
-
-    def calculate_paths(pos, max_distance=None):
-        pos_to_path = {}
-        current_pos = [pos]
-        analyzed_pos = []
-
-        while current_pos:
-            p = current_pos.pop(0)
-            analyzed_pos.append(p)
-
-            if p in pos_to_path:
-                path = pos_to_path[p]
-            else:
-                path = []
-
-            next_pos = []
-            for next_p, action in generate_next_pos(p).items():
-                if next_p not in analyzed_pos:
-                    next_pos.append(next_p)
-
-                    if not max_distance or len(path) + 1 <= max_distance:
-                        pos_to_path[next_p] = path + [action]
-            current_pos.extend(next_pos)
-
-        return pos_to_path
-
-    def calculate_all_paths(max_distance=None):
-        paths = {}
-
-        for y in range(game_map.height):
-            for x in range(game_map.width):
-                pos = (y, x)
-                if pos not in walls:
-                    paths[pos] = calculate_paths(pos, max_distance=max_distance)
-
-        return paths
-
-    def calculate_distance(paths, pos1, pos2):
-        return len(paths[pos1][pos2])
-
     initial_pos = (1, 0)
     final_pos = (1, 2)
 
     print game_map
-    paths = calculate_all_paths()
-    for pos1 in paths:
-        for pos2 in paths[pos1]:
-            print pos1, '->', pos2, calculate_distance(paths, pos1, pos2)
+    positions = [(y, x) for y in range(game_map.height) for x in range(game_map.width)]
+    for pos1 in positions:
+        for pos2 in positions:
+            print pos1, '->', pos2, game_map.calculate_distance(pos1, pos2)
+
+    print game_map.calculate_distance((1, 0), (1, 0))
