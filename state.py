@@ -17,9 +17,19 @@ class Map(object):
             'West': (0, -1),
             'Stop': (0, 0),
         }
-        self.walls = walls
+        self._walls = walls
         self.cells = self.generate_cells()
         self.normalize()
+        self.paths = None
+
+    @property
+    def walls(self):
+        return self._walls
+
+    @walls.setter
+    def walls(self, walls):
+        self._walls = walls
+        self._calculate_all_paths()
 
     def __getitem__(self, i):
         return self.cells[i]
@@ -52,7 +62,7 @@ class Map(object):
         return (0 <= pos[0] < self.height and 0 <= pos[1] < self.width)
 
     def _is_wall(self, pos):
-        return (pos in self.walls)
+        return (pos in self._walls)
 
     def _is_valid_position(self, pos):
         return (self._is_inbound(pos) and not self._is_wall(pos))
@@ -101,16 +111,16 @@ class Map(object):
 
         return max_position
 
-    def observe(self, pos, prob_dist_fn, *params):
+    def observe(self, pos, measurement_prob_dist_fn, *params):
         for x in range(self.width):
             for y in range(self.height):
                 old_probability = self[y][x]
-                new_probability = prob_dist_fn((y, x), pos, *params) * old_probability
+                new_probability = measurement_prob_dist_fn((y, x), pos, *params) * old_probability
                 self[y][x] = new_probability
 
         self.normalize()
 
-    def predict(self, action, prob_dist_fn, *params):
+    def predict(self, action, action_prob_dist_fn, *params):
         cells = self.generate_cells()
 
         for x in range(self.width):
@@ -122,25 +132,81 @@ class Map(object):
                     next_x = x + self.action_to_pos[possible_action][1]
 
                     if self._is_valid_position((next_y, next_x)):
-                        action_probability = prob_dist_fn(action, possible_action, *params)
+                        action_probability = action_prob_dist_fn(action, possible_action, *params)
                         new_probability = action_probability * old_probability
                         cells[next_y][next_x] += new_probability
 
         self.cells = cells
         self.normalize()
 
+    def _generate_next_pos(self, pos):
+        next_pos = {}
 
-def deterministic_distribution(pos1, pos2):
-    if pos1 == pos2:
+        for action, delta in self.action_to_pos.items():
+            candidate_pos = (pos[0] + delta[0], pos[1] + delta[1])
+
+            if self._is_valid_position(candidate_pos):
+                next_pos[candidate_pos] = action
+
+        return next_pos
+
+    def _calculate_paths(self, pos, max_distance=None):
+        pos_to_path = {}
+        current_pos = [pos]
+        analyzed_pos = []
+
+        while current_pos:
+            p = current_pos.pop(0)
+            analyzed_pos.append(p)
+
+            if p in pos_to_path:
+                path = pos_to_path[p]
+            else:
+                path = []
+
+            next_pos = []
+            for next_p, action in self._generate_next_pos(p).items():
+                if next_p not in analyzed_pos:
+                    next_pos.append(next_p)
+
+                    if not max_distance or len(path) + 1 <= max_distance:
+                        pos_to_path[next_p] = path + [action]
+            current_pos.extend(next_pos)
+
+        return pos_to_path
+
+    def _calculate_all_paths(self, max_distance=None):
+        paths = {}
+
+        for y in range(self.height):
+            for x in range(self.width):
+                pos = (y, x)
+                if self._is_valid_position(pos):
+                    paths[pos] = self._calculate_paths(pos, max_distance=max_distance)
+
+        self.paths = paths
+
+    def calculate_distance(self, pos1, pos2):
+        if self.paths == None:
+            self._calculate_all_paths()
+
+        if self._is_valid_position(pos1) and self._is_valid_position(pos2):
+            return len(self.paths[pos1][pos2])
+        else:
+            return float('inf')
+
+
+def deterministic_distribution(action1, action2):
+    if action1 == action2:
         return 1.0
     else:
         return 0.0
 
-def semi_deterministic_distribution(pos1, pos2):
-    if pos1 == pos2:
-        return 0.8
+def semi_deterministic_distribution(action1, action2):
+    if action1 == action2:
+        return 0.99
     else:
-        return 0.2
+        return 0.01
 
 def gaussian_distribution(pos1, pos2, sd):
     diff_y = pos2[0] - pos1[0]
@@ -223,6 +289,9 @@ class GameState(object):
     def calculate_manhattan_distance(self, point1, point2):
         return (abs(point1[0] - point2[0]) + abs(point1[1] - point2[1]))
 
+    def calculate_distance(self, point1, point2):
+        return self.agent_maps['pacman'].calculate_distance(point1, point2)
+
     def get_food_distance(self):
         pacman_position = self.get_pacman_position()
         food_prob_threshold = self.food_map.max() / 2.0
@@ -231,7 +300,7 @@ class GameState(object):
         for x in range(self.width):
             for y in range(self.height):
                 if self.food_map[y][x] > food_prob_threshold:
-                    dist = self.calculate_manhattan_distance(pacman_position, (y, x))
+                    dist = self.calculate_distance(pacman_position, (y, x))
 
                     if dist < min_dist:
                         min_dist = dist
@@ -241,34 +310,83 @@ class GameState(object):
     def get_ghost_distance(self):
         pacman_position = self.get_pacman_position()
         ghost_position = self.get_ghost_position()
-        return self.calculate_manhattan_distance(pacman_position, ghost_position)
+        return self.calculate_distance(pacman_position, ghost_position)
 
 
 if __name__ == '__main__':
-    import time
+    # X X _ _ _
+    # . X o _ _
+    # _ X _ _ _
+    # _ X _ _ _
+    # _ _ _ _ _
 
-    # sleep_time = 1
-    # state = GameState(10, 10, [])
-    # observations = [(5, 5), (4, 5), (5, 5), (5, 4)]
-    # actions = ['North', 'South', 'East']
-    # state.observe_pacman(observations[0])
-    # print state
-    # time.sleep(sleep_time)
+    walls = [(0, 0), (0, 1), (1, 1), (2, 1), (3, 1)]
+    game_map = Map(10, 5, walls)
+    action_to_pos = {
+        'North': (1, 0),
+        'South': (-1, 0),
+        'East': (0, 1),
+        'West': (0, -1),
+        'Stop': (0, 0),
+    }
 
-    # for observation, action in zip(observations[1:], actions):
-    #     state.predict_pacman(action)
-    #     print state
-    #     print action
-    #     print state.get_pacman_position()
-    #     time.sleep(sleep_time)
+    def generate_next_pos(pos):
+        next_pos = {}
 
-    #     state.observe_pacman(observation)
-    #     print state
-    #     print observation
-    #     print state.get_pacman_position()
-    #     time.sleep(sleep_time)
+        for action, delta in action_to_pos.items():
+            candidate_pos = (pos[0] + delta[0], pos[1] + delta[1])
 
-    state = GameState(10, 10, [(0, 0), (1, 1), (1, 0), (2, 2), (3, 1)])
-    state.observe_pacman((5, 5))
-    print state
-    print state.agent_maps['pacman'].max()
+            if (candidate_pos not in walls
+                and (candidate_pos[0] >= 0 and candidate_pos[0] < game_map.height and
+                     candidate_pos[1] >= 0 and candidate_pos[1] < game_map.width)):
+                next_pos[candidate_pos] = action
+
+        return next_pos
+
+    def calculate_paths(pos, max_distance=None):
+        pos_to_path = {}
+        current_pos = [pos]
+        analyzed_pos = []
+
+        while current_pos:
+            p = current_pos.pop(0)
+            analyzed_pos.append(p)
+
+            if p in pos_to_path:
+                path = pos_to_path[p]
+            else:
+                path = []
+
+            next_pos = []
+            for next_p, action in generate_next_pos(p).items():
+                if next_p not in analyzed_pos:
+                    next_pos.append(next_p)
+
+                    if not max_distance or len(path) + 1 <= max_distance:
+                        pos_to_path[next_p] = path + [action]
+            current_pos.extend(next_pos)
+
+        return pos_to_path
+
+    def calculate_all_paths(max_distance=None):
+        paths = {}
+
+        for y in range(game_map.height):
+            for x in range(game_map.width):
+                pos = (y, x)
+                if pos not in walls:
+                    paths[pos] = calculate_paths(pos, max_distance=max_distance)
+
+        return paths
+
+    def calculate_distance(paths, pos1, pos2):
+        return len(paths[pos1][pos2])
+
+    initial_pos = (1, 0)
+    final_pos = (1, 2)
+
+    print game_map
+    paths = calculate_all_paths()
+    for pos1 in paths:
+        for pos2 in paths[pos1]:
+            print pos1, '->', pos2, calculate_distance(paths, pos1, pos2)
