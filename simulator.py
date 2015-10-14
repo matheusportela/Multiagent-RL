@@ -68,6 +68,14 @@ class CommunicatingAgent(game.Agent):
 
         return message
 
+    def create_save_message(self, filename):
+        message = messages.SaveMessage(
+            msg_type=messages.SAVE,
+            index=self.index,
+            filename=filename)
+
+        return message
+
     def send_message(self, message):
         self.client.send(pickle.dumps(message))
 
@@ -170,6 +178,14 @@ if __name__ == '__main__':
     learn_scores = []
     test_scores = []
 
+    pacman = create_pacman()
+    print 'Sending save message'
+    msg = pacman.create_save_message('pacman_policy')
+    pacman.send_message(msg)
+    print 'Receiving save message'
+    _ = pacman.receive_message()
+    print 'OK'
+
     for i in range(learn_games + test_games):
         print '\nGame #%d' % (i+1)
 
@@ -194,6 +210,10 @@ if __name__ == '__main__':
             test_scores.append(games[0].state.getScore())
         else:
             learn_scores.append(games[0].state.getScore())
+
+    msg = pacman.create_save_message('pacman_policy')
+    pacman.send_message(msg)
+    _ = pacman.receive_message()
 
     print learn_scores
     print test_scores

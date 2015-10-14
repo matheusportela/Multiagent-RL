@@ -1,6 +1,8 @@
 STATE = 'State'
 ACTION = 'Action'
 INIT = 'Init'
+SAVE = 'Save'
+ACK = 'Ack'
 
 class BaseMessage(object):
     def __init__(self, msg_type=None):
@@ -33,3 +35,15 @@ class ActionMessage(BaseMessage):
 class InitMessage(BaseMessage):
     def __init__(self, msg_type=None):
         super(InitMessage, self).__init__(msg_type=msg_type)
+
+
+class SaveMessage(BaseMessage):
+    def __init__(self, msg_type=None, index=None, filename=None):
+        self.msg_type = msg_type
+        self.index = index
+        self.filename = filename
+
+
+class AckMessage(BaseMessage):
+    def __init__(self, msg_type=None):
+        self.msg_type = msg_type

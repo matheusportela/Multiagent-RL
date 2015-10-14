@@ -75,11 +75,19 @@ class MessageRouter(object):
 
         return agent_action
 
+    def save_agent_policy(self, message):
+        if message.index == 0:
+            self.pacman_agent.save_policy(message.filename)
+        else:
+            self.ghost_agents[state.index - 1].save_policy(message.filename)
+
     def run(self):
         self.last_action = 'Stop'
 
         while True:
+            print 'Waiting for message'
             received_message = self.receive_message()
+            print received_message
 
             if received_message.msg_type == messages.STATE:
                 self.game_state.set_walls(received_message.wall_positions)
@@ -97,6 +105,12 @@ class MessageRouter(object):
                 # print self.game_state.food_map
                 # print self.game_state.get_ghost_distance()
                 # print self.game_state.get_food_distance()
+            elif received_message.msg_type == messages.SAVE:
+                print 'Received save message'
+                self.save_agent_policy(received_message)
+                print 'Saved policy'
+                self.send_message(messages.AckMessage())
+                print 'Sent ack message'
 
 if __name__ == '__main__':
     num_ghosts = 1
