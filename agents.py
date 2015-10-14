@@ -1,6 +1,7 @@
 import math
 import random
 import learning
+import pickle
 
 
 class PacmanAgent(object):
@@ -24,6 +25,24 @@ class PacmanAgent(object):
         """
         raise NotImplementedError('Pacman agent must contain a choose_action method'
             'to select an action for the current game state.')
+
+    def save_policy(self, filename):
+        """Save the learned policy into filename.
+
+        Args:
+            filename: File which stores the policy data.
+        """
+        raise NotImplementedError('Pacman agent must be able to save its learned'
+            'policy')
+
+    def load_policy(self, filename):
+        """Save the learned policy into filename.
+
+        Args:
+            filename: File which stores the policy data.
+        """
+        raise NotImplementedError('Pacman agent must be able to save its learned'
+            'policy')
 
 
 class GhostAgent(object):
@@ -128,6 +147,14 @@ class BehaviorLearningAgent(PacmanAgent):
             discount_factor=0.9, actions=self.behaviors, features=self.features,
             exploration_rate=self.exploration_rate)
         self.previous_behavior = self.behaviors[0]
+
+    def save_policy(self, filename):
+        with open(filename, 'w') as fout:
+            pickle.dump(self.learning.weights, fout)
+
+    def load_policy(self, filename):
+        with open(filename) as fin:
+            self.learning.weights = pickle.load(fin)
 
     def calculate_manhattan_distance(self, point1, point2):
         return(abs(point1[0] - point2[0]) + abs(point1[1] - point2[1]))
