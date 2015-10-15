@@ -57,9 +57,13 @@ def plot_behavior_count(behavior_count):
     plt.ylabel('Probability of selecting the behavior')
     plt.xlabel('Number of games')
     plt.ylim([0, 1])
+    colors = ['r', 'g', 'b']
 
-    for behavior in behavior_count:
-        ax.plot(behavior_count[behavior], label=behavior)
+    for i, behavior in enumerate(behavior_count):
+        coeff = calculate_regression_coefficients(behavior_count[behavior], degree=5)
+        regression = [calculate_regression_y(x, coeff) for x in range(len(behavior_count[behavior]))]
+        ax.plot(regression, label=behavior, c=colors[i])
+        ax.scatter(range(len(behavior_count[behavior])), behavior_count[behavior], c=colors[i], alpha=0.5)
 
     ax.legend()
 
