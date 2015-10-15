@@ -55,7 +55,6 @@ class CommunicatingAgent(game.Agent):
         self.previous_score = state.getScore()
 
         message = messages.StateMessage(
-            msg_type=messages.STATE,
             index=self.index,
             pacman_position=pacman_position,
             ghost_positions=ghost_positions,
@@ -70,7 +69,13 @@ class CommunicatingAgent(game.Agent):
 
     def create_save_message(self, filename):
         message = messages.SaveMessage(
-            msg_type=messages.SAVE,
+            index=self.index,
+            filename=filename)
+
+        return message
+
+    def create_load_message(self, filename):
+        message = messages.LoadMessage(
             index=self.index,
             filename=filename)
 
@@ -179,12 +184,9 @@ if __name__ == '__main__':
     test_scores = []
 
     pacman = create_pacman()
-    print 'Sending save message'
-    msg = pacman.create_save_message('pacman_policy')
+    msg = pacman.create_load_message('pacman_policy')
     pacman.send_message(msg)
-    print 'Receiving save message'
     _ = pacman.receive_message()
-    print 'OK'
 
     for i in range(learn_games + test_games):
         print '\nGame #%d' % (i+1)

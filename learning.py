@@ -189,7 +189,6 @@ class QLearningWithApproximation(LearningAlgorithm):
         self.discount_factor = discount_factor
         self.previous_state = None
         self.exploration_rate = exploration_rate
-        # self.weights = [random.random() for _ in range(len(features))]
 
         self.weights = {}
         for action in self.actions:
@@ -205,7 +204,6 @@ class QLearningWithApproximation(LearningAlgorithm):
     def get_q_value(self, state, action):
         q_value = 0
 
-        # for weight, feature in zip(self.weights, self.features):
         for weight, feature in zip(self.weights[action], self.features):
             q_value += weight*feature(state, action)
 
@@ -239,7 +237,6 @@ class QLearningWithApproximation(LearningAlgorithm):
         if self.previous_state:
             delta += -self.get_q_value(self.previous_state, action)
 
-        # self.weights = [weight + self.learning_rate*delta*feature(state, action) for weight, feature in zip(self.weights, self.features)]
             self.weights[action] = [weight + self.learning_rate*delta*feature(self.previous_state, action) for weight, feature in zip(self.weights[action], self.features)]
 
             sum_weights = 0
@@ -251,12 +248,6 @@ class QLearningWithApproximation(LearningAlgorithm):
 
 
         self.previous_state = state
-
-        # print action
-        # print reward
-        # for action in self.weights:
-        #     print action, self.weights[action]
-        # print
 
     def _explore(self, state, legal_actions):
         return self._get_max_action_from_list(state, legal_actions)

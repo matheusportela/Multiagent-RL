@@ -39,32 +39,9 @@ class MessageRouter(object):
         self.server.send(message)
 
     def generate_agent_state(self, state):
-        # agent_state = tuple([state.pacman_position] + [tuple([pos for pos in state.ghost_positions])] + [tuple(state.food_positions)])
-        # agent_state = tuple([state.pacman_position])
-
-        # Food state indicates whether there is food in places relative to the
-        # agent position.
-        # Example:
-        # Agent position = (3, 3)
-        # Food position = (4, 4)
-        # food_positions = [(0, 0), (0, 1), (1, 0), (1, 1), (0, -1), (-1, 0), (-1, -1)]
-        # food_state = [False, False, False, True, False, False, False]
-
-        # food_positions = [(i, j) for i in range(-20, 20) for j in range(-20, 20)]
-        # food_state = [False] * len(food_positions)
-
-        # for food_position in state.food_positions:
-        #     diff = (food_position[0] - state.pacman_position[0], food_position[1] - state.pacman_position[1])
-
-        #     for i, position in enumerate(food_positions):
-        #         if diff == position:
-        #             food_state[i] = True
-
         self.game_state.observe_pacman(state.pacman_position)
         self.game_state.observe_ghost(state.ghost_positions[0])
 
-        # agent_state = tuple([self.game_state.get_pacman_position(), self.game_state.get_ghost_position(), self.game_state.get_food_distance()])
-        # return agent_state
         return self.game_state
 
     def choose_action(self, state):
@@ -85,6 +62,12 @@ class MessageRouter(object):
         else:
             self.ghost_agents[state.index - 1].save_policy(message.filename)
 
+    def load_agent_policy(self, message):
+        if message.index == 0:
+            self.pacman_agent.load_policy(message.filename)
+        else:
+            self.ghost_agents[state.index - 1].load_policy(message.filename)
+
     def run(self):
         self.last_action = 'Stop'
 
@@ -104,15 +87,12 @@ class MessageRouter(object):
                 self.game_state = state.GameState(20, 11, [])
                 message = pickle.dumps(messages.InitMessage(msg_type=messages.INIT))
                 self.send_message(message)
-                # print self.game_state.food_map
-                # print self.game_state.get_ghost_distance()
-                # print self.game_state.get_food_distance()
             elif received_message.msg_type == messages.SAVE:
-                print 'Received save message'
                 self.save_agent_policy(received_message)
-                print 'Saved policy'
                 self.send_message(self.create_ack_message())
-                print 'Sent ack message'
+            elif received_message.msg_type == messages.LOAD:
+                self.load_agent_policy(received_message)
+                self.send_message(self.create_ack_message())
 
 if __name__ == '__main__':
     num_ghosts = 1
