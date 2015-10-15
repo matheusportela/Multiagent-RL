@@ -19,13 +19,24 @@ def calculate_regression_y(x, coeff):
 
 def load_behavior_count(filename):
     behavior_count = []
+    behavior_dict = {}
 
     with open(filename) as f:
         reader = csv.DictReader(f)
         for row in reader:
             behavior_count.append(row)
 
-    return behavior_count
+    for behavior in behavior_count[0]:
+        behavior_dict[behavior] = []
+
+    # Calculating the behavior probability of being selected
+    for behavior in behavior_dict:
+        for data in behavior_count:
+            behavior_sum = sum([int(v) for v in data.values()])
+            behavior_prob = float(data[behavior]) / behavior_sum
+            behavior_dict[behavior].append(behavior_prob)
+
+    return behavior_dict
 
 def plot_scores(learn_scores, test_scores):
     fig = plt.figure()
@@ -43,9 +54,12 @@ def plot_scores(learn_scores, test_scores):
 def plot_behavior_count(behavior_count):
     fig = plt.figure()
     ax = fig.add_subplot(111)
+    plt.ylabel('Probability of selecting the behavior')
+    plt.xlabel('Number of games')
+    plt.ylim([0, 1])
 
-    for behavior in behavior_count[0]:
-        ax.plot([b[behavior] for b in behavior_count], label=behavior)
+    for behavior in behavior_count:
+        ax.plot(behavior_count[behavior], label=behavior)
 
     ax.legend()
 
