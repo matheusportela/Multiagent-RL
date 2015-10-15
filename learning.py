@@ -250,10 +250,10 @@ class QLearningWithApproximation(LearningAlgorithm):
         self.previous_state = state
 
     def _explore(self, state, legal_actions):
-        return self._get_max_action_from_list(state, legal_actions)
+        return random.choice(legal_actions)
 
     def _exploit(self, state, legal_actions):
-        return random.choice(legal_actions)
+        return self._get_max_action_from_list(state, legal_actions)
 
     def act(self, state, legal_actions):
         p = random.random()
