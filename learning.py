@@ -195,6 +195,13 @@ class QLearningWithApproximation(LearningAlgorithm):
         for action in self.actions:
             self.weights[action] = [random.random() for _ in range(len(features))]
 
+    def get_weights(self):
+        return [weights for action, weights in self.weights.items()]
+
+    def set_weights(self, weights):
+        for action, weight in zip(self.actions, weights):
+            self.weights[action] = weight
+
     def get_q_value(self, state, action):
         q_value = 0
 

@@ -31,6 +31,10 @@ class MessageRouter(object):
             action=action)
         return pickle.dumps(message)
 
+    def create_ack_message(self):
+        message = messages.AckMessage()
+        return pickle.dumps(message)
+
     def send_message(self, message):
         self.server.send(message)
 
@@ -85,9 +89,7 @@ class MessageRouter(object):
         self.last_action = 'Stop'
 
         while True:
-            print 'Waiting for message'
             received_message = self.receive_message()
-            print received_message
 
             if received_message.msg_type == messages.STATE:
                 self.game_state.set_walls(received_message.wall_positions)
@@ -109,7 +111,7 @@ class MessageRouter(object):
                 print 'Received save message'
                 self.save_agent_policy(received_message)
                 print 'Saved policy'
-                self.send_message(messages.AckMessage())
+                self.send_message(self.create_ack_message())
                 print 'Sent ack message'
 
 if __name__ == '__main__':

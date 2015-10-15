@@ -18,7 +18,7 @@ class Map(object):
             'Stop': (0, 0),
         }
         self.paths = None
-        self.walls = walls
+        self._walls = walls
         self.cells = self.generate_cells()
         self.normalize()
 

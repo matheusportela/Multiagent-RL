@@ -150,11 +150,11 @@ class BehaviorLearningAgent(PacmanAgent):
 
     def save_policy(self, filename):
         with open(filename, 'w') as fout:
-            pickle.dump(self.learning.weights, fout)
+            pickle.dump(self.learning.get_weights(), fout)
 
     def load_policy(self, filename):
         with open(filename) as fin:
-            self.learning.weights = pickle.load(fin)
+            self.learning.set_weights(pickle.load(fin))
 
     def calculate_manhattan_distance(self, point1, point2):
         return(abs(point1[0] - point2[0]) + abs(point1[1] - point2[1]))

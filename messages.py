@@ -10,7 +10,7 @@ class BaseMessage(object):
 
 
 class StateMessage(BaseMessage):
-    def __init__(self, msg_type=None, index=None, pacman_position=None,
+    def __init__(self, msg_type=STATE, index=None, pacman_position=None,
         ghost_positions=None, food_positions=None, wall_positions=None,
         legal_actions=None, reward=None, executed_action=None, explore=None):
         super(StateMessage, self).__init__(msg_type=msg_type)
@@ -26,24 +26,24 @@ class StateMessage(BaseMessage):
 
 
 class ActionMessage(BaseMessage):
-    def __init__(self, msg_type=None, index=None, action=None):
+    def __init__(self, msg_type=ACTION, index=None, action=None):
         super(ActionMessage, self).__init__(msg_type=msg_type)
         self.index = index
         self.action = action
 
 
 class InitMessage(BaseMessage):
-    def __init__(self, msg_type=None):
+    def __init__(self, msg_type=INIT):
         super(InitMessage, self).__init__(msg_type=msg_type)
 
 
 class SaveMessage(BaseMessage):
-    def __init__(self, msg_type=None, index=None, filename=None):
-        self.msg_type = msg_type
+    def __init__(self, msg_type=SAVE, index=None, filename=None):
+        super(SaveMessage, self).__init__(msg_type=msg_type)
         self.index = index
         self.filename = filename
 
 
 class AckMessage(BaseMessage):
-    def __init__(self, msg_type=None):
-        self.msg_type = msg_type
+    def __init__(self, msg_type=ACK):
+        super(AckMessage, self).__init__(msg_type=msg_type)
