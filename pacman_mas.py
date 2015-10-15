@@ -59,12 +59,14 @@ class MessageRouter(object):
     def save_agent_policy(self, message):
         if message.index == 0:
             self.pacman_agent.save_policy(message.filename)
+            print 'Pacman saved policy:', self.pacman_agent.learning.weights
         else:
             self.ghost_agents[state.index - 1].save_policy(message.filename)
 
     def load_agent_policy(self, message):
         if message.index == 0:
             self.pacman_agent.load_policy(message.filename)
+            print 'Pacman loaded policy:', self.pacman_agent.learning.weights
         else:
             self.ghost_agents[state.index - 1].load_policy(message.filename)
 

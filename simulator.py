@@ -159,12 +159,28 @@ def create_display(display_type='None', zoom=1.0, frameTime=0.1):
 
     return display
 
+def load_policy(filename):
+    print 'Loading policy from', filename
+    pacman = create_pacman()
+    msg = pacman.create_load_message(filename)
+    pacman.send_message(msg)
+    pacman.receive_message()
+
+def save_policy(filename):
+    print 'Saving policy to', filename
+    pacman = create_pacman()
+    msg = pacman.create_save_message(filename)
+    pacman.send_message(msg)
+    pacman.receive_message()
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run Pacman simulations.')
     parser.add_argument('-l', dest='learn', type=int, default=100,
                        help='number of games to learn from')
     parser.add_argument('-t', dest='test', type=int, default=100,
                        help='number of games to test learned policy')
+    parser.add_argument('-p', dest='policy_filename', type=str,
+                        help='load and save Pacman policy from the given file')
 
     args = parser.parse_args()
 
@@ -174,6 +190,7 @@ if __name__ == '__main__':
     num_ghosts = 1
     learn_games = args.learn
     test_games = args.test
+    pacman_policy_filename = args.policy_filename
     record = False
     display_type = 'None'
 
@@ -183,10 +200,8 @@ if __name__ == '__main__':
     learn_scores = []
     test_scores = []
 
-    pacman = create_pacman()
-    msg = pacman.create_load_message('pacman_policy')
-    pacman.send_message(msg)
-    _ = pacman.receive_message()
+    if pacman_policy_filename:
+        load_policy(pacman_policy_filename)
 
     for i in range(learn_games + test_games):
         print '\nGame #%d' % (i+1)
@@ -213,9 +228,8 @@ if __name__ == '__main__':
         else:
             learn_scores.append(games[0].state.getScore())
 
-    msg = pacman.create_save_message('pacman_policy')
-    pacman.send_message(msg)
-    _ = pacman.receive_message()
+    if pacman_policy_filename:
+        save_policy(pacman_policy_filename)
 
     print learn_scores
     print test_scores
