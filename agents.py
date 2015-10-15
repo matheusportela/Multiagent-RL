@@ -2,6 +2,7 @@ import math
 import random
 import learning
 import pickle
+import os.path
 
 
 class PacmanAgent(object):
@@ -153,8 +154,9 @@ class BehaviorLearningAgent(PacmanAgent):
             pickle.dump(self.learning.get_weights(), fout)
 
     def load_policy(self, filename):
-        with open(filename) as fin:
-            self.learning.set_weights(pickle.load(fin))
+        if os.path.isfile(filename):
+            with open(filename) as fin:
+                self.learning.set_weights(pickle.load(fin))
 
     def calculate_manhattan_distance(self, point1, point2):
         return(abs(point1[0] - point2[0]) + abs(point1[1] - point2[1]))
