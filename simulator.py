@@ -249,3 +249,8 @@ if __name__ == '__main__':
     with open('test_scores.txt', 'w') as output:
         for score in test_scores:
             output.write(str(score) + '\n')
+
+    with open('behavior_count.txt', 'w') as output:
+        names = [name for name in log_behavior_count[0]]
+        output.write(','.join(names) + '\n')
+        output.write('\n'.join([','.join([str(behavior_count[name]) for name in names]) for behavior_count in log_behavior_count]))
