@@ -148,6 +148,12 @@ class BehaviorLearningAgent(PacmanAgent):
             discount_factor=0.9, actions=self.behaviors, features=self.features,
             exploration_rate=self.exploration_rate)
         self.previous_behavior = self.behaviors[0]
+        self.behavior_count = {}
+        self.reset_behavior_count()
+
+    def reset_behavior_count(self):
+        for behavior in self.behaviors:
+            self.behavior_count[behavior.__name__] = 0
 
     def save_policy(self, filename):
         with open(filename, 'w') as fout:
@@ -229,6 +235,8 @@ class BehaviorLearningAgent(PacmanAgent):
         behavior = self.learning.act(state, self.behaviors)
         self.previous_behavior = behavior
         suggested_action = behavior(state)
+
+        self.behavior_count[behavior.__name__] += 1
 
         if suggested_action in legal_actions:
             return suggested_action

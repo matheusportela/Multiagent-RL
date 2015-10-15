@@ -4,6 +4,8 @@ INIT = 'Init'
 SAVE = 'Save'
 LOAD = 'Load'
 ACK = 'Ack'
+REQUEST_BEHAVIOR_COUNT = 'RequestBehaviorCount'
+BEHAVIOR_COUNT = 'BehaviorCount'
 
 class BaseMessage(object):
     def __init__(self, msg_type=None):
@@ -55,3 +57,15 @@ class LoadMessage(BaseMessage):
         super(LoadMessage, self).__init__(msg_type=msg_type)
         self.index = index
         self.filename = filename
+
+
+class RequestBehaviorCountMessage(BaseMessage):
+    def __init__(self, msg_type=REQUEST_BEHAVIOR_COUNT, index=None):
+        super(RequestBehaviorCountMessage, self).__init__(msg_type=msg_type)
+        self.index = index
+
+
+class BehaviorCountMessage(BaseMessage):
+    def __init__(self, msg_type=BEHAVIOR_COUNT, count=None):
+        super(BehaviorCountMessage, self).__init__(msg_type=msg_type)
+        self.count = count

@@ -35,6 +35,22 @@ class MessageRouter(object):
         message = messages.AckMessage()
         return pickle.dumps(message)
 
+    def create_behavior_count_message(self, index):
+        if index == 0:
+            message = messages.BehaviorCountMessage(
+                count=self.pacman_agent.behavior_count)
+        else:
+            message = messages.BehaviorCountMessage(
+                count=self.ghost_agents[index - 1].behavior_count)
+
+        return pickle.dumps(message)
+
+    def reset_behavior_count(self, index):
+        if index == 0:
+            self.pacman_agent.reset_behavior_count()
+        else:
+            self.ghost_agents[index - 1].reset_behavior_count()
+
     def send_message(self, message):
         self.server.send(message)
 
@@ -95,6 +111,9 @@ class MessageRouter(object):
             elif received_message.msg_type == messages.LOAD:
                 self.load_agent_policy(received_message)
                 self.send_message(self.create_ack_message())
+            elif received_message.msg_type == messages.REQUEST_BEHAVIOR_COUNT:
+                self.send_message(self.create_behavior_count_message(received_message.index))
+                self.reset_behavior_count(received_message.index)
 
 if __name__ == '__main__':
     num_ghosts = 1

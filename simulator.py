@@ -199,6 +199,7 @@ if __name__ == '__main__':
 
     learn_scores = []
     test_scores = []
+    log_behavior_count = []
 
     if pacman_policy_filename:
         load_policy(pacman_policy_filename)
@@ -221,7 +222,14 @@ if __name__ == '__main__':
         # Do this so as Pacman can receive the last reward
         msg = pacman.create_message(games[0].state)
         pacman.send_message(msg)
-        message = pacman.receive_message()
+        pacman.receive_message()
+
+        # Log behavior count
+        msg = messages.RequestBehaviorCountMessage(index=pacman.index)
+        pacman.send_message(msg)
+        behavior_count_msg = pacman.receive_message()
+        print behavior_count_msg.count
+        log_behavior_count.append(behavior_count_msg.count)
 
         if i >= learn_games:
             test_scores.append(games[0].state.getScore())
