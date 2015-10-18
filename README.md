@@ -1,83 +1,51 @@
-# Multiagent-RL
-## Introduction
-This repository contains the code used in the undergraduate thesis in Mechatronics Engineering, at the
-[University of Brasilia](http://www.unb.br), entitled "Reinforcement Learning applied to behaviour selection in multiple
-autonomous agents".
+Multiagent-RL
+=============
 
-## Code structure
+Introduction
+------------
+
+This repository contains the code used in the undergraduate thesis in Mechatronics Engineering, at the [University of Brasilia](http://www.unb.br), entitled "Reinforcement Learning applied to behaviour selection in multiple autonomous agents".
+
+The idea is to have multiple [robotic] agents learn interesting behaviors in a stochastic environment. The uncertainty of a state is handled through [Bayesian Programming](https://en.wikipedia.org/wiki/Bayesian_programming), and the he agents learn through [Q-learning](https://en.wikipedia.org/wiki/Q-learning). Currently, the approach is being tested in the predator-prey problem, a simplified multi-agent situation, to answer: __can the ghosts learn to get the Pac-Man?__
+
+Code structure
+--------------
+
 * Programming language: [Python 2.7](http://www.python.org)
 * Required packages: [The Pac-Man AI Projects](http://ai.berkeley.edu/project_overview.html), by UC Berkeley
 
-## Installation
-The Pac-Man AI Projects, by UC Berkeley, provides six Pac-Man-like simulators that are free to use for educational
-purposes. The one we will be using is [Project 5: Classification](http://ai.berkeley.edu/classification.html), which
-provides an arena mimicking the complete Pac-Man game, including various ghosts.
+Installation
+------------
 
-The project requires the following Python packages:
+This assumes a GNU/Unix distribution (Ubuntu), but everything is in Pỳthon so the setup shouldn't be too different for other platforms. The Pac-Man AI Projects provides six Pac-Man-like simulators that are free to use for educational purposes. The one we will be using is [Project 5: Classification](http://ai.berkeley.edu/classification.html), which provides an arena mimicking the complete Pac-Man game, including various ghosts.
 
-* *Tkinter*: graphical user interfaces
-* *ZeroMQ*: interprocess communication
-* *Matplotlib*: graphics plotting
-* *Numpy*: numerical computation
+This project requires the following Python packages:
+
+* *[Tkinter](http://tkinter.unpythonic.net/wiki/Tkinter)*: graphical user interfaces
+* *[ZeroMQ](https://github.com/zeromq)*: interprocess communication
+* *[Matplotlib](http://matplotlib.org/)*: graphics plotting
+* *[Numpy](http://www.numpy.org/)*: numerical computation
 
 Install by running the following commands.
 
-```
-sudo apt-get install python python-pip python-tk libzmq-dev python-matplotlib
+```bash
+sudo apt-get install python python-dev python-pip python-tk libzmq-dev python-matplotlib
 sudo pip install pyzmq
 ```
 
-## Usage
+Usage
+-----
 
-In order to run the system, two parts are necessary: one process that implements agents intelligence, in our case `pacman_mas.py`
-and another that provides an interface to the real agents. Since we are using the Pacman simulator, we interface it in the module
-`simulator.py`.
+In order to run the system, two processes are necessary: one that implements agents intelligence, in our case `pacman_mas.py`, and another that provides an interface to the real agents. Since we are using the Pacman simulator, we interface it in the module `simulator.py`.
 
 Hence, run the system my executing the following commands in two different terminals:
 
-```
+```bash
 python pacman_mas.py
 ```
 
 and
 
-```
+```bash
 python simulator.py
 ```
-
-## Extras
-### Simulator standalone installation
-
-This project already includes the simulator adapter to our purposes. However, you might want to give a look at the
-original simulator by yourself.
-
-Start installing by downloading the `.zip` file located [here](http://ai.berkeley.edu/classification.html). Not all
-files are necessary for our purposes since most of them are evaluation features. A stripped-down version of the
-simulator can be downloaded [here](https://mega.co.nz/#!otcGnJAb!IZ6MLmS2fMwu2MPyGWKCGhJMRul4SgiPelk08wEjOP4). Here is
-the list of files that must be maintained, the others can be safely discarded.
-
-* `layouts/` directory
-* `game.py`
-* `ghostAgents.py`
-* `graphicsDisplay.py`
-* `graphicsUtils.py`
-* `keyboardAgents.py`
-* `layout.py`
-* `pacman.py`
-* `pacmanAgents.py`
-* `util.py`
-* `textDisplay.py`
-
-Simply run the simulator with the following command:
-
-`python pacman.py`
-
-Several aspects can be configured, such as Pac-Man and ghosts AI agents, number of ghosts, game layout etc. Visualize
-all possible settings with the following command:
-
-`python pacman.py -h`
-
-For instance, to run the game with the `GreedyAgent` Pac-Man AI agent, `RandomGhost` ghost AI agent and `smallClassic`
-layout, use the following:
-
-`python pacman.py -p GreedyAgent -g RandomGhost -l smallClassic`
