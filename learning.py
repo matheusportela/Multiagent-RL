@@ -191,8 +191,11 @@ class QLearningWithApproximation(LearningAlgorithm):
         self.exploration_rate = exploration_rate
 
         self.weights = {}
+        self._init_weights()
+
+    def _init_weights(self):
         for action in self.actions:
-            self.weights[action] = [random.random() for _ in range(len(features))]
+            self.weights[action] = [random.random() for _ in range(len(self.features))]
 
     def get_weights(self):
         return [weights for action, weights in self.weights.items()]
@@ -234,20 +237,26 @@ class QLearningWithApproximation(LearningAlgorithm):
     def _update_weights(self, action, delta):
         self.weights[action] = [weight + self.learning_rate*delta*feature(self.previous_state, action) for weight, feature in zip(self.weights[action], self.features)]
 
-    def _normalize_weights(self, action):
+    def _normalize_weights(self):
         sum_weights = 0
-        for weight in self.weights[action]:
-            sum_weights += weight
+        for action in self.actions:
+            for weight in self.weights[action]:
+                sum_weights += weight
 
-        for i in range(len(self.weights[action])):
-            self.weights[action][i] /= sum_weights
+        if sum_weights > 0:
+            for action in self.actions:
+                for i in range(len(self.weights[action])):
+                    self.weights[action][i] /= sum_weights
+        else:
+            self._init_weights()
+
 
     def learn(self, state, action, reward):
         if self.previous_state:
             delta = (reward + self.discount_factor*self.get_max_q_value(state)
                 - self.get_q_value(self.previous_state, action))
             self._update_weights(action, delta)
-            self._normalize_weights(action)
+            self._normalize_weights()
 
         self.previous_state = state
 
