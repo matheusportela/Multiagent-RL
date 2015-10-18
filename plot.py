@@ -62,8 +62,8 @@ def plot_behavior_count(behavior_count):
     for i, behavior in enumerate(behavior_count):
         coeff = calculate_regression_coefficients(behavior_count[behavior], degree=5)
         regression = [calculate_regression_y(x, coeff) for x in range(len(behavior_count[behavior]))]
-        ax.plot(regression, label=behavior, c=colors[i])
-        ax.scatter(range(len(behavior_count[behavior])), behavior_count[behavior], c=colors[i], alpha=0.5)
+        ax.plot(regression, label=behavior, c=colors[i], linewidth=2.0)
+        ax.scatter(range(len(behavior_count[behavior])), behavior_count[behavior], c=colors[i], alpha=0.10)
 
     ax.legend()
 

@@ -167,9 +167,24 @@ class BehaviorLearningAgent(PacmanAgent):
     def calculate_manhattan_distance(self, point1, point2):
         return(abs(point1[0] - point2[0]) + abs(point1[1] - point2[1]))
 
+    def _get_closest_ghost(self, state):
+        pacman_position = state.get_pacman_position()
+        distance = float('inf')
+        closest_ghost = 0
+
+        for i in state.num_ghosts:
+            ghost_position = state.get_ghost_position(i)
+            ghost_distance = self.calculate_manhattan_distance(pacman_position, ghost_position)
+
+            if ghost_distance < distance:
+                distance = ghost_distance
+                closest_ghost = i
+
+        return closest_ghost
+
     def feature_ghost_distance(self, state, action):
         pacman_position = state.get_pacman_position()
-        ghost_position = state.get_ghost_position()
+        ghost_position = state.get_ghost_position(self._get_closest_ghost(state))
         return self.calculate_manhattan_distance(pacman_position, ghost_position)
 
     def feature_food_distance(self, state, action):
@@ -206,7 +221,7 @@ class BehaviorLearningAgent(PacmanAgent):
 
     def flee_from_ghost(self, state):
         pacman_position = state.get_pacman_position()
-        ghost_position = state.get_ghost_position()
+        ghost_position = state.get_ghost_position(self._get_closest_ghost(state))
         pacman_map = state.agent_maps['pacman']
 
         best_action = None

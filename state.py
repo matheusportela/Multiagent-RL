@@ -218,14 +218,17 @@ def gaussian_distribution(pos1, pos2, sd):
 
 
 class GameState(object):
-    def __init__(self, width, height, walls):
+    def __init__(self, width, height, walls, num_ghosts=1):
+        self.num_ghosts = num_ghosts
         self.width = width
         self.height = height
         self.walls = walls
-        self.agent_maps = {
-            'pacman': Map(width, height, walls),
-            'ghost': Map(width, height, walls),
-        }
+        self.agent_maps = {'pacman': Map(width, height, walls)}
+
+        for i in range(num_ghosts):
+            print self._index_to_ghost_str(i)
+            self.agent_maps[self._index_to_ghost_str(i)] = Map(width, height, walls)
+
         self.food_map = None
         self.sd = 0.5
 
@@ -237,6 +240,9 @@ class GameState(object):
             string.append(str(value))
 
         return '\n'.join(string)
+
+    def _index_to_ghost_str(self, i):
+        return 'ghost%d' % i
 
     def set_food_positions(self, food_positions):
         if self.food_map == None:
@@ -261,9 +267,9 @@ class GameState(object):
     def observe_pacman(self, pos):
         self._observe_agent('pacman', pos)
 
-    def observe_ghost(self, pos):
+    def observe_ghost(self, index, pos):
         # TODO: Should it be ghost_pos - pacman_pos?
-        self._observe_agent('ghost', pos)
+        self._observe_agent(self._index_to_ghost_str(index), pos)
 
     def _get_agent_position(self, agent):
         return self.agent_maps[agent].get_maximum_position()
@@ -271,8 +277,8 @@ class GameState(object):
     def get_pacman_position(self):
         return self._get_agent_position('pacman')
 
-    def get_ghost_position(self):
-        return self._get_agent_position('ghost')
+    def get_ghost_position(self, index):
+        return self._get_agent_position(self._index_to_ghost_str(index))
 
     def _predict_agent(self, agent, action):
         self.agent_maps[agent].predict(action, semi_deterministic_distribution)
@@ -281,8 +287,8 @@ class GameState(object):
         self._predict_agent('pacman', action)
         self._predict_food_positions()
 
-    def predict_ghost(self, action):
-        self._predict_agent('ghost', action)
+    def predict_ghost(self, index, action):
+        self._predict_agent(self._index_to_ghost_str(index), action)
 
     def _predict_food_positions(self):
         for x in range(self.width):

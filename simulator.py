@@ -184,10 +184,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # layout_file = 'mediumClassic'
+    layout_file = 'mediumClassic'
     # layout_file = 'ghostlessMediumClassic'
-    layout_file = 'oneGhostMediumClassic'
-    num_ghosts = 1
+    # layout_file = 'oneGhostMediumClassic'
+    num_ghosts = 2
     learn_games = args.learn
     test_games = args.test
     pacman_policy_filename = args.policy_filename
