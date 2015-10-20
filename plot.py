@@ -33,7 +33,7 @@ def load_behavior_count(filename):
     for behavior in behavior_dict:
         for data in behavior_count:
             behavior_sum = sum([int(v) for v in data.values()])
-            behavior_prob = float(data[behavior]) #/ behavior_sum
+            behavior_prob = float(data[behavior]) / behavior_sum
             behavior_dict[behavior].append(behavior_prob)
 
     return behavior_dict
@@ -56,7 +56,7 @@ def plot_behavior_count(behavior_count):
     ax = fig.add_subplot(111)
     plt.ylabel('Probability of selecting the behavior')
     plt.xlabel('Number of games')
-    # plt.ylim([0, 1])
+    plt.ylim([0, 1])
     colors = ['r', 'g', 'b']
 
     for i, behavior in enumerate(behavior_count):
