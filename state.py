@@ -226,7 +226,6 @@ class GameState(object):
         self.agent_maps = {'pacman': Map(width, height, walls)}
 
         for i in range(num_ghosts):
-            print self._index_to_ghost_str(i)
             self.agent_maps[self._index_to_ghost_str(i)] = Map(width, height, walls)
 
         self.food_map = None

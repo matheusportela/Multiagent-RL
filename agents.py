@@ -172,7 +172,7 @@ class BehaviorLearningAgent(PacmanAgent):
         distance = float('inf')
         closest_ghost = 0
 
-        for i in state.num_ghosts:
+        for i in range(state.num_ghosts):
             ghost_position = state.get_ghost_position(i)
             ghost_distance = self.calculate_manhattan_distance(pacman_position, ghost_position)
 

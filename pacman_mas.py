@@ -10,6 +10,7 @@ import state
 
 class MessageRouter(object):
     def __init__(self, num_ghosts=1):
+        self.num_ghosts = num_ghosts
         self.pacman_agent = None
         self.ghost_agents = []
         self.server = comm.Server()
@@ -104,7 +105,7 @@ class MessageRouter(object):
 
                 self.last_action = agent_action
             elif received_message.msg_type == messages.INIT:
-                self.game_state = state.GameState(20, 11, [])
+                self.game_state = state.GameState(20, 11, [], num_ghosts=num_ghosts)
                 message = pickle.dumps(messages.InitMessage(msg_type=messages.INIT))
                 self.send_message(message)
             elif received_message.msg_type == messages.SAVE:
