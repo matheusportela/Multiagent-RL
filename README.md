@@ -21,8 +21,8 @@ This assumes a GNU/Unix distribution (Ubuntu), but everything is in Pỳthon so 
 
 This project requires the following Python packages:
 
-* *[Tkinter](http://tkinter.unpythonic.net/wiki/Tkinter)*: graphical user interfaces
-* *[ZeroMQ](https://github.com/zeromq)*: interprocess communication
+* *[Tkinter](https://docs.python.org/2/library/tkinter.html)*: graphical user interfaces
+* *[ZeroMQ](http://zeromq.org/)*: interprocess communication
 * *[Matplotlib](http://matplotlib.org/)*: graphics plotting
 * *[Numpy](http://www.numpy.org/)*: numerical computation
 
