@@ -165,16 +165,25 @@ class BehaviorLearningAgent(PacmanAgent):
                 self.learning.set_weights(pickle.load(fin))
 
     def calculate_manhattan_distance(self, point1, point2):
-        return(abs(point1[0] - point2[0]) + abs(point1[1] - point2[1]))
+        return (abs(point1[0] - point2[0]) + abs(point1[1] - point2[1]))
 
     def feature_ghost_distance(self, state, action):
         pacman_position = state.get_pacman_position()
         ghost_position = state.get_ghost_position()
-        return self.calculate_manhattan_distance(pacman_position, ghost_position)
+        distance = self.calculate_manhattan_distance(pacman_position, ghost_position)
+
+        if distance == 0.0:
+            distance = 1.0
+
+        return (1.0/distance)
 
     def feature_food_distance(self, state, action):
-        food_distance = state.get_food_distance()
-        return food_distance
+        distance = state.get_food_distance()
+
+        if distance == 0.0:
+            distance = 1.0
+
+        return (1.0/distance)
 
     def random(self, state):
         if self.legal_actions == []:

@@ -256,7 +256,11 @@ class QLearningWithApproximation(LearningAlgorithm):
             delta = (reward + self.discount_factor*self.get_max_q_value(state)
                 - self.get_q_value(self.previous_state, action))
             self._update_weights(action, delta)
-            self._normalize_weights()
+            # self._normalize_weights()
+
+        # for weights in self.weights.values():
+        #     print weights
+        # print
 
         self.previous_state = state
 
