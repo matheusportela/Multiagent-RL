@@ -184,10 +184,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # layout_file = 'mediumClassic'
+    layout_file = 'mediumClassic'
     # layout_file = 'ghostlessMediumClassic'
-    layout_file = 'oneGhostMediumClassic'
-    num_ghosts = 1
+    # layout_file = 'oneGhostMediumClassic'
+    num_ghosts = 2
     learn_games = args.learn
     test_games = args.test
     pacman_policy_filename = args.policy_filename
@@ -216,8 +216,8 @@ if __name__ == '__main__':
             for ghost in ghosts:
                 ghost.enable_explore()
 
-        games = pacman_simulator.runGames(layout, pacman, ghosts, display, 1, record)
-        # games = pacman_simulator.runGames(layout, pacman, ghosts, create_display(display_type='Graphic'), 1, record)
+        # games = pacman_simulator.runGames(layout, pacman, ghosts, display, 1, record)
+        games = pacman_simulator.runGames(layout, pacman, ghosts, create_display(display_type='Graphic'), 1, record)
 
         # Do this so as Pacman can receive the last reward
         msg = pacman.create_message(games[0].state)

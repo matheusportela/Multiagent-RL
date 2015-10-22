@@ -9,11 +9,12 @@ import state
 
 
 class MessageRouter(object):
-    def __init__(self):
+    def __init__(self, num_ghosts=1):
+        self.num_ghosts = num_ghosts
         self.pacman_agent = None
         self.ghost_agents = []
         self.server = comm.Server()
-        self.game_state = state.GameState(20, 11, [])
+        self.game_state = state.GameState(20, 11, [], num_ghosts=num_ghosts)
 
     def register_pacman_agent(self, agent):
         self.pacman_agent = agent
@@ -56,11 +57,11 @@ class MessageRouter(object):
 
     def generate_agent_state(self, state):
         self.game_state.observe_pacman(state.pacman_position)
-        self.game_state.observe_ghost(state.ghost_positions[0])
-
+        self.game_state.observe_ghosts(state.ghost_positions)
         return self.game_state
 
     def choose_action(self, state):
+        # Agent state should be per agent, instead of a class attribute
         agent_state = self.generate_agent_state(state)
 
         if state.index == 0:
@@ -68,7 +69,7 @@ class MessageRouter(object):
             self.game_state.predict_pacman(agent_action)
         else:
             agent_action = self.ghost_agents[state.index - 1].choose_action(state.legal_actions)
-            self.game_state.predict_ghost(agent_action)
+            self.game_state.predict_ghost(state.index - 1, agent_action)
 
         return agent_action
 
@@ -102,7 +103,7 @@ class MessageRouter(object):
 
                 self.last_action = agent_action
             elif received_message.msg_type == messages.INIT:
-                self.game_state = state.GameState(20, 11, [])
+                self.game_state = state.GameState(20, 11, [], num_ghosts=num_ghosts)
                 message = pickle.dumps(messages.InitMessage(msg_type=messages.INIT))
                 self.send_message(message)
             elif received_message.msg_type == messages.SAVE:
@@ -116,9 +117,9 @@ class MessageRouter(object):
                 self.reset_behavior_count(received_message.index)
 
 if __name__ == '__main__':
-    num_ghosts = 1
-    router = MessageRouter()
-    router.register_pacman_agent(agents.BehaviorLearningAgent())
+    num_ghosts = 2
+    router = MessageRouter(num_ghosts=num_ghosts)
+    router.register_pacman_agent(agents.BehaviorLearningAgent(num_ghosts))
     for _ in range(num_ghosts):
         router.register_ghost_agent(agents.RandomGhostAgent())
     router.run()
