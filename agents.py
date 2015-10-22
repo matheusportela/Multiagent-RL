@@ -138,10 +138,36 @@ class QLearningWithApproximationAgent(PacmanAgent):
             return suggested_action
 
 
+class Feature(object):
+    def __call__(self, state, action):
+        raise NotImplementedError, 'Feature must implement __call__'
+
+
+class GhostDistanceFeature(Feature):
+    def __call__(self, state, action):
+        pacman_position = state.get_pacman_position()
+        ghost_position = state.get_ghost_position(state.get_closest_ghost(state))
+        distance = state.calculate_distance(pacman_position, ghost_position)
+
+        if distance == 0.0:
+            distance = 1.0
+
+        return (1.0/distance)
+
+class FoodDistanceFeature(Feature):
+    def __call__(self, state, action):
+        distance = state.get_food_distance()
+
+        if distance == 0.0:
+            distance = 1.0
+
+        return (1.0/distance)
+
+
 class BehaviorLearningAgent(PacmanAgent):
     def __init__(self):
         super(BehaviorLearningAgent, self).__init__()
-        self.features = [self.feature_ghost_distance, self.feature_food_distance]
+        self.features = [GhostDistanceFeature(), FoodDistanceFeature()]
         self.behaviors = [self.eat_food, self.flee_from_ghost, self.random]
         self.exploration_rate = 0.1
         self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
@@ -164,42 +190,6 @@ class BehaviorLearningAgent(PacmanAgent):
             with open(filename) as fin:
                 self.learning.set_weights(pickle.load(fin))
 
-    def calculate_manhattan_distance(self, point1, point2):
-        return (abs(point1[0] - point2[0]) + abs(point1[1] - point2[1]))
-
-    def _get_closest_ghost(self, state):
-        pacman_position = state.get_pacman_position()
-        distance = float('inf')
-        closest_ghost = 0
-
-        for i in range(state.num_ghosts):
-            ghost_position = state.get_ghost_position(i)
-            ghost_distance = self.calculate_manhattan_distance(pacman_position, ghost_position)
-
-            if ghost_distance < distance:
-                distance = ghost_distance
-                closest_ghost = i
-
-        return closest_ghost
-
-    def feature_ghost_distance(self, state, action):
-        pacman_position = state.get_pacman_position()
-        ghost_position = state.get_ghost_position(self._get_closest_ghost(state))
-        distance = self.calculate_manhattan_distance(pacman_position, ghost_position)
-
-        if distance == 0.0:
-            distance = 1.0
-
-        return (1.0/distance)
-
-    def feature_food_distance(self, state, action):
-        distance = state.get_food_distance()
-
-        if distance == 0.0:
-            distance = 1.0
-
-        return (1.0/distance)
-
     def random(self, state):
         if self.legal_actions == []:
             return 'Stop'
@@ -220,7 +210,7 @@ class BehaviorLearningAgent(PacmanAgent):
 
             for x in range(food_map.width):
                 for y in range(food_map.height):
-                    new_distance = self.calculate_manhattan_distance(new_position, (y, x))
+                    new_distance = state.calculate_distance(new_position, (y, x))
 
                     if (best_action == None) or (food_map[y][x] > food_prob_threshold and new_distance < min_dist):
                         min_dist = new_distance
@@ -230,7 +220,7 @@ class BehaviorLearningAgent(PacmanAgent):
 
     def flee_from_ghost(self, state):
         pacman_position = state.get_pacman_position()
-        ghost_position = state.get_ghost_position(self._get_closest_ghost(state))
+        ghost_position = state.get_ghost_position(state.get_closest_ghost(state))
         pacman_map = state.agent_maps['pacman']
 
         best_action = None
@@ -239,7 +229,7 @@ class BehaviorLearningAgent(PacmanAgent):
         for action in self.legal_actions:
             diff = pacman_map.action_to_pos[action]
             new_position = (pacman_position[0] + diff[0], pacman_position[1] + diff[1])
-            new_distance = self.calculate_manhattan_distance(new_position, ghost_position)
+            new_distance = state.calculate_distance(new_position, ghost_position)
 
             if (best_action == None) or (pacman_map._is_valid_position(new_position) and
                 new_distance > max_distance):

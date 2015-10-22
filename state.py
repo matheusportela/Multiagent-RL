@@ -335,6 +335,21 @@ class GameState(object):
     def get_ghost_distances(self):
         return [self.get_ghost_distance(i) for i in range(self.num_ghosts)]
 
+    def get_closest_ghost(self, state):
+        pacman_position = self.get_pacman_position()
+        distance = float('inf')
+        closest_ghost = 0
+
+        for i in range(self.num_ghosts):
+            ghost_position = self.get_ghost_position(i)
+            ghost_distance = self.calculate_distance(pacman_position, ghost_position)
+
+            if ghost_distance < distance:
+                distance = ghost_distance
+                closest_ghost = i
+
+        return closest_ghost
+
 
 if __name__ == '__main__':
     # X X _ _ _
