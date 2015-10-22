@@ -144,9 +144,12 @@ class Feature(object):
 
 
 class GhostDistanceFeature(Feature):
+    def __init__(self, ghost_index):
+        self.ghost_index = ghost_index
+
     def __call__(self, state, action):
         pacman_position = state.get_pacman_position()
-        ghost_position = state.get_ghost_position(state.get_closest_ghost(state))
+        ghost_position = state.get_ghost_position(self.ghost_index)
         distance = state.calculate_distance(pacman_position, ghost_position)
 
         if distance == 0.0:
@@ -165,9 +168,12 @@ class FoodDistanceFeature(Feature):
 
 
 class BehaviorLearningAgent(PacmanAgent):
-    def __init__(self):
+    def __init__(self, num_ghosts):
         super(BehaviorLearningAgent, self).__init__()
-        self.features = [GhostDistanceFeature(), FoodDistanceFeature()]
+        self.features = [FoodDistanceFeature()]
+        for i in range(num_ghosts):
+            self.features.append(GhostDistanceFeature(i))
+
         self.behaviors = [self.eat_food, self.flee_from_ghost, self.random]
         self.exploration_rate = 0.1
         self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
