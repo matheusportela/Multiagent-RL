@@ -57,13 +57,11 @@ class MessageRouter(object):
 
     def generate_agent_state(self, state):
         self.game_state.observe_pacman(state.pacman_position)
-
-        for i, ghost_position in enumerate(state.ghost_positions):
-            self.game_state.observe_ghost(i, ghost_position)
-
+        self.game_state.observe_ghosts(state.ghost_positions)
         return self.game_state
 
     def choose_action(self, state):
+        # Agent state should be per agent, instead of a class attribute
         agent_state = self.generate_agent_state(state)
 
         if state.index == 0:

@@ -270,6 +270,10 @@ class GameState(object):
         # TODO: Should it be ghost_pos - pacman_pos?
         self._observe_agent(self._index_to_ghost_str(index), pos)
 
+    def observe_ghosts(self, pos_list):
+        for i, pos in enumerate(pos_list):
+            self.observe_ghost(i, pos)
+
     def _get_agent_position(self, agent):
         return self.agent_maps[agent].get_maximum_position()
 
@@ -278,6 +282,10 @@ class GameState(object):
 
     def get_ghost_position(self, index):
         return self._get_agent_position(self._index_to_ghost_str(index))
+
+    def get_ghost_positions(self):
+        return [self._get_agent_position(self._index_to_ghost_str(i))
+                for i in range(self.num_ghosts)]
 
     def _predict_agent(self, agent, action):
         self.agent_maps[agent].predict(action, semi_deterministic_distribution)
@@ -288,6 +296,10 @@ class GameState(object):
 
     def predict_ghost(self, index, action):
         self._predict_agent(self._index_to_ghost_str(index), action)
+
+    def predict_ghosts(self, action):
+        for i in range(self.num_ghosts):
+            self.predict_ghost(i, action)
 
     def _predict_food_positions(self):
         for x in range(self.width):
@@ -315,10 +327,13 @@ class GameState(object):
 
         return min_dist
 
-    def get_ghost_distance(self):
+    def get_ghost_distance(self, index):
         pacman_position = self.get_pacman_position()
-        ghost_position = self.get_ghost_position()
+        ghost_position = self.get_ghost_position(index)
         return self.calculate_distance(pacman_position, ghost_position)
+
+    def get_ghost_distances(self):
+        return [self.get_ghost_distance(i) for i in range(self.num_ghosts)]
 
 
 if __name__ == '__main__':
