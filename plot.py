@@ -68,9 +68,9 @@ def plot_behavior_count(behavior_count):
     ax.legend()
 
 if __name__ == '__main__':
-    learn_scores = load_scores('learn_scores.txt')
-    test_scores = load_scores('test_scores.txt')
-    behavior_count = load_behavior_count('behavior_count.txt')
+    learn_scores = load_scores('results/learn_scores.txt')
+    test_scores = load_scores('results/test_scores.txt')
+    behavior_count = load_behavior_count('results/behavior_count.txt')
 
     plot_scores(learn_scores, test_scores)
     plot_behavior_count(behavior_count)
