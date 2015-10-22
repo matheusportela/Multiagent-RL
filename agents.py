@@ -252,7 +252,7 @@ class BehaviorLearningAgent(PacmanAgent):
 
         self.legal_actions = legal_actions
         self.learning.learn(state, self.previous_behavior, reward)
-        behavior = self.learning.act(state, self.behaviors)
+        behavior = self.learning.act(state)
         self.previous_behavior = behavior
         suggested_action = behavior(state)
 
