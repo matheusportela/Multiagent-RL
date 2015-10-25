@@ -47,11 +47,7 @@ class CommunicatingAgent(game.Agent):
                 if l:
                     wall_positions.append((y, x))
 
-        if self.invalid_action:
-            # Punish for invalid actions
-            reward = -100
-        else:
-            reward = state.getScore() - self.previous_score
+        reward = state.getScore() - self.previous_score
         self.previous_score = state.getScore()
 
         message = messages.StateMessage(
@@ -175,12 +171,17 @@ def save_policy(filename):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run Pacman simulations.')
-    parser.add_argument('-l', dest='learn', type=int, default=100,
+    parser.add_argument('-l', '--learn-num', dest='learn', type=int, default=100,
                        help='number of games to learn from')
-    parser.add_argument('-t', dest='test', type=int, default=100,
+    parser.add_argument('-t', '--test-num', dest='test', type=int, default=100,
                        help='number of games to test learned policy')
-    parser.add_argument('-p', dest='policy_filename', type=str,
+    parser.add_argument('-p', '--policy-file', dest='policy_filename', type=str,
                         help='load and save Pacman policy from the given file')
+    parser.add_argument('-g', '--graphics', dest='graphics', action='store_true',
+                        help='display graphical user interface')
+    parser.add_argument('--no-graphics', dest='graphics', action='store_false',
+                        help='do not display graphical user interface')
+    parser.set_defaults(graphics=False)
 
     args = parser.parse_args()
 
@@ -192,7 +193,11 @@ if __name__ == '__main__':
     test_games = args.test
     pacman_policy_filename = args.policy_filename
     record = False
-    display_type = 'None'
+
+    if args.graphics:
+        display_type = 'Graphic'
+    else:
+        display_type = 'None'
 
     layout = create_layout(layout_file)
     display = create_display(display_type=display_type)
@@ -216,8 +221,8 @@ if __name__ == '__main__':
             for ghost in ghosts:
                 ghost.enable_explore()
 
-        # games = pacman_simulator.runGames(layout, pacman, ghosts, display, 1, record)
-        games = pacman_simulator.runGames(layout, pacman, ghosts, create_display(display_type='Graphic'), 1, record)
+        games = pacman_simulator.runGames(layout, pacman, ghosts, display, 1, record)
+        # games = pacman_simulator.runGames(layout, pacman, ghosts, create_display(display_type='Graphic'), 1, record)
 
         # Do this so as Pacman can receive the last reward
         msg = pacman.create_message(games[0].state)
