@@ -222,7 +222,6 @@ if __name__ == '__main__':
                 ghost.enable_explore()
 
         games = pacman_simulator.runGames(layout, pacman, ghosts, display, 1, record)
-        # games = pacman_simulator.runGames(layout, pacman, ghosts, create_display(display_type='Graphic'), 1, record)
 
         # Do this so as Pacman can receive the last reward
         msg = pacman.create_message(games[0].state)
