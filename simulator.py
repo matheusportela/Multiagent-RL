@@ -9,6 +9,7 @@ import messages
 import pickle
 import random
 import argparse
+import agents
 
 
 class CommunicatingAgent(game.Agent):
@@ -77,14 +78,18 @@ class CommunicatingAgent(game.Agent):
 
         return message
 
-    def init_agent(self):
-        if self.init:
-            self.init = False
-            message = messages.InitMessage(
-                msg_type=messages.INIT,
-                agent_id=self.agent_id)
-            self.send_message(message)
-            self.receive_message()
+    def init_game(self):
+        self.send_message(messages.InitMessage())
+        self.receive_message()
+
+    def register_agent(self, agent_type, args, kwargs):
+        message = messages.RegisterMessage(
+            agent_id=self.agent_id,
+            agent_type=agent_type,
+            args=args,
+            kwargs=kwargs)
+        self.send_message(message)
+        self.receive_message()
 
     def send_message(self, message):
         self.client.send(pickle.dumps(message))
@@ -140,18 +145,18 @@ def create_layout(layout_file):
 
     return layout
 
-def create_pacman():
+def create_pacman(agent_type, args=[], kwargs={}):
     agent = CommunicatingPacmanAgent()
-    agent.init_agent()
+    agent.register_agent(agent_type, args, kwargs)
     print 'Created Pacman agent with ID:', agent.agent_id
     return agent
 
-def create_ghosts(num_ghosts):
+def create_ghosts(num_ghosts, agent_type, args=[], kwargs={}):
     agents = []
 
     for i in range(num_ghosts):
         agent = CommunicatingGhostAgent(i+1)
-        agent.init_agent()
+        agent.register_agent(agent_type, args, kwargs)
         print 'Created ghost agent with ID:', agent.agent_id
         agents.append(agent)
 
@@ -223,11 +228,13 @@ if __name__ == '__main__':
     if pacman_policy_filename:
         load_policy(pacman_policy_filename)
 
+    ghosts = create_ghosts(num_ghosts, agents.RandomGhostAgent)
+    pacman = create_pacman(agents.BehaviorLearningAgent, kwargs={'num_ghosts': num_ghosts})
+
     for i in range(learn_games + test_games):
         print '\nGame #%d' % (i+1)
 
-        pacman = create_pacman()
-        ghosts = create_ghosts(num_ghosts)
+        pacman.init_game()
 
         if i >= learn_games:
             pacman.enable_explore()

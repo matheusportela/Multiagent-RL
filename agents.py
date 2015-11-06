@@ -14,11 +14,15 @@ class PacmanAgent(object):
     def __init__(self):
         self.actions = ['North', 'South', 'East', 'West', 'Stop']
 
-    def choose_action(self, state):
+    def choose_action(self, state, action, reward, legal_actions, explore):
         """Select an action to be executed by the agent.
 
         Args:
             state: Current game state.
+            action: Last executed action.
+            reward: Reward for the previous action.
+            legal_actions: List of currently allowed actions.
+            explore: Boolean whether agent is allowed to explore.
 
         Returns:
             A Direction for the agent to follow (NORTH, SOUTH, EAST, WEST or
@@ -55,13 +59,17 @@ class GhostAgent(object):
     def __init__(self):
         self.actions = ['North', 'South', 'East', 'West']
 
-    def choose_action(self, state):
+    def choose_action(self, state, action, reward, legal_actions, explore):
         """Select an action to be executed by the agent.
 
         Ghosts can only select new actions at intersections or dead ends.
 
         Args:
             state: Current game state.
+            action: Last executed action.
+            reward: Reward for the previous action.
+            legal_actions: List of currently allowed actions.
+            explore: Boolean whether agent is allowed to explore.
 
         Returns:
             A Direction for the agent to follow (NORTH, SOUTH, EAST, WEST or
@@ -73,14 +81,16 @@ class GhostAgent(object):
 
 class RandomPacmanAgent(PacmanAgent):
     """Agent that randomly selects an action."""
-    def choose_action(self, legal_actions):
-        return random.choice(legal_actions)
+    def choose_action(self, state, action, reward, legal_actions, explore):
+        if len(legal_actions) > 0:
+            return random.choice(legal_actions)
 
 
 class RandomGhostAgent(GhostAgent):
     """Agent that randomly selects an action."""
-    def choose_action(self, legal_actions):
-        return random.choice(legal_actions)
+    def choose_action(self, state, action, reward, legal_actions, explore):
+        if len(legal_actions) > 0:
+            return random.choice(legal_actions)
 
 
 class QLearningAgent(PacmanAgent):
@@ -90,7 +100,7 @@ class QLearningAgent(PacmanAgent):
         self.learning = learning.QLearning(learning_rate=0.1, discount_factor=0.9,
             actions=self.actions)
 
-    def choose_action(self, state, action, reward, legal_actions):
+    def choose_action(self, state, action, reward, legal_actions, explore):
         self.learning.learn(state, action, reward)
         suggested_action = self.learning.act(state, legal_actions)
 
@@ -128,7 +138,7 @@ class QLearningWithApproximationAgent(PacmanAgent):
         food_positions = state[2]
         return self._find_closest_distance(pacman_position, food_positions)
 
-    def choose_action(self, state, action, reward, legal_actions):
+    def choose_action(self, state, action, reward, legal_actions, explore):
         self.learning.learn(state, action, reward)
         suggested_action = self.learning.act(state, legal_actions)
 
@@ -168,13 +178,16 @@ class FoodDistanceFeature(Feature):
 
 
 class BehaviorLearningAgent(PacmanAgent):
-    def __init__(self, num_ghosts):
+    def __init__(self, num_ghosts=1):
         super(BehaviorLearningAgent, self).__init__()
         self.features = [FoodDistanceFeature()]
         for i in range(num_ghosts):
             self.features.append(GhostDistanceFeature(i))
 
-        self.behaviors = [self.eat_food, self.flee_from_ghost, self.random]
+        self.behaviors = [self.eat_food, self.random]
+        if num_ghosts > 0:
+            self.behaviors.append(self.flee_from_ghost)
+
         self.exploration_rate = 0.1
         self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
             discount_factor=0.9, actions=self.behaviors, features=self.features,

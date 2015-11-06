@@ -9,19 +9,17 @@ import state
 
 
 class MessageRouter(object):
-    def __init__(self, num_ghosts=1):
-        self.num_ghosts = num_ghosts
+    def __init__(self):
         self.agents = {}
-        self.pacman_agent = None
-        self.ghost_agents = []
         self.server = comm.Server()
-        self.game_state = state.GameState(20, 11, [], num_ghosts=num_ghosts)
+        self.game_state = None
 
-    def register_pacman_agent(self, agent):
-        self.pacman_agent = agent
+    def register_agent(self, message):
+        print 'Initialized agent:', message.agent_id
+        print 'Type:', message.agent_type
+        print 'Parameters:', message.args, message.kwargs
 
-    def register_ghost_agent(self, agent):
-        self.ghost_agents.append(agent)
+        self.agents[message.agent_id] = message.agent_type(*message.args, **message.kwargs)
 
     def receive_message(self):
         message = pickle.loads(self.server.recv())
@@ -29,10 +27,7 @@ class MessageRouter(object):
         return message
 
     def create_action_message(self, agent_id, action):
-        message = messages.ActionMessage(
-            msg_type=messages.ACTION,
-            agent_id=agent_id,
-            action=action)
+        message = messages.ActionMessage(agent_id=agent_id, action=action)
         return message
 
     def create_ack_message(self):
@@ -40,20 +35,13 @@ class MessageRouter(object):
         return message
 
     def create_behavior_count_message(self, agent_id):
-        if agent_id == 0:
-            message = messages.BehaviorCountMessage(
-                count=self.pacman_agent.behavior_count)
-        else:
-            message = messages.BehaviorCountMessage(
-                count=self.ghost_agents[agent_id - 1].behavior_count)
+        message = messages.BehaviorCountMessage(
+            count=self.agents[agent_id].behavior_count)
 
         return message
 
     def reset_behavior_count(self, agent_id):
-        if agent_id == 0:
-            self.pacman_agent.reset_behavior_count()
-        else:
-            self.ghost_agents[agent_id - 1].reset_behavior_count()
+        self.agents[agent_id].reset_behavior_count()
 
     def send_message(self, message):
         print 'Sent message:', message.__dict__
@@ -67,30 +55,19 @@ class MessageRouter(object):
     def choose_action(self, state):
         # Agent state should be per agent, instead of a class attribute
         agent_state = self.generate_agent_state(state)
-
+        agent_action = self.agents[state.agent_id].choose_action(agent_state, state.executed_action, state.reward, state.legal_actions, state.explore)
         if state.agent_id == 0:
-            # agent_action = self.pacman_agent.choose_action(agent_state, state.executed_action, state.reward, state.legal_actions, state.explore)
-            agent_action = self.pacman_agent.choose_action(state.legal_actions)
             self.game_state.predict_pacman(agent_action)
         else:
-            agent_action = self.ghost_agents[state.agent_id - 1].choose_action(state.legal_actions)
             self.game_state.predict_ghost(state.agent_id - 1, agent_action)
 
         return agent_action
 
     def save_agent_policy(self, message):
-        if message.agent_id == 0:
-            self.pacman_agent.save_policy(message.filename)
-            print 'Pacman saved policy:', self.pacman_agent.learning.weights
-        else:
-            self.ghost_agents[state.agent_id - 1].save_policy(message.filename)
+        self.agents[message.agent_id].save_policy(message.filename)
 
     def load_agent_policy(self, message):
-        if message.agent_id == 0:
-            self.pacman_agent.load_policy(message.filename)
-            print 'Pacman loaded policy:', self.pacman_agent.learning.weights
-        else:
-            self.ghost_agents[state.agent_id - 1].load_policy(message.filename)
+        self.agents[message.agent_id].load_policy(message.filename)
 
     def run(self):
         self.last_action = 'Stop'
@@ -108,7 +85,10 @@ class MessageRouter(object):
 
                 self.last_action = agent_action
             elif received_message.msg_type == messages.INIT:
-                self.game_state = state.GameState(20, 11, [], num_ghosts=num_ghosts)
+                self.game_state = state.GameState(20, 11, [], num_ghosts=len(self.agents) - 1)
+                self.send_message(self.create_ack_message())
+            elif received_message.msg_type == messages.REGISTER:
+                self.register_agent(received_message)
                 self.send_message(self.create_ack_message())
             elif received_message.msg_type == messages.SAVE:
                 self.save_agent_policy(received_message)
@@ -121,10 +101,5 @@ class MessageRouter(object):
                 self.reset_behavior_count(received_message.agent_id)
 
 if __name__ == '__main__':
-    num_ghosts = 2
-    router = MessageRouter(num_ghosts=num_ghosts)
-    # router.register_pacman_agent(agents.BehaviorLearningAgent(num_ghosts))
-    router.register_pacman_agent(agents.RandomPacmanAgent())
-    for _ in range(num_ghosts):
-        router.register_ghost_agent(agents.RandomGhostAgent())
+    router = MessageRouter()
     router.run()
