@@ -23,18 +23,20 @@ class MessageRouter(object):
         self.ghost_agents.append(agent)
 
     def receive_message(self):
-        return pickle.loads(self.server.recv())
+        message = pickle.loads(self.server.recv())
+        print 'Received message:', message
+        return message
 
     def create_action_message(self, agent_index, action):
         message = messages.ActionMessage(
             msg_type=messages.ACTION,
             index=agent_index,
             action=action)
-        return pickle.dumps(message)
+        return message
 
     def create_ack_message(self):
         message = messages.AckMessage()
-        return pickle.dumps(message)
+        return message
 
     def create_behavior_count_message(self, index):
         if index == 0:
@@ -44,7 +46,7 @@ class MessageRouter(object):
             message = messages.BehaviorCountMessage(
                 count=self.ghost_agents[index - 1].behavior_count)
 
-        return pickle.dumps(message)
+        return message
 
     def reset_behavior_count(self, index):
         if index == 0:
@@ -53,7 +55,8 @@ class MessageRouter(object):
             self.ghost_agents[index - 1].reset_behavior_count()
 
     def send_message(self, message):
-        self.server.send(message)
+        print 'Sent message:', message
+        self.server.send(pickle.dumps(message))
 
     def generate_agent_state(self, state):
         self.game_state.observe_pacman(state.pacman_position)
@@ -65,7 +68,8 @@ class MessageRouter(object):
         agent_state = self.generate_agent_state(state)
 
         if state.index == 0:
-            agent_action = self.pacman_agent.choose_action(agent_state, state.executed_action, state.reward, state.legal_actions, state.explore)
+            # agent_action = self.pacman_agent.choose_action(agent_state, state.executed_action, state.reward, state.legal_actions, state.explore)
+            agent_action = self.pacman_agent.choose_action(state.legal_actions)
             self.game_state.predict_pacman(agent_action)
         else:
             agent_action = self.ghost_agents[state.index - 1].choose_action(state.legal_actions)
@@ -104,7 +108,7 @@ class MessageRouter(object):
                 self.last_action = agent_action
             elif received_message.msg_type == messages.INIT:
                 self.game_state = state.GameState(20, 11, [], num_ghosts=num_ghosts)
-                message = pickle.dumps(messages.InitMessage(msg_type=messages.INIT))
+                message = messages.InitMessage(msg_type=messages.INIT)
                 self.send_message(message)
             elif received_message.msg_type == messages.SAVE:
                 self.save_agent_policy(received_message)
@@ -119,7 +123,8 @@ class MessageRouter(object):
 if __name__ == '__main__':
     num_ghosts = 2
     router = MessageRouter(num_ghosts=num_ghosts)
-    router.register_pacman_agent(agents.BehaviorLearningAgent(num_ghosts))
+    # router.register_pacman_agent(agents.BehaviorLearningAgent(num_ghosts))
+    router.register_pacman_agent(agents.RandomPacmanAgent())
     for _ in range(num_ghosts):
         router.register_ghost_agent(agents.RandomGhostAgent())
     router.run()
