@@ -77,6 +77,15 @@ class CommunicatingAgent(game.Agent):
 
         return message
 
+    def init_agent(self):
+        if self.init:
+            self.init = False
+            message = messages.InitMessage(
+                msg_type=messages.INIT,
+                agent_id=self.agent_id)
+            self.send_message(message)
+            self.receive_message()
+
     def send_message(self, message):
         self.client.send(pickle.dumps(message))
 
@@ -87,12 +96,6 @@ class CommunicatingAgent(game.Agent):
         raise NotImplementedError
 
     def getAction(self, state):
-        if self.init and self.agent_id == 0:
-            self.init = False
-            message = messages.InitMessage(msg_type=messages.INIT)
-            self.send_message(message)
-            self.receive_message()
-
         message = self.create_message(state)
         self.send_message(message)
 
@@ -139,6 +142,7 @@ def create_layout(layout_file):
 
 def create_pacman():
     agent = CommunicatingPacmanAgent()
+    agent.init_agent()
     print 'Created Pacman agent with ID:', agent.agent_id
     return agent
 
@@ -147,6 +151,7 @@ def create_ghosts(num_ghosts):
 
     for i in range(num_ghosts):
         agent = CommunicatingGhostAgent(i+1)
+        agent.init_agent()
         print 'Created ghost agent with ID:', agent.agent_id
         agents.append(agent)
 

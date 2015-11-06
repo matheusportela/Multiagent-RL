@@ -11,6 +11,7 @@ import state
 class MessageRouter(object):
     def __init__(self, num_ghosts=1):
         self.num_ghosts = num_ghosts
+        self.agents = {}
         self.pacman_agent = None
         self.ghost_agents = []
         self.server = comm.Server()

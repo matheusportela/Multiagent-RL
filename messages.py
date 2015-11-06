@@ -41,8 +41,10 @@ class ActionMessage(BaseMessage):
 
 
 class InitMessage(BaseMessage):
-    def __init__(self, msg_type=INIT):
+    def __init__(self, msg_type=INIT, agent_id=None, agent_type=None):
         super(InitMessage, self).__init__(msg_type=msg_type)
+        self.agent_id = agent_id
+        self.agent_type = agent_type
 
 
 class SaveMessage(BaseMessage):
