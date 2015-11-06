@@ -12,9 +12,9 @@ import argparse
 
 
 class CommunicatingAgent(game.Agent):
-    def __init__(self, index):
+    def __init__(self, agent_id):
         super(CommunicatingAgent, self).__init__()
-        self.index = index
+        self.agent_id = agent_id
         self.client = comm.Client()
         self.previous_score = 0
         self.previous_action = 'Stop'
@@ -51,12 +51,12 @@ class CommunicatingAgent(game.Agent):
         self.previous_score = state.getScore()
 
         message = messages.StateMessage(
-            index=self.index,
+            agent_id=self.agent_id,
             pacman_position=pacman_position,
             ghost_positions=ghost_positions,
             food_positions=food_positions,
             wall_positions=wall_positions,
-            legal_actions=state.getLegalActions(self.index),
+            legal_actions=state.getLegalActions(self.agent_id),
             reward=reward,
             executed_action=self.previous_action,
             explore=self.explore)
@@ -65,14 +65,14 @@ class CommunicatingAgent(game.Agent):
 
     def create_save_message(self, filename):
         message = messages.SaveMessage(
-            index=self.index,
+            agent_id=self.agent_id,
             filename=filename)
 
         return message
 
     def create_load_message(self, filename):
         message = messages.LoadMessage(
-            index=self.index,
+            agent_id=self.agent_id,
             filename=filename)
 
         return message
@@ -87,7 +87,7 @@ class CommunicatingAgent(game.Agent):
         raise NotImplementedError
 
     def getAction(self, state):
-        if self.init and self.index == 0:
+        if self.init and self.agent_id == 0:
             self.init = False
             message = messages.InitMessage(msg_type=messages.INIT)
             self.send_message(message)
@@ -97,12 +97,12 @@ class CommunicatingAgent(game.Agent):
         self.send_message(message)
 
         message = self.receive_message()
-        while message.index != self.index:
+        while message.agent_id != self.agent_id:
             message = self.receive_message()
 
         self.previous_action = message.action
 
-        if message.action not in state.getLegalActions(self.index):
+        if message.action not in state.getLegalActions(self.agent_id):
             self.invalid_action = True
             return self.act_when_invalid(state)
         else:
@@ -120,13 +120,13 @@ class CommunicatingPacmanAgent(CommunicatingAgent):
 
 
 class CommunicatingGhostAgent(CommunicatingAgent):
-    def __init__(self, index):
-        super(CommunicatingGhostAgent, self).__init__(index)
+    def __init__(self, agent_id):
+        super(CommunicatingGhostAgent, self).__init__(agent_id)
         self.previous_action = 'North'
         self.actions = ['North', 'South', 'East', 'West']
 
     def act_when_invalid(self, state):
-        return random.choice(state.getLegalActions(self.index))
+        return random.choice(state.getLegalActions(self.agent_id))
 
 
 def create_layout(layout_file):
@@ -138,10 +138,19 @@ def create_layout(layout_file):
     return layout
 
 def create_pacman():
-    return CommunicatingPacmanAgent()
+    agent = CommunicatingPacmanAgent()
+    print 'Created Pacman agent with ID:', agent.agent_id
+    return agent
 
 def create_ghosts(num_ghosts):
-    return [CommunicatingGhostAgent(i+1) for i in range(num_ghosts)]
+    agents = []
+
+    for i in range(num_ghosts):
+        agent = CommunicatingGhostAgent(i+1)
+        print 'Created ghost agent with ID:', agent.agent_id
+        agents.append(agent)
+
+    return agents
 
 def create_display(display_type='None', zoom=1.0, frameTime=0.1):
     if display_type == 'Text':
@@ -229,7 +238,7 @@ if __name__ == '__main__':
         pacman.receive_message()
 
         # Log behavior count
-        msg = messages.RequestBehaviorCountMessage(index=pacman.index)
+        msg = messages.RequestBehaviorCountMessage(agent_id=pacman.agent_id)
         pacman.send_message(msg)
         behavior_count_msg = pacman.receive_message()
         print behavior_count_msg.count
