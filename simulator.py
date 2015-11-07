@@ -31,8 +31,10 @@ class CommunicatingAgent(game.Agent):
         self.explore = False
 
     def create_state_message(self, state):
-        pacman_position = state.getPacmanPosition()[::-1]
-        ghost_positions = [g[::-1] for g in state.getGhostPositions()]
+        agent_positions = {}
+        agent_positions[0] = state.getPacmanPosition()[::-1]
+        for id_, g in enumerate(state.getGhostPositions()):
+            agent_positions[id_] = g[::-1]
 
         food_positions = []
 
@@ -53,8 +55,7 @@ class CommunicatingAgent(game.Agent):
 
         message = messages.StateMessage(
             agent_id=self.agent_id,
-            pacman_position=pacman_position,
-            ghost_positions=ghost_positions,
+            agent_positions=agent_positions,
             food_positions=food_positions,
             wall_positions=wall_positions,
             legal_actions=state.getLegalActions(self.agent_id),

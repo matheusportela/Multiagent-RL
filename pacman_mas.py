@@ -10,10 +10,11 @@ import state
 
 class MessageRouter(object):
     def __init__(self):
-        self.agents = {}
-        self.agent_teams = {}
         self.server = comm.Server()
-        self.game_state = None
+        self.agents = {}
+        self.agent_classes = {}
+        self.agent_teams = {}
+        self.game_states = {}
 
     def register_agent(self, message):
         print 'Initialized agent:', message.agent_id
@@ -21,7 +22,7 @@ class MessageRouter(object):
         print 'Type:', message.agent_class
         print 'Parameters:', message.args, message.kwargs
 
-        self.agents[message.agent_id] = message.agent_class(*message.args, **message.kwargs)
+        self.agent_classes[message.agent_id] = message.agent_class
         self.agent_teams[message.agent_id] = message.agent_team
 
     def get_agent_allies(self, agent_id):
@@ -60,17 +61,17 @@ class MessageRouter(object):
         print 'Sent message:', message.__dict__
         self.server.send(pickle.dumps(message))
 
-    def generate_agent_state(self, state):
-        self.game_state.observe_agent(0, state.pacman_position)
-        for ghost_id, ghost_pos in zip(self.game_state.enemy_ids, state.ghost_positions):
-            self.game_state.observe_agent(ghost_id, ghost_pos)
-        return self.game_state
+    def update_agent_state(self, state):
+        agent_id = state.agent_id
+
+        for id_, pos in state.agent_positions.items():
+            self.game_states[agent_id].observe_agent(id_, pos)
 
     def choose_action(self, state):
-        # Agent state should be per agent, instead of a class attribute
-        agent_state = self.generate_agent_state(state)
+        self.update_agent_state(state)
+        agent_state = self.game_states[state.agent_id]
         agent_action = self.agents[state.agent_id].choose_action(agent_state, state.executed_action, state.reward, state.legal_actions, state.explore)
-        self.game_state.predict_agent(state.agent_id, agent_action)
+        agent_state.predict_agent(state.agent_id, agent_action)
 
         return agent_action
 
@@ -87,8 +88,9 @@ class MessageRouter(object):
             received_message = self.receive_message()
 
             if received_message.msg_type == messages.STATE:
-                self.game_state.set_walls(received_message.wall_positions)
-                self.game_state.set_food_positions(received_message.food_positions)
+                game_state = self.game_states[received_message.agent_id]
+                game_state.set_walls(received_message.wall_positions)
+                game_state.set_food_positions(received_message.food_positions)
 
                 agent_action = self.choose_action(received_message)
                 reply_message = self.create_action_message(received_message.agent_id, agent_action)
@@ -101,8 +103,9 @@ class MessageRouter(object):
                 enemy_ids = self.get_agent_enemies(agent_id)
                 print 'Allies:', self.get_agent_allies(agent_id)
                 print 'Enemies:', self.get_agent_enemies(agent_id)
-                self.game_state = state.GameState(20, 11, [], my_id=agent_id,
-                    ally_ids=ally_ids, enemy_ids=enemy_ids)
+                self.agents[agent_id] = self.agent_classes[agent_id](ally_ids, enemy_ids)
+                self.game_states[agent_id] = state.GameState(20, 11, [],
+                    agent_id=agent_id, ally_ids=ally_ids, enemy_ids=enemy_ids)
                 self.send_message(self.create_ack_message())
             elif received_message.msg_type == messages.REGISTER:
                 self.register_agent(received_message)

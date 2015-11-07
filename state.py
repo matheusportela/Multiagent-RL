@@ -218,18 +218,19 @@ def gaussian_distribution(pos1, pos2, sd):
 
 
 class GameState(object):
-    def __init__(self, width, height, walls, my_id=None, ally_ids=[], enemy_ids=[], eater=True):
+    def __init__(self, width, height, walls, agent_id=None, ally_ids=[],
+        enemy_ids=[], eater=True):
         self.width = width
         self.height = height
         self.walls = walls
 
-        self.my_id = my_id
+        self.agent_id = agent_id
         self.ally_ids = ally_ids
         self.enemy_ids = enemy_ids
 
         self.agent_maps = {}
 
-        self.agent_maps[self.my_id] = Map(width, height, walls)
+        self.agent_maps[self.agent_id] = Map(width, height, walls)
 
         for ally_id in self.ally_ids:
             self.agent_maps[ally_id] = Map(width, height, walls)
@@ -273,8 +274,8 @@ class GameState(object):
     def get_agent_position(self, agent_id):
         return self.agent_maps[agent_id].get_maximum_position()
 
-    def get_my_position(self):
-        return self.get_agent_position(self.my_id)
+    def get_position(self):
+        return self.get_agent_position(self.agent_id)
 
     def get_ally_positions(self):
         return [self.get_agent_position(id_) for id_ in self.ally_ids]
@@ -282,8 +283,8 @@ class GameState(object):
     def get_enemy_positions(self):
         return [self.get_agent_position(id_) for id_ in self.enemy_ids]
 
-    def get_my_map(self):
-        return self.agent_maps[self.my_id]
+    def get_map(self):
+        return self.agent_maps[self.agent_id]
 
     def predict_agent(self, agent_id, action):
         self.agent_maps[agent_id].predict(action, semi_deterministic_distribution)
@@ -294,16 +295,16 @@ class GameState(object):
     def _predict_food_positions(self):
         for x in range(self.width):
             for y in range(self.height):
-                self.food_map[y][x] = self.food_map[y][x] * (1 - self.agent_maps[self.my_id][y][x])
+                self.food_map[y][x] = self.food_map[y][x] * (1 - self.agent_maps[self.agent_id][y][x])
 
     def calculate_manhattan_distance(self, point1, point2):
         return (abs(point1[0] - point2[0]) + abs(point1[1] - point2[1]))
 
     def calculate_distance(self, point1, point2):
-        return self.agent_maps[self.my_id].calculate_distance(point1, point2)
+        return self.agent_maps[self.agent_id].calculate_distance(point1, point2)
 
     def get_food_distance(self):
-        position = self.get_agent_position(self.my_id)
+        position = self.get_agent_position(self.agent_id)
         food_prob_threshold = self.food_map.max() / 2.0
         min_dist = float('inf')
 
@@ -318,7 +319,7 @@ class GameState(object):
         return min_dist
 
     def get_distance_to_agent(self, agent_id):
-        my_position = self.get_agent_position(self.my_id)
+        my_position = self.get_agent_position(self.agent_id)
         agent_position = self.get_agent_position(agent_id)
         return self.calculate_distance(my_position, agent_position)
 

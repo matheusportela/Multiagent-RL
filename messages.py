@@ -19,13 +19,12 @@ class AckMessage(BaseMessage):
 
 
 class StateMessage(BaseMessage):
-    def __init__(self, agent_id=None, pacman_position=None,
-        ghost_positions=None, food_positions=None, wall_positions=None,
-        legal_actions=None, reward=None, executed_action=None, explore=None):
+    def __init__(self, agent_id=None, agent_positions=None, food_positions=None,
+        wall_positions=None, legal_actions=None, reward=None,
+        executed_action=None, explore=None):
         super(StateMessage, self).__init__(msg_type=STATE)
         self.agent_id = agent_id
-        self.pacman_position = pacman_position
-        self.ghost_positions = ghost_positions
+        self.agent_positions = agent_positions
         self.food_positions = food_positions
         self.wall_positions = wall_positions
         self.legal_actions = legal_actions
