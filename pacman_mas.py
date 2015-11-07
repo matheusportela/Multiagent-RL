@@ -96,11 +96,13 @@ class MessageRouter(object):
 
                 self.last_action = agent_action
             elif received_message.msg_type == messages.INIT:
-                pacman_id = 0
-                ghost_ids = [id_ for id_ in self.agents.keys() if id_ != pacman_id]
-                print 'Allies:', self.get_agent_allies(pacman_id)
-                print 'Enemies:', self.get_agent_enemies(pacman_id)
-                self.game_state = state.GameState(20, 11, [], my_id=pacman_id, enemy_ids=ghost_ids)
+                agent_id = received_message.agent_id
+                ally_ids = self.get_agent_allies(agent_id)
+                enemy_ids = self.get_agent_enemies(agent_id)
+                print 'Allies:', self.get_agent_allies(agent_id)
+                print 'Enemies:', self.get_agent_enemies(agent_id)
+                self.game_state = state.GameState(20, 11, [], my_id=agent_id,
+                    ally_ids=ally_ids, enemy_ids=enemy_ids)
                 self.send_message(self.create_ack_message())
             elif received_message.msg_type == messages.REGISTER:
                 self.register_agent(received_message)

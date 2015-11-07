@@ -81,7 +81,7 @@ class CommunicatingAgent(game.Agent):
     def init_game(self):
         self.previous_score = 0
         self.previous_action = 'Stop'
-        self.send_message(messages.InitMessage())
+        self.send_message(messages.InitMessage(agent_id=self.agent_id))
         self.receive_message()
 
     def register_agent(self, agent_team, agent_class, args, kwargs):
@@ -208,10 +208,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     layout_file = 'mediumClassic'
-    # layout_file = 'oneGhostMediumClassic'
-    # layout_file = 'ghostlessMediumClassic'
     num_ghosts = 2
+    # layout_file = 'oneGhostMediumClassic'
     # num_ghosts = 1
+    # layout_file = 'ghostlessMediumClassic'
+    # num_ghosts = 0
     learn_games = args.learn
     test_games = args.test
     pacman_policy_filename = args.policy_filename

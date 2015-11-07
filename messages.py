@@ -42,8 +42,9 @@ class ActionMessage(BaseMessage):
 
 
 class InitMessage(BaseMessage):
-    def __init__(self):
+    def __init__(self, agent_id=None):
         super(InitMessage, self).__init__(msg_type=INIT)
+        self.agent_id = agent_id
 
 
 class RegisterMessage(BaseMessage):
