@@ -84,10 +84,10 @@ class CommunicatingAgent(game.Agent):
         self.send_message(messages.InitMessage())
         self.receive_message()
 
-    def register_agent(self, agent_type, args, kwargs):
+    def register_agent(self, agent_class, args, kwargs):
         message = messages.RegisterMessage(
             agent_id=self.agent_id,
-            agent_type=agent_type,
+            agent_class=agent_class,
             args=args,
             kwargs=kwargs)
         self.send_message(message)
@@ -147,18 +147,18 @@ def create_layout(layout_file):
 
     return layout
 
-def create_pacman(agent_type, args=[], kwargs={}):
+def create_pacman(agent_class, args=[], kwargs={}):
     agent = CommunicatingPacmanAgent()
-    agent.register_agent(agent_type, args, kwargs)
+    agent.register_agent(agent_class, args, kwargs)
     print 'Created Pacman agent with ID:', agent.agent_id
     return agent
 
-def create_ghosts(num_ghosts, agent_type, args=[], kwargs={}):
+def create_ghosts(num_ghosts, agent_class, args=[], kwargs={}):
     agents = []
 
     for i in range(num_ghosts):
         agent = CommunicatingGhostAgent(i+1)
-        agent.register_agent(agent_type, args, kwargs)
+        agent.register_agent(agent_class, args, kwargs)
         print 'Created ghost agent with ID:', agent.agent_id
         agents.append(agent)
 
@@ -275,15 +275,15 @@ if __name__ == '__main__':
     print learn_scores
     print test_scores
 
-    with open('learn_scores.txt', 'w') as output:
+    with open('results/learn_scores.txt', 'w') as output:
         for score in learn_scores:
             output.write(str(score) + '\n')
 
-    with open('test_scores.txt', 'w') as output:
+    with open('results/test_scores.txt', 'w') as output:
         for score in test_scores:
             output.write(str(score) + '\n')
 
-    with open('behavior_count.txt', 'w') as output:
+    with open('results/behavior_count.txt', 'w') as output:
         names = [name for name in log_behavior_count[0]]
         output.write(','.join(names) + '\n')
         output.write('\n'.join([','.join([str(behavior_count[name]) for name in names]) for behavior_count in log_behavior_count]))

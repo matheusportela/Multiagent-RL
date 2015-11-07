@@ -16,10 +16,10 @@ class MessageRouter(object):
 
     def register_agent(self, message):
         print 'Initialized agent:', message.agent_id
-        print 'Type:', message.agent_type
+        print 'Type:', message.agent_class
         print 'Parameters:', message.args, message.kwargs
 
-        self.agents[message.agent_id] = message.agent_type(*message.args, **message.kwargs)
+        self.agents[message.agent_id] = message.agent_class(*message.args, **message.kwargs)
 
     def receive_message(self):
         message = pickle.loads(self.server.recv())
