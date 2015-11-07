@@ -84,9 +84,10 @@ class CommunicatingAgent(game.Agent):
         self.send_message(messages.InitMessage())
         self.receive_message()
 
-    def register_agent(self, agent_class, args, kwargs):
+    def register_agent(self, agent_team, agent_class, args, kwargs):
         message = messages.RegisterMessage(
             agent_id=self.agent_id,
+            agent_team=agent_team,
             agent_class=agent_class,
             args=args,
             kwargs=kwargs)
@@ -149,7 +150,7 @@ def create_layout(layout_file):
 
 def create_pacman(agent_class, args=[], kwargs={}):
     agent = CommunicatingPacmanAgent()
-    agent.register_agent(agent_class, args, kwargs)
+    agent.register_agent('pacman', agent_class, args, kwargs)
     print 'Created Pacman agent with ID:', agent.agent_id
     return agent
 
@@ -158,7 +159,7 @@ def create_ghosts(num_ghosts, agent_class, args=[], kwargs={}):
 
     for i in range(num_ghosts):
         agent = CommunicatingGhostAgent(i+1)
-        agent.register_agent(agent_class, args, kwargs)
+        agent.register_agent('ghost', agent_class, args, kwargs)
         print 'Created ghost agent with ID:', agent.agent_id
         agents.append(agent)
 
@@ -206,11 +207,11 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # layout_file = 'mediumClassic'
-    layout_file = 'oneGhostMediumClassic'
+    layout_file = 'mediumClassic'
+    # layout_file = 'oneGhostMediumClassic'
     # layout_file = 'ghostlessMediumClassic'
-    # num_ghosts = 2
-    num_ghosts = 1
+    num_ghosts = 2
+    # num_ghosts = 1
     learn_games = args.learn
     test_games = args.test
     pacman_policy_filename = args.policy_filename
