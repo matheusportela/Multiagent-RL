@@ -30,11 +30,14 @@ class CommunicatingAgent(game.Agent):
     def disable_explore(self):
         self.explore = False
 
+    def calculate_reward(self, current_score):
+        raise NotImplementedError, 'Communicating agent must calculate score'
+
     def create_state_message(self, state):
         agent_positions = {}
         agent_positions[0] = state.getPacmanPosition()[::-1]
         for id_, g in enumerate(state.getGhostPositions()):
-            agent_positions[id_] = g[::-1]
+            agent_positions[id_ + 1] = g[::-1]
 
         food_positions = []
 
@@ -50,7 +53,7 @@ class CommunicatingAgent(game.Agent):
                 if l:
                     wall_positions.append((y, x))
 
-        reward = state.getScore() - self.previous_score
+        reward = self.calculate_reward(state.getScore())
         self.previous_score = state.getScore()
 
         message = messages.StateMessage(
@@ -128,6 +131,9 @@ class CommunicatingPacmanAgent(CommunicatingAgent):
     def act_when_invalid(self, state):
         return 'Stop'
 
+    def calculate_reward(self, current_score):
+        return current_score - self.previous_score
+
 
 class CommunicatingGhostAgent(CommunicatingAgent):
     def __init__(self, agent_id):
@@ -137,6 +143,9 @@ class CommunicatingGhostAgent(CommunicatingAgent):
 
     def act_when_invalid(self, state):
         return random.choice(state.getLegalActions(self.agent_id))
+
+    def calculate_reward(self, current_score):
+        return self.previous_score - current_score
 
 
 def create_layout(layout_file):
@@ -216,6 +225,10 @@ if __name__ == '__main__':
     test_games = args.test
     pacman_policy_filename = args.policy_filename
     record = False
+    # pacman_class = agents.BehaviorLearningPacmanAgent
+    # ghost_class = agents.RandomGhostAgent
+    pacman_class = agents.RandomPacmanAgent
+    ghost_class = agents.BehaviorLearningGhostAgent
 
     if args.graphics:
         display_type = 'Graphic'
@@ -232,8 +245,8 @@ if __name__ == '__main__':
     if pacman_policy_filename:
         load_policy(pacman_policy_filename)
 
-    pacman = create_pacman(agents.BehaviorLearningAgent)
-    ghosts = create_ghosts(num_ghosts, agents.RandomGhostAgent)
+    pacman = create_pacman(pacman_class)
+    ghosts = create_ghosts(num_ghosts, ghost_class)
 
     for i in range(learn_games + test_games):
         print '\nGame #%d' % (i+1)
@@ -259,12 +272,21 @@ if __name__ == '__main__':
             ghost.receive_message()
 
         # Log behavior count
-        msg = messages.RequestBehaviorCountMessage(agent_id=pacman.agent_id)
-        pacman.send_message(msg)
-        behavior_count_msg = pacman.receive_message()
+        if pacman_class == agents.BehaviorLearningPacmanAgent:
+            msg = messages.RequestBehaviorCountMessage(agent_id=pacman.agent_id)
+            pacman.send_message(msg)
+            behavior_count_msg = pacman.receive_message()
+
+        if ghost_class == agents.BehaviorLearningGhostAgent:
+            for ghost in ghosts:
+                msg = messages.RequestBehaviorCountMessage(agent_id=ghost.agent_id)
+                ghost.send_message(msg)
+                behavior_count_msg = ghost.receive_message()
+
         print behavior_count_msg.count
         log_behavior_count.append(behavior_count_msg.count)
 
+        # Log score
         if i >= learn_games:
             test_scores.append(games[0].state.getScore())
         else:

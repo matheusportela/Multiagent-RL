@@ -246,7 +246,7 @@ class GameState(object):
         string = []
 
         for key, value in self.agent_maps.items():
-            string.append(key)
+            string.append(str(key))
             string.append(str(value))
 
         return '\n'.join(string)

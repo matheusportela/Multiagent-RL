@@ -177,9 +177,9 @@ class FoodDistanceFeature(Feature):
         return (1.0/distance)
 
 
-class BehaviorLearningAgent(PacmanAgent):
+class BehaviorLearningPacmanAgent(PacmanAgent):
     def __init__(self, ally_ids, enemy_ids):
-        super(BehaviorLearningAgent, self).__init__(ally_ids, enemy_ids)
+        super(BehaviorLearningPacmanAgent, self).__init__(ally_ids, enemy_ids)
         self.features = [FoodDistanceFeature()]
         for enemy_id in enemy_ids:
             self.features.append(EnemyDistanceFeature(enemy_id))
@@ -268,6 +268,115 @@ class BehaviorLearningAgent(PacmanAgent):
         behavior = self.learning.act(state)
         self.previous_behavior = behavior
         suggested_action = behavior(state)
+
+        print 'Selected behavior:', behavior.__name__
+
+        self.behavior_count[behavior.__name__] += 1
+
+        if suggested_action in legal_actions:
+            return suggested_action
+        elif legal_actions == []:
+            return 'Stop'
+        else:
+            return random.choice(legal_actions)
+
+    def enable_exploration(self):
+        self.learning.exploration_rate = self.exploration_rate
+
+    def disable_exploration(self):
+        self.learning.exploration_rate = 0
+
+
+class BehaviorLearningGhostAgent(GhostAgent):
+    def __init__(self, ally_ids, enemy_ids):
+        super(BehaviorLearningGhostAgent, self).__init__(ally_ids, enemy_ids)
+        self.features = [FoodDistanceFeature()]
+        for enemy_id in enemy_ids:
+            self.features.append(EnemyDistanceFeature(enemy_id))
+
+        self.behaviors = [self.random_behavior, self.flee_behavior,
+            self.pursue_behavior]
+
+        self.exploration_rate = 0.1
+        self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
+            discount_factor=0.9, actions=self.behaviors, features=self.features,
+            exploration_rate=self.exploration_rate)
+        self.previous_behavior = self.behaviors[0]
+        self.behavior_count = {}
+        self.reset_behavior_count()
+
+    def reset_behavior_count(self):
+        for behavior in self.behaviors:
+            self.behavior_count[behavior.__name__] = 0
+
+    def save_policy(self, filename):
+        with open(filename, 'w') as fout:
+            pickle.dump(self.learning.get_weights(), fout)
+
+    def load_policy(self, filename):
+        if os.path.isfile(filename):
+            with open(filename) as fin:
+                self.learning.set_weights(pickle.load(fin))
+
+    def random_behavior(self, state):
+        if self.legal_actions == []:
+            return 'Stop'
+        else:
+            return random.choice(self.legal_actions)
+
+    def flee_behavior(self, state):
+        agent_position = state.get_position()
+        enemy_position = state.get_agent_position(state.get_closest_enemy(state))
+        agent_map = state.get_map()
+
+        best_action = None
+        max_distance = None
+
+        for action in self.legal_actions:
+            diff = agent_map.action_to_pos[action]
+            new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
+            new_distance = state.calculate_distance(new_position, enemy_position)
+
+            if (best_action == None) or (agent_map._is_valid_position(new_position) and
+                new_distance > max_distance):
+                best_action = action
+                max_distance = new_distance
+
+        return best_action
+
+    def pursue_behavior(self, state):
+        agent_position = state.get_position()
+        enemy_position = state.get_agent_position(state.get_closest_enemy(state))
+        agent_map = state.get_map()
+
+        best_action = None
+        min_distance = None
+
+        for action in self.legal_actions:
+            diff = agent_map.action_to_pos[action]
+            new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
+            new_distance = state.calculate_distance(new_position, enemy_position)
+
+            if (best_action == None) or (agent_map._is_valid_position(new_position) and
+                new_distance < min_distance):
+                best_action = action
+                min_distance = new_distance
+
+        return best_action
+
+    def choose_action(self, state, action, reward, legal_actions, explore):
+        if explore:
+            self.enable_exploration()
+        else:
+            self.disable_exploration()
+
+        self.legal_actions = legal_actions
+        self.learning.learn(state, self.previous_behavior, reward)
+        behavior = self.learning.act(state)
+        self.previous_behavior = behavior
+        suggested_action = behavior(state)
+
+        print 'Selected behavior:', behavior.__name__
 
         self.behavior_count[behavior.__name__] += 1
 

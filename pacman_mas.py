@@ -36,7 +36,7 @@ class MessageRouter(object):
 
     def receive_message(self):
         message = pickle.loads(self.server.recv())
-        print 'Received message:', message.__dict__
+        print 'Received message from %d: %s' % (message.agent_id, str(message.__dict__))
         return message
 
     def create_action_message(self, agent_id, action):
@@ -57,7 +57,7 @@ class MessageRouter(object):
         self.agents[agent_id].reset_behavior_count()
 
     def send_message(self, message):
-        print 'Sent message:', message.__dict__
+        print 'Sent message: %s' % str(message)
         self.server.send(pickle.dumps(message))
 
     def update_agent_state(self, state):
