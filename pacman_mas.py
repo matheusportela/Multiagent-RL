@@ -24,6 +24,16 @@ class MessageRouter(object):
         self.agents[message.agent_id] = message.agent_class(*message.args, **message.kwargs)
         self.agent_teams[message.agent_id] = message.agent_team
 
+    def get_agent_allies(self, agent_id):
+        return [id_ for id_ in self.agent_teams
+            if self.agent_teams[id_] == self.agent_teams[agent_id]
+            and id_ != agent_id]
+
+    def get_agent_enemies(self, agent_id):
+        return [id_ for id_ in self.agent_teams
+            if self.agent_teams[id_] != self.agent_teams[agent_id]
+            and id_ != agent_id]
+
     def receive_message(self):
         message = pickle.loads(self.server.recv())
         print 'Received message:', message.__dict__
@@ -88,8 +98,8 @@ class MessageRouter(object):
             elif received_message.msg_type == messages.INIT:
                 pacman_id = 0
                 ghost_ids = [id_ for id_ in self.agents.keys() if id_ != pacman_id]
-                print 'Allies:', [id_ for id_ in self.agent_teams if self.agent_teams[id_] == self.agent_teams[pacman_id] and id_ != pacman_id]
-                print 'Enemies:', [id_ for id_ in self.agent_teams if self.agent_teams[id_] != self.agent_teams[pacman_id] and id_ != pacman_id]
+                print 'Allies:', self.get_agent_allies(pacman_id)
+                print 'Enemies:', self.get_agent_enemies(pacman_id)
                 self.game_state = state.GameState(20, 11, [], my_id=pacman_id, enemy_ids=ghost_ids)
                 self.send_message(self.create_ack_message())
             elif received_message.msg_type == messages.REGISTER:
