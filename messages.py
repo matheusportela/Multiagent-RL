@@ -47,14 +47,11 @@ class InitMessage(BaseMessage):
 
 
 class RegisterMessage(BaseMessage):
-    def __init__(self, agent_id=None, agent_team=None, agent_class=None,
-        args=[], kwargs={}):
+    def __init__(self, agent_id=None, agent_team=None, agent_class=None):
         super(RegisterMessage, self).__init__(msg_type=REGISTER)
         self.agent_id = agent_id
         self.agent_team = agent_team
         self.agent_class = agent_class
-        self.args = args
-        self.kwargs = kwargs
 
 
 class SaveMessage(BaseMessage):

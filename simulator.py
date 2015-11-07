@@ -85,13 +85,11 @@ class CommunicatingAgent(game.Agent):
         self.send_message(messages.InitMessage(agent_id=self.agent_id))
         self.receive_message()
 
-    def register_agent(self, agent_team, agent_class, args, kwargs):
+    def register_agent(self, agent_team, agent_class):
         message = messages.RegisterMessage(
             agent_id=self.agent_id,
             agent_team=agent_team,
-            agent_class=agent_class,
-            args=args,
-            kwargs=kwargs)
+            agent_class=agent_class)
         self.send_message(message)
         self.receive_message()
 
@@ -149,18 +147,18 @@ def create_layout(layout_file):
 
     return layout
 
-def create_pacman(agent_class, args=[], kwargs={}):
+def create_pacman(agent_class):
     agent = CommunicatingPacmanAgent()
-    agent.register_agent('pacman', agent_class, args, kwargs)
+    agent.register_agent('pacman', agent_class)
     print 'Created Pacman agent with ID:', agent.agent_id
     return agent
 
-def create_ghosts(num_ghosts, agent_class, args=[], kwargs={}):
+def create_ghosts(num_ghosts, agent_class):
     agents = []
 
     for i in range(num_ghosts):
         agent = CommunicatingGhostAgent(i+1)
-        agent.register_agent('ghost', agent_class, args, kwargs)
+        agent.register_agent('ghost', agent_class)
         print 'Created ghost agent with ID:', agent.agent_id
         agents.append(agent)
 
@@ -234,7 +232,7 @@ if __name__ == '__main__':
     if pacman_policy_filename:
         load_policy(pacman_policy_filename)
 
-    pacman = create_pacman(agents.BehaviorLearningAgent, kwargs={'num_ghosts': num_ghosts})
+    pacman = create_pacman(agents.BehaviorLearningAgent)
     ghosts = create_ghosts(num_ghosts, agents.RandomGhostAgent)
 
     for i in range(learn_games + test_games):

@@ -20,7 +20,6 @@ class MessageRouter(object):
         print 'Initialized agent:', message.agent_id
         print 'Team:', message.agent_team
         print 'Type:', message.agent_class
-        print 'Parameters:', message.args, message.kwargs
 
         self.agent_classes[message.agent_id] = message.agent_class
         self.agent_teams[message.agent_id] = message.agent_team

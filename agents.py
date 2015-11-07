@@ -216,8 +216,8 @@ class BehaviorLearningAgent(PacmanAgent):
             return random.choice(self.legal_actions)
 
     def eat_behavior(self, state):
-        my_position = state.get_position()
-        agent_map = state.get_my_map()
+        agent_position = state.get_position()
+        agent_map = state.get_map()
         food_map = state.food_map
         food_prob_threshold = food_map.max() / 2.0
         best_action = None
@@ -225,7 +225,7 @@ class BehaviorLearningAgent(PacmanAgent):
 
         for action in self.legal_actions:
             diff = agent_map.action_to_pos[action]
-            new_position = (my_position[0] + diff[0], my_position[1] + diff[1])
+            new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
 
             for x in range(food_map.width):
                 for y in range(food_map.height):
@@ -238,16 +238,16 @@ class BehaviorLearningAgent(PacmanAgent):
         return best_action
 
     def flee_behavior(self, state):
-        my_position = state.get_position()
+        agent_position = state.get_position()
         enemy_position = state.get_agent_position(state.get_closest_enemy(state))
-        agent_map = state.get_my_map()
+        agent_map = state.get_map()
 
         best_action = None
         max_distance = None
 
         for action in self.legal_actions:
             diff = agent_map.action_to_pos[action]
-            new_position = (my_position[0] + diff[0], my_position[1] + diff[1])
+            new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
             new_distance = state.calculate_distance(new_position, enemy_position)
 
             if (best_action == None) or (agent_map._is_valid_position(new_position) and
