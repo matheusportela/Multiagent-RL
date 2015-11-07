@@ -184,7 +184,7 @@ class BehaviorLearningAgent(PacmanAgent):
         for enemy_id in enemy_ids:
             self.features.append(EnemyDistanceFeature(enemy_id))
 
-        self.behaviors = [self.eat_behavior, self.random_behavior]
+        self.behaviors = [self.random_behavior, self.eat_behavior]
         if len(enemy_ids) > 0:
             self.behaviors.append(self.flee_behavior)
 
