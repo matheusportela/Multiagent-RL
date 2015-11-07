@@ -30,7 +30,7 @@ class CommunicatingAgent(game.Agent):
     def disable_explore(self):
         self.explore = False
 
-    def create_message(self, state):
+    def create_state_message(self, state):
         pacman_position = state.getPacmanPosition()[::-1]
         ghost_positions = [g[::-1] for g in state.getGhostPositions()]
 
@@ -79,6 +79,8 @@ class CommunicatingAgent(game.Agent):
         return message
 
     def init_game(self):
+        self.previous_score = 0
+        self.previous_action = 'Stop'
         self.send_message(messages.InitMessage())
         self.receive_message()
 
@@ -101,7 +103,7 @@ class CommunicatingAgent(game.Agent):
         raise NotImplementedError
 
     def getAction(self, state):
-        message = self.create_message(state)
+        message = self.create_state_message(state)
         self.send_message(message)
 
         message = self.receive_message()
@@ -204,10 +206,11 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    layout_file = 'mediumClassic'
+    # layout_file = 'mediumClassic'
+    layout_file = 'oneGhostMediumClassic'
     # layout_file = 'ghostlessMediumClassic'
-    # layout_file = 'oneGhostMediumClassic'
-    num_ghosts = 2
+    # num_ghosts = 2
+    num_ghosts = 1
     learn_games = args.learn
     test_games = args.test
     pacman_policy_filename = args.policy_filename
@@ -228,26 +231,31 @@ if __name__ == '__main__':
     if pacman_policy_filename:
         load_policy(pacman_policy_filename)
 
-    ghosts = create_ghosts(num_ghosts, agents.RandomGhostAgent)
     pacman = create_pacman(agents.BehaviorLearningAgent, kwargs={'num_ghosts': num_ghosts})
+    ghosts = create_ghosts(num_ghosts, agents.RandomGhostAgent)
 
     for i in range(learn_games + test_games):
         print '\nGame #%d' % (i+1)
 
         pacman.init_game()
+        for ghost in ghosts:
+            ghost.init_game()
 
         if i >= learn_games:
-            pacman.enable_explore()
+            pacman.disable_explore()
 
             for ghost in ghosts:
-                ghost.enable_explore()
+                ghost.disable_explore()
 
         games = pacman_simulator.runGames(layout, pacman, ghosts, display, 1, record)
 
-        # Do this so as Pacman can receive the last reward
-        msg = pacman.create_message(games[0].state)
-        pacman.send_message(msg)
+        # Do this so as agents can receive the last reward
+        pacman.send_message(pacman.create_state_message(games[0].state))
         pacman.receive_message()
+
+        for ghost in ghosts:
+            ghost.send_message(ghost.create_state_message(games[0].state))
+            ghost.receive_message()
 
         # Log behavior count
         msg = messages.RequestBehaviorCountMessage(agent_id=pacman.agent_id)

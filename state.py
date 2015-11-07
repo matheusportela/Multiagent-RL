@@ -218,16 +218,26 @@ def gaussian_distribution(pos1, pos2, sd):
 
 
 class GameState(object):
-    def __init__(self, width, height, walls, num_ghosts=1):
-        self.num_ghosts = num_ghosts
+    def __init__(self, width, height, walls, my_id=None, ally_ids=[], enemy_ids=[], eater=True):
         self.width = width
         self.height = height
         self.walls = walls
-        self.agent_maps = {'pacman': Map(width, height, walls)}
 
-        for i in range(num_ghosts):
-            self.agent_maps[self._index_to_ghost_str(i)] = Map(width, height, walls)
+        self.my_id = my_id
+        self.ally_ids = ally_ids
+        self.enemy_ids = enemy_ids
 
+        self.agent_maps = {}
+
+        self.agent_maps[self.my_id] = Map(width, height, walls)
+
+        for ally_id in self.ally_ids:
+            self.agent_maps[ally_id] = Map(width, height, walls)
+
+        for enemy_id in self.enemy_ids:
+            self.agent_maps[enemy_id] = Map(width, height, walls)
+
+        self.eater = eater
         self.food_map = None
         self.sd = 0.5
 
@@ -239,9 +249,6 @@ class GameState(object):
             string.append(str(value))
 
         return '\n'.join(string)
-
-    def _index_to_ghost_str(self, i):
-        return 'ghost%d' % i
 
     def set_food_positions(self, food_positions):
         if self.food_map == None:
@@ -260,95 +267,86 @@ class GameState(object):
                 self.agent_maps[agent].walls = walls
                 self.agent_maps[agent].normalize()
 
-    def _observe_agent(self, agent, pos):
-        self.agent_maps[agent].observe(pos, gaussian_distribution, self.sd)
+    def observe_agent(self, agent_id, pos):
+        self.agent_maps[agent_id].observe(pos, gaussian_distribution, self.sd)
 
-    def observe_pacman(self, pos):
-        self._observe_agent('pacman', pos)
+    def get_agent_position(self, agent_id):
+        return self.agent_maps[agent_id].get_maximum_position()
 
-    def observe_ghost(self, index, pos):
-        # TODO: Should it be ghost_pos - pacman_pos?
-        self._observe_agent(self._index_to_ghost_str(index), pos)
+    def get_my_position(self):
+        return self.get_agent_position(self.my_id)
 
-    def observe_ghosts(self, pos_list):
-        for i, pos in enumerate(pos_list):
-            self.observe_ghost(i, pos)
+    def get_ally_positions(self):
+        return [self.get_agent_position(id_) for id_ in self.ally_ids]
 
-    def _get_agent_position(self, agent):
-        return self.agent_maps[agent].get_maximum_position()
+    def get_enemy_positions(self):
+        return [self.get_agent_position(id_) for id_ in self.enemy_ids]
 
-    def get_pacman_position(self):
-        return self._get_agent_position('pacman')
+    def get_my_map(self):
+        return self.agent_maps[self.my_id]
 
-    def get_ghost_position(self, index):
-        return self._get_agent_position(self._index_to_ghost_str(index))
+    def predict_agent(self, agent_id, action):
+        self.agent_maps[agent_id].predict(action, semi_deterministic_distribution)
 
-    def get_ghost_positions(self):
-        return [self._get_agent_position(self._index_to_ghost_str(i))
-                for i in range(self.num_ghosts)]
-
-    def _predict_agent(self, agent, action):
-        self.agent_maps[agent].predict(action, semi_deterministic_distribution)
-
-    def predict_pacman(self, action):
-        self._predict_agent('pacman', action)
-        self._predict_food_positions()
-
-    def predict_ghost(self, index, action):
-        self._predict_agent(self._index_to_ghost_str(index), action)
-
-    def predict_ghosts(self, action):
-        for i in range(self.num_ghosts):
-            self.predict_ghost(i, action)
+        if self.eater:
+            self._predict_food_positions()
 
     def _predict_food_positions(self):
         for x in range(self.width):
             for y in range(self.height):
-                self.food_map[y][x] = self.food_map[y][x] * (1 - self.agent_maps['pacman'][y][x])
+                self.food_map[y][x] = self.food_map[y][x] * (1 - self.agent_maps[self.my_id][y][x])
 
     def calculate_manhattan_distance(self, point1, point2):
         return (abs(point1[0] - point2[0]) + abs(point1[1] - point2[1]))
 
     def calculate_distance(self, point1, point2):
-        return self.agent_maps['pacman'].calculate_distance(point1, point2)
+        return self.agent_maps[self.my_id].calculate_distance(point1, point2)
 
     def get_food_distance(self):
-        pacman_position = self.get_pacman_position()
+        position = self.get_agent_position(self.my_id)
         food_prob_threshold = self.food_map.max() / 2.0
         min_dist = float('inf')
 
         for x in range(self.width):
             for y in range(self.height):
                 if self.food_map[y][x] > food_prob_threshold:
-                    dist = self.calculate_distance(pacman_position, (y, x))
+                    dist = self.calculate_distance(position, (y, x))
 
                     if dist < min_dist:
                         min_dist = dist
 
         return min_dist
 
-    def get_ghost_distance(self, index):
-        pacman_position = self.get_pacman_position()
-        ghost_position = self.get_ghost_position(index)
-        return self.calculate_distance(pacman_position, ghost_position)
+    def get_distance_to_agent(self, agent_id):
+        my_position = self.get_agent_position(self.my_id)
+        agent_position = self.get_agent_position(agent_id)
+        return self.calculate_distance(my_position, agent_position)
 
-    def get_ghost_distances(self):
-        return [self.get_ghost_distance(i) for i in range(self.num_ghosts)]
-
-    def get_closest_ghost(self, state):
-        pacman_position = self.get_pacman_position()
+    def get_closest_ally(self, state):
         distance = float('inf')
-        closest_ghost = 0
+        closest_ally = None
 
-        for i in range(self.num_ghosts):
-            ghost_position = self.get_ghost_position(i)
-            ghost_distance = self.calculate_distance(pacman_position, ghost_position)
+        for ally_id in self.ally_ids:
+            ally_distance = self.get_distance_to_agent(ally_id)
 
-            if ghost_distance < distance:
-                distance = ghost_distance
-                closest_ghost = i
+            if ally_distance < distance:
+                distance = ally_distance
+                closest_ally = ally_id
 
-        return closest_ghost
+        return closest_ally
+
+    def get_closest_enemy(self, state):
+        distance = float('inf')
+        closest_enemy = None
+
+        for enemy_id in self.enemy_ids:
+            enemy_distance = self.get_distance_to_agent(enemy_id)
+
+            if enemy_distance < distance:
+                distance = enemy_distance
+                closest_enemy = enemy_id
+
+        return closest_enemy
 
 
 if __name__ == '__main__':

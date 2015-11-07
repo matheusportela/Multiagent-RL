@@ -48,18 +48,16 @@ class MessageRouter(object):
         self.server.send(pickle.dumps(message))
 
     def generate_agent_state(self, state):
-        self.game_state.observe_pacman(state.pacman_position)
-        self.game_state.observe_ghosts(state.ghost_positions)
+        self.game_state.observe_agent(0, state.pacman_position)
+        for ghost_id, ghost_pos in zip(self.game_state.enemy_ids, state.ghost_positions):
+            self.game_state.observe_agent(ghost_id, ghost_pos)
         return self.game_state
 
     def choose_action(self, state):
         # Agent state should be per agent, instead of a class attribute
         agent_state = self.generate_agent_state(state)
         agent_action = self.agents[state.agent_id].choose_action(agent_state, state.executed_action, state.reward, state.legal_actions, state.explore)
-        if state.agent_id == 0:
-            self.game_state.predict_pacman(agent_action)
-        else:
-            self.game_state.predict_ghost(state.agent_id - 1, agent_action)
+        self.game_state.predict_agent(state.agent_id, agent_action)
 
         return agent_action
 
@@ -85,7 +83,9 @@ class MessageRouter(object):
 
                 self.last_action = agent_action
             elif received_message.msg_type == messages.INIT:
-                self.game_state = state.GameState(20, 11, [], num_ghosts=len(self.agents) - 1)
+                pacman_id = 0
+                ghost_ids = [id_ for id_ in self.agents.keys() if id_ != pacman_id]
+                self.game_state = state.GameState(20, 11, [], my_id=pacman_id, enemy_ids=ghost_ids)
                 self.send_message(self.create_ack_message())
             elif received_message.msg_type == messages.REGISTER:
                 self.register_agent(received_message)

@@ -158,9 +158,9 @@ class GhostDistanceFeature(Feature):
         self.ghost_index = ghost_index
 
     def __call__(self, state, action):
-        pacman_position = state.get_pacman_position()
-        ghost_position = state.get_ghost_position(self.ghost_index)
-        distance = state.calculate_distance(pacman_position, ghost_position)
+        my_position = state.get_my_position()
+        ghost_position = state.get_agent_position(self.ghost_index)
+        distance = state.calculate_distance(my_position, ghost_position)
 
         if distance == 0.0:
             distance = 1.0
@@ -184,9 +184,9 @@ class BehaviorLearningAgent(PacmanAgent):
         for i in range(num_ghosts):
             self.features.append(GhostDistanceFeature(i))
 
-        self.behaviors = [self.eat_food, self.random]
+        self.behaviors = [self.eat_behavior, self.random_behavior]
         if num_ghosts > 0:
-            self.behaviors.append(self.flee_from_ghost)
+            self.behaviors.append(self.flee_behavior)
 
         self.exploration_rate = 0.1
         self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
@@ -209,23 +209,23 @@ class BehaviorLearningAgent(PacmanAgent):
             with open(filename) as fin:
                 self.learning.set_weights(pickle.load(fin))
 
-    def random(self, state):
+    def random_behavior(self, state):
         if self.legal_actions == []:
             return 'Stop'
         else:
             return random.choice(self.legal_actions)
 
-    def eat_food(self, state):
-        pacman_position = state.get_pacman_position()
-        pacman_map = state.agent_maps['pacman']
+    def eat_behavior(self, state):
+        my_position = state.get_my_position()
+        agent_map = state.get_my_map()
         food_map = state.food_map
         food_prob_threshold = food_map.max() / 2.0
         best_action = None
         min_dist = None
 
         for action in self.legal_actions:
-            diff = pacman_map.action_to_pos[action]
-            new_position = (pacman_position[0] + diff[0], pacman_position[1] + diff[1])
+            diff = agent_map.action_to_pos[action]
+            new_position = (my_position[0] + diff[0], my_position[1] + diff[1])
 
             for x in range(food_map.width):
                 for y in range(food_map.height):
@@ -237,20 +237,20 @@ class BehaviorLearningAgent(PacmanAgent):
 
         return best_action
 
-    def flee_from_ghost(self, state):
-        pacman_position = state.get_pacman_position()
-        ghost_position = state.get_ghost_position(state.get_closest_ghost(state))
-        pacman_map = state.agent_maps['pacman']
+    def flee_behavior(self, state):
+        my_position = state.get_my_position()
+        enemy_position = state.get_agent_position(state.get_closest_enemy(state))
+        agent_map = state.get_my_map()
 
         best_action = None
         max_distance = None
 
         for action in self.legal_actions:
-            diff = pacman_map.action_to_pos[action]
-            new_position = (pacman_position[0] + diff[0], pacman_position[1] + diff[1])
-            new_distance = state.calculate_distance(new_position, ghost_position)
+            diff = agent_map.action_to_pos[action]
+            new_position = (my_position[0] + diff[0], my_position[1] + diff[1])
+            new_distance = state.calculate_distance(new_position, enemy_position)
 
-            if (best_action == None) or (pacman_map._is_valid_position(new_position) and
+            if (best_action == None) or (agent_map._is_valid_position(new_position) and
                 new_distance > max_distance):
                 best_action = action
                 max_distance = new_distance
