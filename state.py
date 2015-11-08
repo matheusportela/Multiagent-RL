@@ -229,14 +229,12 @@ class GameState(object):
         self.enemy_ids = enemy_ids
 
         self.agent_maps = {}
+        for id_ in [self.agent_id] + self.ally_ids + self.enemy_ids:
+            self.agent_maps[id_] = Map(width, height, walls)
 
-        self.agent_maps[self.agent_id] = Map(width, height, walls)
-
-        for ally_id in self.ally_ids:
-            self.agent_maps[ally_id] = Map(width, height, walls)
-
-        for enemy_id in self.enemy_ids:
-            self.agent_maps[enemy_id] = Map(width, height, walls)
+        self.fragile_agents = {}
+        for id_ in [self.agent_id] + self.ally_ids + self.enemy_ids:
+            self.fragile_agents[id_] = 0.5
 
         self.eater = eater
         self.food_map = None
@@ -283,6 +281,9 @@ class GameState(object):
 
     def observe_agent(self, agent_id, pos):
         self.agent_maps[agent_id].observe(pos, gaussian_distribution, self.sd)
+
+    def observe_fragile_agent(self, agent_id, status):
+        self.fragile_agents[agent_id] = status
 
     def get_agent_position(self, agent_id):
         return self.agent_maps[agent_id].get_maximum_position()

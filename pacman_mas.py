@@ -62,6 +62,9 @@ class MessageRouter(object):
         for id_, pos in state.agent_positions.items():
             self.game_states[agent_id].observe_agent(id_, pos)
 
+        for id_, status in state.fragile_agents.items():
+            self.game_states[agent_id].observe_fragile_agent(id_, status)
+
     def choose_action(self, state):
         self.update_agent_state(state)
         agent_state = self.game_states[state.agent_id]
@@ -69,10 +72,6 @@ class MessageRouter(object):
 
         for id_ in self.game_states:
             agent_state.predict_agent(id_, agent_action)
-
-        print state.fragile_agents
-        # print self.game_states[state.agent_id].agent_maps[0]
-        # print self.game_states[state.agent_id].food_map
 
         return agent_action
 
