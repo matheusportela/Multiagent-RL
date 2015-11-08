@@ -2,11 +2,11 @@ STATE = 'State'
 ACTION = 'Action'
 INIT = 'Init'
 REGISTER = 'Register'
-SAVE = 'Save'
-LOAD = 'Load'
 ACK = 'Ack'
 REQUEST_BEHAVIOR_COUNT = 'RequestBehaviorCount'
 BEHAVIOR_COUNT = 'BehaviorCount'
+REQUEST_POLICY = 'RequestPolicy'
+POLICY = 'Policy'
 
 class BaseMessage(object):
     def __init__(self, msg_type=None):
@@ -54,20 +54,6 @@ class RegisterMessage(BaseMessage):
         self.agent_class = agent_class
 
 
-class SaveMessage(BaseMessage):
-    def __init__(self, agent_id=None, filename=None):
-        super(SaveMessage, self).__init__(msg_type=SAVE)
-        self.agent_id = agent_id
-        self.filename = filename
-
-
-class LoadMessage(BaseMessage):
-    def __init__(self, agent_id=None, filename=None):
-        super(LoadMessage, self).__init__(msg_type=LOAD)
-        self.agent_id = agent_id
-        self.filename = filename
-
-
 class RequestBehaviorCountMessage(BaseMessage):
     def __init__(self, agent_id=None):
         super(RequestBehaviorCountMessage, self).__init__(msg_type=REQUEST_BEHAVIOR_COUNT)
@@ -78,3 +64,16 @@ class BehaviorCountMessage(BaseMessage):
     def __init__(self, count=None):
         super(BehaviorCountMessage, self).__init__(msg_type=BEHAVIOR_COUNT)
         self.count = count
+
+
+class RequestPolicyMessage(BaseMessage):
+    def __init__(self, agent_id=None):
+        super(RequestPolicyMessage, self).__init__(msg_type=REQUEST_POLICY)
+        self.agent_id = agent_id
+
+
+class PolicyMessage(BaseMessage):
+    def __init__(self, agent_id=None, policy=None):
+        super(PolicyMessage, self).__init__(msg_type=POLICY)
+        self.agent_id = agent_id
+        self.policy = policy

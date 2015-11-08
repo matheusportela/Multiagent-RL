@@ -200,14 +200,11 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
         for behavior in self.behaviors:
             self.behavior_count[behavior.__name__] = 0
 
-    def save_policy(self, filename):
-        with open(filename, 'w') as fout:
-            pickle.dump(self.learning.get_weights(), fout)
+    def get_policy(self):
+        return self.learning.get_weights()
 
-    def load_policy(self, filename):
-        if os.path.isfile(filename):
-            with open(filename) as fin:
-                self.learning.set_weights(pickle.load(fin))
+    def set_policy(self, weights):
+        self.learning.set_weights(weights)
 
     def random_behavior(self, state):
         if self.legal_actions == []:
@@ -309,14 +306,11 @@ class BehaviorLearningGhostAgent(GhostAgent):
         for behavior in self.behaviors:
             self.behavior_count[behavior.__name__] = 0
 
-    def save_policy(self, filename):
-        with open(filename, 'w') as fout:
-            pickle.dump(self.learning.get_weights(), fout)
+    def get_policy(self):
+        return self.learning.get_weights()
 
-    def load_policy(self, filename):
-        if os.path.isfile(filename):
-            with open(filename) as fin:
-                self.learning.set_weights(pickle.load(fin))
+    def set_policy(self, weights):
+        self.learning.set_weights(weights)
 
     def random_behavior(self, state):
         if self.legal_actions == []:

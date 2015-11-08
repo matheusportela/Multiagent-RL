@@ -10,6 +10,7 @@ import pickle
 import random
 import argparse
 import agents
+import os
 
 
 class CommunicatingAgent(game.Agent):
@@ -65,20 +66,6 @@ class CommunicatingAgent(game.Agent):
             reward=reward,
             executed_action=self.previous_action,
             explore=self.explore)
-
-        return message
-
-    def create_save_message(self, filename):
-        message = messages.SaveMessage(
-            agent_id=self.agent_id,
-            filename=filename)
-
-        return message
-
-    def create_load_message(self, filename):
-        message = messages.LoadMessage(
-            agent_id=self.agent_id,
-            filename=filename)
 
         return message
 
@@ -185,20 +172,6 @@ def create_display(display_type='None', zoom=1.0, frameTime=0.1):
 
     return display
 
-def load_policy(filename):
-    print 'Loading policy from', filename
-    pacman = create_pacman()
-    msg = pacman.create_load_message(filename)
-    pacman.send_message(msg)
-    pacman.receive_message()
-
-def save_policy(filename):
-    print 'Saving policy to', filename
-    pacman = create_pacman()
-    msg = pacman.create_save_message(filename)
-    pacman.send_message(msg)
-    pacman.receive_message()
-
 def save_results(filename, results):
     with open(filename, 'w') as f:
         f.write(pickle.dumps(results))
@@ -227,7 +200,8 @@ if __name__ == '__main__':
     # num_ghosts = 0
     learn_games = args.learn
     test_games = args.test
-    pacman_policy_filename = args.policy_filename
+    policy_filename = args.policy_filename
+    policies = {}
     record = False
     # pacman_class = agents.BehaviorLearningPacmanAgent
     # ghost_class = agents.RandomGhostAgent
@@ -248,9 +222,6 @@ if __name__ == '__main__':
         'behavior_count': {}
     }
 
-    if pacman_policy_filename:
-        load_policy(pacman_policy_filename)
-
     pacman = create_pacman(pacman_class)
     ghosts = create_ghosts(num_ghosts, ghost_class)
 
@@ -261,12 +232,36 @@ if __name__ == '__main__':
         for ghost in ghosts:
             results['behavior_count'][ghost.agent_id] = {}
 
+    # Load policies from file
+    if policy_filename and os.path.isfile(policy_filename):
+        print 'Loading policies from file'
+        with open(policy_filename) as f:
+            policies = pickle.loads(f.read())
+
     for i in range(learn_games + test_games):
         print '\nGame #%d' % (i+1)
 
         pacman.init_game()
         for ghost in ghosts:
             ghost.init_game()
+
+        # Load policies to agents
+        print 'Loading policies to agents'
+        if pacman.agent_id in policies:
+            print 'Loading Pacman policy'
+            pacman.send_message(messages.PolicyMessage(
+                agent_id=pacman.agent_id,
+                policy=policies[pacman.agent_id]))
+            pacman.receive_message()
+
+
+        for ghost in ghosts:
+            if ghost.agent_id in policies:
+                print 'Loading ghost %d policy' % ghost.agent_id
+                ghost.send_message(messages.PolicyMessage(
+                    agent_id=ghost.agent_id,
+                    policy=policies[ghost.agent_id]))
+                ghost.receive_message()
 
         if i >= learn_games:
             pacman.disable_explore()
@@ -312,8 +307,21 @@ if __name__ == '__main__':
         else:
             results['learn_scores'].append(games[0].state.getScore())
 
-    if pacman_policy_filename:
-        save_policy(pacman_policy_filename)
+    # Save policies
+    if policy_filename:
+        if pacman_class == agents.BehaviorLearningPacmanAgent:
+            pacman.send_message(messages.RequestPolicyMessage(pacman.agent_id))
+            msg = pacman.receive_message()
+            policies[pacman.agent_id] = msg.policy
+
+        if ghost_class == agents.BehaviorLearningGhostAgent:
+            for ghost in ghosts:
+                ghost.send_message(messages.RequestPolicyMessage(ghost.agent_id))
+                msg = ghost.receive_message()
+                policies[ghost.agent_id] = msg.policy
+
+        with open(policy_filename, 'w') as f:
+            f.write(pickle.dumps(policies))
 
     print 'Learn scores:', results['learn_scores']
     print 'Test scores:', results['test_scores']

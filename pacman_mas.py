@@ -80,6 +80,10 @@ class MessageRouter(object):
     def load_agent_policy(self, message):
         self.agents[message.agent_id].load_policy(message.filename)
 
+    def create_policy_message(self, agent_id):
+        policy = self.agents[agent_id].get_policy()
+        return messages.PolicyMessage(agent_id=agent_id, policy=policy)
+
     def run(self):
         self.last_action = 'Stop'
 
@@ -109,15 +113,14 @@ class MessageRouter(object):
             elif received_message.msg_type == messages.REGISTER:
                 self.register_agent(received_message)
                 self.send_message(self.create_ack_message())
-            elif received_message.msg_type == messages.SAVE:
-                self.save_agent_policy(received_message)
-                self.send_message(self.create_ack_message())
-            elif received_message.msg_type == messages.LOAD:
-                self.load_agent_policy(received_message)
-                self.send_message(self.create_ack_message())
             elif received_message.msg_type == messages.REQUEST_BEHAVIOR_COUNT:
                 self.send_message(self.create_behavior_count_message(received_message.agent_id))
                 self.reset_behavior_count(received_message.agent_id)
+            elif received_message.msg_type == messages.REQUEST_POLICY:
+                self.send_message(self.create_policy_message(received_message.agent_id))
+            elif received_message.msg_type == messages.POLICY:
+                self.agents[received_message.agent_id].set_policy(received_message.policy)
+                self.send_message(self.create_ack_message())
 
 if __name__ == '__main__':
     router = MessageRouter()
