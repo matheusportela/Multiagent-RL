@@ -1,15 +1,12 @@
 import csv
+import pickle
 import matplotlib.pylab as plt
 import numpy as np
 
-def load_scores(filename):
-    scores = []
-
+def load_results(filename):
     with open(filename) as f:
-        for line in f:
-            scores.append(float(line))
-
-    return scores
+        results = pickle.loads(f.read())
+    return results
 
 def calculate_regression_coefficients(data, degree=5):
     return np.polyfit(range(len(data)), data, degree)
@@ -68,8 +65,7 @@ def plot_behavior_count(behavior_count):
     ax.legend()
 
 if __name__ == '__main__':
-    learn_scores = load_scores('results/learn_scores.txt')
-    test_scores = load_scores('results/test_scores.txt')
+    results = load_results('results.txt')
     behavior_count = load_behavior_count('results/behavior_count.txt')
 
     plot_scores(learn_scores, test_scores)

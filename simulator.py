@@ -199,6 +199,10 @@ def save_policy(filename):
     pacman.send_message(msg)
     pacman.receive_message()
 
+def save_results(filename, results):
+    with open(filename, 'w') as f:
+        f.write(pickle.dumps(results))
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run Pacman simulations.')
     parser.add_argument('-l', '--learn-num', dest='learn', type=int, default=100,
@@ -238,9 +242,11 @@ if __name__ == '__main__':
     layout = create_layout(layout_file)
     display = create_display(display_type=display_type)
 
-    learn_scores = []
-    test_scores = []
     log_behavior_count = []
+    results = {
+        'learn_scores': [],
+        'test_scores': [],
+    }
 
     if pacman_policy_filename:
         load_policy(pacman_policy_filename)
@@ -288,25 +294,19 @@ if __name__ == '__main__':
 
         # Log score
         if i >= learn_games:
-            test_scores.append(games[0].state.getScore())
+            results['test_scores'].append(games[0].state.getScore())
         else:
-            learn_scores.append(games[0].state.getScore())
+            results['learn_scores'].append(games[0].state.getScore())
 
     if pacman_policy_filename:
         save_policy(pacman_policy_filename)
 
-    print learn_scores
-    print test_scores
-
-    with open('results/learn_scores.txt', 'w') as output:
-        for score in learn_scores:
-            output.write(str(score) + '\n')
-
-    with open('results/test_scores.txt', 'w') as output:
-        for score in test_scores:
-            output.write(str(score) + '\n')
+    print 'Learn scores:', results['learn_scores']
+    print 'Test scores:', results['test_scores']
 
     with open('results/behavior_count.txt', 'w') as output:
         names = [name for name in log_behavior_count[0]]
         output.write(','.join(names) + '\n')
         output.write('\n'.join([','.join([str(behavior_count[name]) for name in names]) for behavior_count in log_behavior_count]))
+
+    save_results('results.txt', results)
