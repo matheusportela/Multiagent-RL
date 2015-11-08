@@ -159,7 +159,7 @@ def create_layout(layout_file):
 def create_pacman(agent_class):
     agent = CommunicatingPacmanAgent()
     agent.register_agent('pacman', agent_class)
-    print 'Created Pacman agent with ID:', agent.agent_id
+    print 'Created Pacman\tID: %d\tClass: %s' % (agent.agent_id, agent_class.__name__)
     return agent
 
 def create_ghosts(num_ghosts, agent_class):
@@ -168,7 +168,7 @@ def create_ghosts(num_ghosts, agent_class):
     for i in range(num_ghosts):
         agent = CommunicatingGhostAgent(i+1)
         agent.register_agent('ghost', agent_class)
-        print 'Created ghost agent with ID:', agent.agent_id
+        print 'Created ghost\tID: %d\tClass: %s' % (agent.agent_id, agent_class.__name__)
         agents.append(agent)
 
     return agents
