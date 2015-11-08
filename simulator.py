@@ -242,10 +242,10 @@ if __name__ == '__main__':
     layout = create_layout(layout_file)
     display = create_display(display_type=display_type)
 
-    log_behavior_count = []
     results = {
         'learn_scores': [],
         'test_scores': [],
+        'behavior_count': {}
     }
 
     if pacman_policy_filename:
@@ -253,6 +253,13 @@ if __name__ == '__main__':
 
     pacman = create_pacman(pacman_class)
     ghosts = create_ghosts(num_ghosts, ghost_class)
+
+    if pacman_class == agents.BehaviorLearningPacmanAgent:
+        results['behavior_count'][pacman.agent_id] = {}
+
+    if ghost_class == agents.BehaviorLearningGhostAgent:
+        for ghost in ghosts:
+            results['behavior_count'][ghost.agent_id] = {}
 
     for i in range(learn_games + test_games):
         print '\nGame #%d' % (i+1)
@@ -282,15 +289,22 @@ if __name__ == '__main__':
             msg = messages.RequestBehaviorCountMessage(agent_id=pacman.agent_id)
             pacman.send_message(msg)
             behavior_count_msg = pacman.receive_message()
+            print 'Pacman behavior count:', behavior_count_msg.count
+            for behavior, count in behavior_count_msg.count.items():
+                if behavior not in results['behavior_count'][pacman.agent_id]:
+                    results['behavior_count'][pacman.agent_id][behavior] = []
+                results['behavior_count'][pacman.agent_id][behavior].append(count)
 
         if ghost_class == agents.BehaviorLearningGhostAgent:
             for ghost in ghosts:
                 msg = messages.RequestBehaviorCountMessage(agent_id=ghost.agent_id)
                 ghost.send_message(msg)
                 behavior_count_msg = ghost.receive_message()
-
-        print behavior_count_msg.count
-        log_behavior_count.append(behavior_count_msg.count)
+                print 'Ghost', ghost.agent_id, 'behavior count:', behavior_count_msg.count
+                for behavior, count in behavior_count_msg.count.items():
+                    if behavior not in results['behavior_count'][ghost.agent_id]:
+                        results['behavior_count'][ghost.agent_id][behavior] = []
+                    results['behavior_count'][ghost.agent_id][behavior].append(count)
 
         # Log score
         if i >= learn_games:
@@ -303,10 +317,5 @@ if __name__ == '__main__':
 
     print 'Learn scores:', results['learn_scores']
     print 'Test scores:', results['test_scores']
-
-    with open('results/behavior_count.txt', 'w') as output:
-        names = [name for name in log_behavior_count[0]]
-        output.write(','.join(names) + '\n')
-        output.write('\n'.join([','.join([str(behavior_count[name]) for name in names]) for behavior_count in log_behavior_count]))
 
     save_results('results.txt', results)
