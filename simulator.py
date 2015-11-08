@@ -179,7 +179,7 @@ def save_results(filename, results):
     with open(filename, 'w') as f:
         f.write(pickle.dumps(results))
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description='Run Pacman simulations.')
     parser.add_argument('-l', '--learn-num', dest='learn', type=int, default=100,
                        help='number of games to learn from')
@@ -206,10 +206,10 @@ if __name__ == '__main__':
     policy_filename = args.policy_filename
     policies = {}
     record = False
-    # pacman_class = agents.BehaviorLearningPacmanAgent
-    # ghost_class = agents.RandomGhostAgent
-    pacman_class = agents.RandomPacmanAgent
-    ghost_class = agents.BehaviorLearningGhostAgent
+    pacman_class = agents.BehaviorLearningPacmanAgent
+    ghost_class = agents.RandomGhostAgent
+    # pacman_class = agents.RandomPacmanAgent
+    # ghost_class = agents.BehaviorLearningGhostAgent
 
     if args.graphics:
         display_type = 'Graphic'
@@ -331,3 +331,9 @@ if __name__ == '__main__':
     print 'Test scores:', results['test_scores']
 
     save_results('results.txt', results)
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print '\n\nInterrupted execution\n'

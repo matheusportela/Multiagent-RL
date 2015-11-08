@@ -303,11 +303,17 @@ class GameState(object):
 
         if self.eater:
             self._predict_food_positions()
+            self._predict_capsule_positions()
 
     def _predict_food_positions(self):
         for x in range(self.width):
             for y in range(self.height):
                 self.food_map[y][x] = self.food_map[y][x] * (1 - self.agent_maps[self.agent_id][y][x])
+
+    def _predict_capsule_positions(self):
+        for x in range(self.width):
+            for y in range(self.height):
+                self.capsule_map[y][x] = self.capsule_map[y][x] * (1 - self.agent_maps[self.agent_id][y][x])
 
     def calculate_distance(self, point1, point2):
         return self.agent_maps[self.agent_id].calculate_distance(point1, point2)

@@ -119,4 +119,8 @@ class MessageRouter(object):
 
 if __name__ == '__main__':
     router = MessageRouter()
-    router.run()
+
+    try:
+        router.run()
+    except KeyboardInterrupt:
+        print '\n\nInterrupted execution\n'

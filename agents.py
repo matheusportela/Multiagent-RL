@@ -266,8 +266,6 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
         self.previous_behavior = behavior
         suggested_action = behavior(state)
 
-        print 'Selected behavior:', behavior.__name__
-
         self.behavior_count[behavior.__name__] += 1
 
         if suggested_action in legal_actions:
