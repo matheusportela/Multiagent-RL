@@ -75,12 +75,6 @@ class MessageRouter(object):
 
         return agent_action
 
-    def save_agent_policy(self, message):
-        self.agents[message.agent_id].save_policy(message.filename)
-
-    def load_agent_policy(self, message):
-        self.agents[message.agent_id].load_policy(message.filename)
-
     def create_policy_message(self, agent_id):
         policy = self.agents[agent_id].get_policy()
         return messages.PolicyMessage(agent_id=agent_id, policy=policy)
@@ -111,7 +105,7 @@ class MessageRouter(object):
                 else:
                     eater = False
 
-                self.agents[agent_id] = self.agent_classes[agent_id](ally_ids, enemy_ids)
+                self.agents[agent_id] = self.agent_classes[agent_id](agent_id, ally_ids, enemy_ids)
                 self.game_states[agent_id] = state.GameState(20, 11, [],
                     agent_id=agent_id, ally_ids=ally_ids, enemy_ids=enemy_ids,
                     eater=eater)

@@ -300,6 +300,9 @@ class GameState(object):
     def get_map(self):
         return self.agent_maps[self.agent_id]
 
+    def get_fragile_agent(self, agent_id):
+        return self.fragile_agents[agent_id]
+
     def predict_agent(self, agent_id, action):
         self.agent_maps[agent_id].predict(action, semi_deterministic_distribution)
 

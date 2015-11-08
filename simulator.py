@@ -54,8 +54,6 @@ class CommunicatingAgent(game.Agent):
             else:
                 fragile_agents[id_] = 0.0
 
-        print fragile_agents
-
         wall_positions = []
 
         for x, k in enumerate(state.getWalls()):

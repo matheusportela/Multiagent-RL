@@ -11,7 +11,7 @@ class PacmanAgent(object):
     Attributes:
         index: Pacman agent index for game referral.
     """
-    def __init__(self, ally_ids, enemy_ids):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
         self.actions = ['North', 'South', 'East', 'West', 'Stop']
 
     def choose_action(self, state, action, reward, legal_actions, explore):
@@ -56,7 +56,7 @@ class GhostAgent(object):
     Attributes:
         index: Ghost agent index for game referral.
     """
-    def __init__(self, ally_ids, enemy_ids):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
         self.actions = ['North', 'South', 'East', 'West']
 
     def choose_action(self, state, action, reward, legal_actions, explore):
@@ -94,8 +94,8 @@ class RandomGhostAgent(GhostAgent):
 
 
 class QLearningAgent(PacmanAgent):
-    def __init__(self, ally_ids, enemy_ids):
-        super(QLearningAgent, self).__init__(ally_ids, enemy_ids)
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(QLearningAgent, self).__init__(agent_id, ally_ids, enemy_ids)
         self.exploration_rate = 0.1
         self.learning = learning.QLearning(learning_rate=0.1, discount_factor=0.9,
             actions=self.actions)
@@ -111,8 +111,8 @@ class QLearningAgent(PacmanAgent):
 
 
 class QLearningWithApproximationAgent(PacmanAgent):
-    def __init__(self, ally_ids, enemy_ids):
-        super(QLearningWithApproximationAgent, self).__init__(ally_ids, enemy_ids)
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(QLearningWithApproximationAgent, self).__init__(agent_id, ally_ids, enemy_ids)
         self.features = [self.feature_ghost_distance, self.feature_food_distance]
         self.exploration_rate = 0.1
         self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
@@ -167,6 +167,7 @@ class EnemyDistanceFeature(Feature):
 
         return (1.0/distance)
 
+
 class FoodDistanceFeature(Feature):
     def __call__(self, state, action):
         distance = state.get_food_distance()
@@ -177,12 +178,22 @@ class FoodDistanceFeature(Feature):
         return (1.0/distance)
 
 
+class FragileAgentFeature(Feature):
+    def __init__(self, agent_id):
+        self.agent_id = agent_id
+
+    def __call__(self, state, action):
+        return state.get_fragile_agent(self.agent_id)
+
+
 class BehaviorLearningPacmanAgent(PacmanAgent):
-    def __init__(self, ally_ids, enemy_ids):
-        super(BehaviorLearningPacmanAgent, self).__init__(ally_ids, enemy_ids)
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(BehaviorLearningPacmanAgent, self).__init__(agent_id, ally_ids, enemy_ids)
         self.features = [FoodDistanceFeature()]
         for enemy_id in enemy_ids:
             self.features.append(EnemyDistanceFeature(enemy_id))
+        for id_ in [agent_id] + ally_ids + enemy_ids:
+            self.features.append(FragileAgentFeature(id_))
 
         self.behaviors = [self.random_behavior, self.eat_behavior]
         if len(enemy_ids) > 0:
@@ -283,11 +294,13 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
 
 
 class BehaviorLearningGhostAgent(GhostAgent):
-    def __init__(self, ally_ids, enemy_ids):
-        super(BehaviorLearningGhostAgent, self).__init__(ally_ids, enemy_ids)
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(BehaviorLearningGhostAgent, self).__init__(agent_id, ally_ids, enemy_ids)
         self.features = [FoodDistanceFeature()]
         for enemy_id in enemy_ids:
             self.features.append(EnemyDistanceFeature(enemy_id))
+        for id_ in [agent_id] + ally_ids + enemy_ids:
+            self.features.append(FragileAgentFeature(id_))
 
         self.behaviors = [self.random_behavior, self.flee_behavior,
             self.pursue_behavior]
