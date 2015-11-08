@@ -66,7 +66,13 @@ class MessageRouter(object):
         self.update_agent_state(state)
         agent_state = self.game_states[state.agent_id]
         agent_action = self.agents[state.agent_id].choose_action(agent_state, state.executed_action, state.reward, state.legal_actions, state.explore)
-        agent_state.predict_agent(state.agent_id, agent_action)
+
+        for id_ in self.game_states:
+            agent_state.predict_agent(id_, agent_action)
+
+        print state.fragile_agents
+        # print self.game_states[state.agent_id].agent_maps[0]
+        # print self.game_states[state.agent_id].food_map
 
         return agent_action
 
@@ -90,7 +96,6 @@ class MessageRouter(object):
                 game_state = self.game_states[received_message.agent_id]
                 game_state.set_walls(received_message.wall_positions)
                 game_state.set_food_positions(received_message.food_positions)
-                game_state.set_capsule_positions(received_message.capsule_positions)
 
                 agent_action = self.choose_action(received_message)
                 reply_message = self.create_action_message(received_message.agent_id, agent_action)
@@ -101,9 +106,16 @@ class MessageRouter(object):
                 agent_id = received_message.agent_id
                 ally_ids = self.get_agent_allies(agent_id)
                 enemy_ids = self.get_agent_enemies(agent_id)
+
+                if self.agent_teams[agent_id] == 'pacman':
+                    eater = True
+                else:
+                    eater = False
+
                 self.agents[agent_id] = self.agent_classes[agent_id](ally_ids, enemy_ids)
                 self.game_states[agent_id] = state.GameState(20, 11, [],
-                    agent_id=agent_id, ally_ids=ally_ids, enemy_ids=enemy_ids)
+                    agent_id=agent_id, ally_ids=ally_ids, enemy_ids=enemy_ids,
+                    eater=eater)
                 self.send_message(self.create_ack_message())
             elif received_message.msg_type == messages.REGISTER:
                 self.register_agent(received_message)

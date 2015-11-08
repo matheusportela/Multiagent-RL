@@ -47,7 +47,14 @@ class CommunicatingAgent(game.Agent):
                 if l:
                     food_positions.append((y, x))
 
-        capsule_positions = [(y, x) for (x, y) in state.getCapsules()]
+        fragile_agents = {}
+        for id_, s in enumerate(state.data.agentStates):
+            if s.scaredTimer > 0:
+                fragile_agents[id_] = 1.0
+            else:
+                fragile_agents[id_] = 0.0
+
+        print fragile_agents
 
         wall_positions = []
 
@@ -63,7 +70,7 @@ class CommunicatingAgent(game.Agent):
             agent_id=self.agent_id,
             agent_positions=agent_positions,
             food_positions=food_positions,
-            capsule_positions=capsule_positions,
+            fragile_agents=fragile_agents,
             wall_positions=wall_positions,
             legal_actions=state.getLegalActions(self.agent_id),
             reward=reward,

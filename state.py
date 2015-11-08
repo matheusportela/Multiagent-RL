@@ -240,7 +240,6 @@ class GameState(object):
 
         self.eater = eater
         self.food_map = None
-        self.capsule_map = None
         self.sd = 0.5
 
     def __str__(self):
@@ -263,22 +262,24 @@ class GameState(object):
                     else:
                         self.food_map[y][x] = 0.0
 
-    def set_capsule_positions(self, capsule_positions):
-        if self.capsule_map == None:
-            self.capsule_map = Map(self.width, self.height, self.walls)
-
-            for x in range(self.width):
-                for y in range(self.height):
-                    if (y, x) in capsule_positions:
-                        self.capsule_map[y][x] = 1.0
-                    else:
-                        self.capsule_map[y][x] = 0.0
-
     def set_walls(self, walls):
         for agent in self.agent_maps:
             if self.agent_maps[agent].walls == []:
                 self.agent_maps[agent].walls = walls
                 self.agent_maps[agent].normalize()
+
+    def _is_this_agent(self, agent_id):
+        return (agent_id == self.agent_id)
+
+    def _is_ally_agent(self, agent_id):
+        return (agent_id in self.ally_ids)
+
+    def _is_enemy_agent(self, agent_id):
+        return (agent_id in self.enemy_ids)
+
+    def _is_eater_agent(self, agent_id):
+        return ((self.eater and (self._is_this_agent(agent_id) or self._is_ally_agent(agent_id)))
+            or (not self.eater and self._is_enemy_agent(agent_id)))
 
     def observe_agent(self, agent_id, pos):
         self.agent_maps[agent_id].observe(pos, gaussian_distribution, self.sd)
@@ -301,19 +302,14 @@ class GameState(object):
     def predict_agent(self, agent_id, action):
         self.agent_maps[agent_id].predict(action, semi_deterministic_distribution)
 
-        if self.eater:
-            self._predict_food_positions()
-            self._predict_capsule_positions()
+        # Either the agent and its allies eat or its enemies
+        if self._is_eater_agent(agent_id):
+            self._predict_food_positions(agent_id)
 
-    def _predict_food_positions(self):
+    def _predict_food_positions(self, agent_id):
         for x in range(self.width):
             for y in range(self.height):
-                self.food_map[y][x] = self.food_map[y][x] * (1 - self.agent_maps[self.agent_id][y][x])
-
-    def _predict_capsule_positions(self):
-        for x in range(self.width):
-            for y in range(self.height):
-                self.capsule_map[y][x] = self.capsule_map[y][x] * (1 - self.agent_maps[self.agent_id][y][x])
+                self.food_map[y][x] = self.food_map[y][x] * (1 - self.agent_maps[agent_id][y][x])
 
     def calculate_distance(self, point1, point2):
         return self.agent_maps[self.agent_id].calculate_distance(point1, point2)
