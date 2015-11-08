@@ -297,9 +297,6 @@ class GameState(object):
             for y in range(self.height):
                 self.food_map[y][x] = self.food_map[y][x] * (1 - self.agent_maps[self.agent_id][y][x])
 
-    def calculate_manhattan_distance(self, point1, point2):
-        return (abs(point1[0] - point2[0]) + abs(point1[1] - point2[1]))
-
     def calculate_distance(self, point1, point2):
         return self.agent_maps[self.agent_id].calculate_distance(point1, point2)
 
