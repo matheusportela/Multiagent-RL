@@ -68,6 +68,6 @@ if __name__ == '__main__':
     results = load_results('results.txt')
     behavior_count = load_behavior_count('results/behavior_count.txt')
 
-    plot_scores(learn_scores, test_scores)
+    plot_scores(results['learn_scores'], results['test_scores'])
     plot_behavior_count(behavior_count)
     plt.show()
