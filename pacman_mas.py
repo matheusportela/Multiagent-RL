@@ -17,9 +17,7 @@ class MessageRouter(object):
         self.game_states = {}
 
     def register_agent(self, message):
-        print 'Initialized agent:', message.agent_id
-        print 'Team:', message.agent_team
-        print 'Type:', message.agent_class
+        print 'Registered %s\tID: %d\tClass: %s' % (message.agent_team, message.agent_id, message.agent_class.__name__)
 
         self.agent_classes[message.agent_id] = message.agent_class
         self.agent_teams[message.agent_id] = message.agent_team
@@ -36,7 +34,6 @@ class MessageRouter(object):
 
     def receive_message(self):
         message = pickle.loads(self.server.recv())
-        print 'Received message from %d: %s' % (message.agent_id, str(message.__dict__))
         return message
 
     def create_action_message(self, agent_id, action):
@@ -57,7 +54,6 @@ class MessageRouter(object):
         self.agents[agent_id].reset_behavior_count()
 
     def send_message(self, message):
-        print 'Sent message: %s' % str(message)
         self.server.send(pickle.dumps(message))
 
     def update_agent_state(self, state):
@@ -94,6 +90,7 @@ class MessageRouter(object):
                 game_state = self.game_states[received_message.agent_id]
                 game_state.set_walls(received_message.wall_positions)
                 game_state.set_food_positions(received_message.food_positions)
+                game_state.set_capsule_positions(received_message.capsule_positions)
 
                 agent_action = self.choose_action(received_message)
                 reply_message = self.create_action_message(received_message.agent_id, agent_action)
@@ -104,8 +101,6 @@ class MessageRouter(object):
                 agent_id = received_message.agent_id
                 ally_ids = self.get_agent_allies(agent_id)
                 enemy_ids = self.get_agent_enemies(agent_id)
-                print 'Allies:', self.get_agent_allies(agent_id)
-                print 'Enemies:', self.get_agent_enemies(agent_id)
                 self.agents[agent_id] = self.agent_classes[agent_id](ally_ids, enemy_ids)
                 self.game_states[agent_id] = state.GameState(20, 11, [],
                     agent_id=agent_id, ally_ids=ally_ids, enemy_ids=enemy_ids)

@@ -47,6 +47,8 @@ class CommunicatingAgent(game.Agent):
                 if l:
                     food_positions.append((y, x))
 
+        capsule_positions = [(y, x) for (x, y) in state.getCapsules()]
+
         wall_positions = []
 
         for x, k in enumerate(state.getWalls()):
@@ -61,6 +63,7 @@ class CommunicatingAgent(game.Agent):
             agent_id=self.agent_id,
             agent_positions=agent_positions,
             food_positions=food_positions,
+            capsule_positions=capsule_positions,
             wall_positions=wall_positions,
             legal_actions=state.getLegalActions(self.agent_id),
             reward=reward,
@@ -323,6 +326,7 @@ if __name__ == '__main__':
         with open(policy_filename, 'w') as f:
             f.write(pickle.dumps(policies))
 
+    # Save results
     print 'Learn scores:', results['learn_scores']
     print 'Test scores:', results['test_scores']
 

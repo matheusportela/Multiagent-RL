@@ -240,6 +240,7 @@ class GameState(object):
 
         self.eater = eater
         self.food_map = None
+        self.capsule_map = None
         self.sd = 0.5
 
     def __str__(self):
@@ -261,6 +262,17 @@ class GameState(object):
                         self.food_map[y][x] = 1.0
                     else:
                         self.food_map[y][x] = 0.0
+
+    def set_capsule_positions(self, capsule_positions):
+        if self.capsule_map == None:
+            self.capsule_map = Map(self.width, self.height, self.walls)
+
+            for x in range(self.width):
+                for y in range(self.height):
+                    if (y, x) in capsule_positions:
+                        self.capsule_map[y][x] = 1.0
+                    else:
+                        self.capsule_map[y][x] = 0.0
 
     def set_walls(self, walls):
         for agent in self.agent_maps:
