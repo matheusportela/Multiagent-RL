@@ -21,7 +21,7 @@ class AckMessage(BaseMessage):
 class StateMessage(BaseMessage):
     def __init__(self, agent_id=None, agent_positions=None, food_positions=None,
         fragile_agents=None, wall_positions=None, legal_actions=None,
-        reward=None, executed_action=None, explore=None):
+        reward=None, executed_action=None, test_mode=None):
         super(StateMessage, self).__init__(msg_type=STATE)
         self.agent_id = agent_id
         self.agent_positions = agent_positions
@@ -31,7 +31,7 @@ class StateMessage(BaseMessage):
         self.legal_actions = legal_actions
         self.reward = reward
         self.executed_action = executed_action
-        self.explore = explore
+        self.test_mode = test_mode
 
 
 class ActionMessage(BaseMessage):

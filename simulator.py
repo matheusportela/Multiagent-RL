@@ -23,13 +23,13 @@ class CommunicatingAgent(game.Agent):
         self.invalid_action = False
         self.actions = []
         self.init = True
-        self.explore = True
+        self.test_mode = False
 
-    def enable_explore(self):
-        self.explore = True
+    def enable_test_mode(self):
+        self.test_mode = True
 
-    def disable_explore(self):
-        self.explore = False
+    def enable_learn_mode(self):
+        self.test_mode = False
 
     def calculate_reward(self, current_score):
         raise NotImplementedError, 'Communicating agent must calculate score'
@@ -73,7 +73,7 @@ class CommunicatingAgent(game.Agent):
             legal_actions=state.getLegalActions(self.agent_id),
             reward=reward,
             executed_action=self.previous_action,
-            explore=self.explore)
+            test_mode=self.test_mode)
 
         return message
 
@@ -272,10 +272,10 @@ def main():
                 ghost.receive_message()
 
         if i >= learn_games:
-            pacman.disable_explore()
+            pacman.enable_test_mode()
 
             for ghost in ghosts:
-                ghost.disable_explore()
+                ghost.enable_test_mode()
 
         games = pacman_simulator.runGames(layout, pacman, ghosts, display, 1, record)
 

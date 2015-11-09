@@ -294,6 +294,8 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
         self.behavior_count = {}
         self.reset_behavior_count()
 
+        self.test_mode = False
+
     def reset_behavior_count(self):
         for behavior in self.behaviors:
             self.behavior_count[str(behavior)] = 0
@@ -304,13 +306,15 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
     def set_policy(self, weights):
         self.learning.set_weights(weights)
 
-    def choose_action(self, state, action, reward, legal_actions, explore):
-        if explore:
-            self.enable_exploration()
+    def choose_action(self, state, action, reward, legal_actions, test):
+        if test:
+            self.enable_test_mode()
         else:
-            self.disable_exploration()
+            self.enable_learn_mode()
 
-        self.learning.learn(state, self.previous_behavior, reward)
+        if not self.test_mode:
+            self.learning.learn(state, self.previous_behavior, reward)
+
         behavior = self.learning.act(state)
         self.previous_behavior = behavior
         suggested_action = behavior(state, legal_actions)
@@ -324,10 +328,12 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
         else:
             return random.choice(legal_actions)
 
-    def enable_exploration(self):
+    def enable_learn_mode(self):
+        self.test_mode = False
         self.learning.exploration_rate = self.exploration_rate
 
-    def disable_exploration(self):
+    def enable_test_mode(self):
+        self.test_mode = True
         self.learning.exploration_rate = 0
 
 
@@ -353,6 +359,8 @@ class BehaviorLearningGhostAgent(GhostAgent):
         self.behavior_count = {}
         self.reset_behavior_count()
 
+        self.test_mode = False
+
     def reset_behavior_count(self):
         for behavior in self.behaviors:
             self.behavior_count[str(behavior)] = 0
@@ -363,13 +371,15 @@ class BehaviorLearningGhostAgent(GhostAgent):
     def set_policy(self, weights):
         self.learning.set_weights(weights)
 
-    def choose_action(self, state, action, reward, legal_actions, explore):
-        if explore:
-            self.enable_exploration()
+    def choose_action(self, state, action, reward, legal_actions, test):
+        if test:
+            self.enable_test_mode()
         else:
-            self.disable_exploration()
+            self.enable_learn_mode()
 
-        self.learning.learn(state, self.previous_behavior, reward)
+        if not self.test_mode:
+            self.learning.learn(state, self.previous_behavior, reward)
+
         behavior = self.learning.act(state)
         self.previous_behavior = behavior
         suggested_action = behavior(state, legal_actions)
@@ -383,8 +393,10 @@ class BehaviorLearningGhostAgent(GhostAgent):
         else:
             return random.choice(legal_actions)
 
-    def enable_exploration(self):
+    def enable_learn_mode(self):
+        self.test_mode = False
         self.learning.exploration_rate = self.exploration_rate
 
-    def disable_exploration(self):
+    def enable_test_mode(self):
+        self.test_mode = True
         self.learning.exploration_rate = 0

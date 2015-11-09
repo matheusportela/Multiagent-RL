@@ -68,7 +68,7 @@ class MessageRouter(object):
     def choose_action(self, state):
         self.update_agent_state(state)
         agent_state = self.game_states[state.agent_id]
-        agent_action = self.agents[state.agent_id].choose_action(agent_state, state.executed_action, state.reward, state.legal_actions, state.explore)
+        agent_action = self.agents[state.agent_id].choose_action(agent_state, state.executed_action, state.reward, state.legal_actions, state.test_mode)
 
         for id_ in self.game_states:
             agent_state.predict_agent(id_, agent_action)
