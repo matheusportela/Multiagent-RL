@@ -195,19 +195,18 @@ class QLearningWithApproximation(LearningAlgorithm):
 
     def _init_weights(self):
         for action in self.actions:
-            self.weights[action] = [random.random() for _ in range(len(self.features))]
+            self.weights[str(action)] = [random.random() for _ in range(len(self.features))]
 
     def get_weights(self):
-        return [weights for action, weights in self.weights.items()]
+        return self.weights
 
     def set_weights(self, weights):
-        for action, weight in zip(self.actions, weights):
-            self.weights[action] = weight
+        self.weights = weights
 
     def get_q_value(self, state, action):
         q_value = 0
 
-        for weight, feature in zip(self.weights[action], self.features):
+        for weight, feature in zip(self.weights[str(action)], self.features):
             q_value += weight*feature(state, action)
 
         return q_value
@@ -235,7 +234,7 @@ class QLearningWithApproximation(LearningAlgorithm):
         return self.get_q_value(state, action)
 
     def _update_weights(self, action, delta):
-        self.weights[action] = [weight + self.learning_rate*delta*feature(self.previous_state, action) for weight, feature in zip(self.weights[action], self.features)]
+        self.weights[str(action)] = [weight + self.learning_rate*delta*feature(self.previous_state, action) for weight, feature in zip(self.weights[str(action)], self.features)]
 
 
     def learn(self, state, action, reward):

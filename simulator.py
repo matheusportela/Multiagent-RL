@@ -212,9 +212,9 @@ def main():
     policies = {}
     record = False
     pacman_class = agents.BehaviorLearningPacmanAgent
-    ghost_class = agents.RandomGhostAgent
+    # ghost_class = agents.RandomGhostAgent
     # pacman_class = agents.RandomPacmanAgent
-    # ghost_class = agents.BehaviorLearningGhostAgent
+    ghost_class = agents.BehaviorLearningGhostAgent
 
     if args.graphics:
         display_type = 'Graphic'

@@ -12,6 +12,7 @@ class PacmanAgent(object):
         index: Pacman agent index for game referral.
     """
     def __init__(self, agent_id, ally_ids, enemy_ids):
+        self.agent_id = agent_id
         self.actions = ['North', 'South', 'East', 'West', 'Stop']
 
     def choose_action(self, state, action, reward, legal_actions, explore):
@@ -57,6 +58,7 @@ class GhostAgent(object):
         index: Ghost agent index for game referral.
     """
     def __init__(self, agent_id, ally_ids, enemy_ids):
+        self.agent_id = agent_id
         self.actions = ['North', 'South', 'East', 'West']
 
     def choose_action(self, state, action, reward, legal_actions, explore):
@@ -186,44 +188,24 @@ class FragileAgentFeature(Feature):
         return state.get_fragile_agent(self.agent_id)
 
 
-class BehaviorLearningPacmanAgent(PacmanAgent):
-    def __init__(self, agent_id, ally_ids, enemy_ids):
-        super(BehaviorLearningPacmanAgent, self).__init__(agent_id, ally_ids, enemy_ids)
-        self.features = [FoodDistanceFeature()]
-        for enemy_id in enemy_ids:
-            self.features.append(EnemyDistanceFeature(enemy_id))
-        for id_ in [agent_id] + ally_ids + enemy_ids:
-            self.features.append(FragileAgentFeature(id_))
+class Behavior(object):
+    def __str__(self):
+        return self.__class__.__name__
 
-        self.behaviors = [self.random_behavior, self.eat_behavior]
-        if len(enemy_ids) > 0:
-            self.behaviors.append(self.flee_behavior)
+    def __call__(self, state, legal_actions):
+        raise NotImplementedError, 'Behavior must implement __call__'
 
-        self.exploration_rate = 0.1
-        self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
-            discount_factor=0.9, actions=self.behaviors, features=self.features,
-            exploration_rate=self.exploration_rate)
-        self.previous_behavior = self.behaviors[0]
-        self.behavior_count = {}
-        self.reset_behavior_count()
 
-    def reset_behavior_count(self):
-        for behavior in self.behaviors:
-            self.behavior_count[behavior.__name__] = 0
-
-    def get_policy(self):
-        return self.learning.get_weights()
-
-    def set_policy(self, weights):
-        self.learning.set_weights(weights)
-
-    def random_behavior(self, state):
-        if self.legal_actions == []:
+class RandomBehavior(Behavior):
+    def __call__(self, state, legal_actions):
+        if legal_actions == []:
             return 'Stop'
         else:
-            return random.choice(self.legal_actions)
+            return random.choice(legal_actions)
 
-    def eat_behavior(self, state):
+
+class EatBehavior(Behavior):
+    def __call__(self, state, legal_actions):
         agent_position = state.get_position()
         agent_map = state.get_map()
         food_map = state.food_map
@@ -231,7 +213,7 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
         best_action = None
         min_dist = None
 
-        for action in self.legal_actions:
+        for action in legal_actions:
             diff = agent_map.action_to_pos[action]
             new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
 
@@ -245,7 +227,9 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
 
         return best_action
 
-    def flee_behavior(self, state):
+
+class FleeBehavior(Behavior):
+    def __call__(self, state, legal_actions):
         agent_position = state.get_position()
         enemy_position = state.get_agent_position(state.get_closest_enemy(state))
         agent_map = state.get_map()
@@ -253,7 +237,7 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
         best_action = None
         max_distance = None
 
-        for action in self.legal_actions:
+        for action in legal_actions:
             diff = agent_map.action_to_pos[action]
             new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
             new_distance = state.calculate_distance(new_position, enemy_position)
@@ -265,19 +249,72 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
 
         return best_action
 
+
+class PursueBehavior(Behavior):
+    def __call__(self, state, legal_actions):
+        agent_position = state.get_position()
+        enemy_position = state.get_agent_position(state.get_closest_enemy(state))
+        agent_map = state.get_map()
+
+        best_action = None
+        min_distance = None
+
+        for action in legal_actions:
+            diff = agent_map.action_to_pos[action]
+            new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
+            new_distance = state.calculate_distance(new_position, enemy_position)
+
+            if (best_action == None) or (agent_map._is_valid_position(new_position) and
+                new_distance < min_distance):
+                best_action = action
+                min_distance = new_distance
+
+        return best_action
+
+
+class BehaviorLearningPacmanAgent(PacmanAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(BehaviorLearningPacmanAgent, self).__init__(agent_id, ally_ids, enemy_ids)
+        self.features = [FoodDistanceFeature()]
+        for enemy_id in enemy_ids:
+            self.features.append(EnemyDistanceFeature(enemy_id))
+        for id_ in [agent_id] + ally_ids + enemy_ids:
+            self.features.append(FragileAgentFeature(id_))
+
+        self.behaviors = [RandomBehavior(), EatBehavior()]
+        if len(enemy_ids) > 0:
+            self.behaviors.append(FleeBehavior())
+
+        self.exploration_rate = 0.1
+        self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
+            discount_factor=0.9, actions=self.behaviors, features=self.features,
+            exploration_rate=self.exploration_rate)
+        self.previous_behavior = self.behaviors[0]
+        self.behavior_count = {}
+        self.reset_behavior_count()
+
+    def reset_behavior_count(self):
+        for behavior in self.behaviors:
+            self.behavior_count[str(behavior)] = 0
+
+    def get_policy(self):
+        return self.learning.get_weights()
+
+    def set_policy(self, weights):
+        self.learning.set_weights(weights)
+
     def choose_action(self, state, action, reward, legal_actions, explore):
         if explore:
             self.enable_exploration()
         else:
             self.disable_exploration()
 
-        self.legal_actions = legal_actions
         self.learning.learn(state, self.previous_behavior, reward)
         behavior = self.learning.act(state)
         self.previous_behavior = behavior
-        suggested_action = behavior(state)
+        suggested_action = behavior(state, legal_actions)
 
-        self.behavior_count[behavior.__name__] += 1
+        self.behavior_count[str(behavior)] += 1
 
         if suggested_action in legal_actions:
             return suggested_action
@@ -302,8 +339,7 @@ class BehaviorLearningGhostAgent(GhostAgent):
         for id_ in [agent_id] + ally_ids + enemy_ids:
             self.features.append(FragileAgentFeature(id_))
 
-        self.behaviors = [self.random_behavior, self.flee_behavior,
-            self.pursue_behavior]
+        self.behaviors = [RandomBehavior(), FleeBehavior(), PursueBehavior()]
 
         self.exploration_rate = 0.1
         self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
@@ -315,7 +351,7 @@ class BehaviorLearningGhostAgent(GhostAgent):
 
     def reset_behavior_count(self):
         for behavior in self.behaviors:
-            self.behavior_count[behavior.__name__] = 0
+            self.behavior_count[str(behavior)] = 0
 
     def get_policy(self):
         return self.learning.get_weights()
@@ -323,65 +359,18 @@ class BehaviorLearningGhostAgent(GhostAgent):
     def set_policy(self, weights):
         self.learning.set_weights(weights)
 
-    def random_behavior(self, state):
-        if self.legal_actions == []:
-            return 'Stop'
-        else:
-            return random.choice(self.legal_actions)
-
-    def flee_behavior(self, state):
-        agent_position = state.get_position()
-        enemy_position = state.get_agent_position(state.get_closest_enemy(state))
-        agent_map = state.get_map()
-
-        best_action = None
-        max_distance = None
-
-        for action in self.legal_actions:
-            diff = agent_map.action_to_pos[action]
-            new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
-            new_distance = state.calculate_distance(new_position, enemy_position)
-
-            if (best_action == None) or (agent_map._is_valid_position(new_position) and
-                new_distance > max_distance):
-                best_action = action
-                max_distance = new_distance
-
-        return best_action
-
-    def pursue_behavior(self, state):
-        agent_position = state.get_position()
-        enemy_position = state.get_agent_position(state.get_closest_enemy(state))
-        agent_map = state.get_map()
-
-        best_action = None
-        min_distance = None
-
-        for action in self.legal_actions:
-            diff = agent_map.action_to_pos[action]
-            new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
-            new_distance = state.calculate_distance(new_position, enemy_position)
-
-            if (best_action == None) or (agent_map._is_valid_position(new_position) and
-                new_distance < min_distance):
-                best_action = action
-                min_distance = new_distance
-
-        return best_action
-
     def choose_action(self, state, action, reward, legal_actions, explore):
         if explore:
             self.enable_exploration()
         else:
             self.disable_exploration()
 
-        self.legal_actions = legal_actions
         self.learning.learn(state, self.previous_behavior, reward)
         behavior = self.learning.act(state)
         self.previous_behavior = behavior
-        suggested_action = behavior(state)
+        suggested_action = behavior(state, legal_actions)
 
-        self.behavior_count[behavior.__name__] += 1
+        self.behavior_count[str(behavior)] += 1
 
         if suggested_action in legal_actions:
             return suggested_action
