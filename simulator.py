@@ -212,9 +212,9 @@ def main():
     policies = {}
     record = False
     pacman_class = agents.BehaviorLearningPacmanAgent
-    # ghost_class = agents.RandomGhostAgent
+    ghost_class = agents.RandomGhostAgent
     # pacman_class = agents.RandomPacmanAgent
-    ghost_class = agents.BehaviorLearningGhostAgent
+    # ghost_class = agents.BehaviorLearningGhostAgent
 
     if args.graphics:
         display_type = 'Graphic'
@@ -254,22 +254,23 @@ def main():
             ghost.init_game()
 
         # Load policies to agents
-        print 'Loading policies to agents'
-        if pacman.agent_id in policies:
-            print 'Loading Pacman policy'
-            pacman.send_message(messages.PolicyMessage(
-                agent_id=pacman.agent_id,
-                policy=policies[pacman.agent_id]))
-            pacman.receive_message()
+        if policy_filename and os.path.isfile(policy_filename):
+            print 'Loading policies to agents'
+            if pacman.agent_id in policies:
+                print 'Loading Pacman policy'
+                pacman.send_message(messages.PolicyMessage(
+                    agent_id=pacman.agent_id,
+                    policy=policies[pacman.agent_id]))
+                pacman.receive_message()
 
 
-        for ghost in ghosts:
-            if ghost.agent_id in policies:
-                print 'Loading ghost %d policy' % ghost.agent_id
-                ghost.send_message(messages.PolicyMessage(
-                    agent_id=ghost.agent_id,
-                    policy=policies[ghost.agent_id]))
-                ghost.receive_message()
+            for ghost in ghosts:
+                if ghost.agent_id in policies:
+                    print 'Loading ghost %d policy' % ghost.agent_id
+                    ghost.send_message(messages.PolicyMessage(
+                        agent_id=ghost.agent_id,
+                        policy=policies[ghost.agent_id]))
+                    ghost.receive_message()
 
         if i >= learn_games:
             pacman.enable_test_mode()
