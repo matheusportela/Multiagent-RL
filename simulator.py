@@ -196,27 +196,50 @@ def main():
                         help='display graphical user interface')
     parser.add_argument('--no-graphics', dest='graphics', action='store_false',
                         help='do not display graphical user interface')
+    parser.add_argument('-e', '--experiment', dest='experiment_number', type=int,
+                        default=3, help='select experiment from 0 to 4')
+    parser.add_argument('--pacman-agent', dest='pacman_agent', type=str,
+                        default='random', help='select pacman agent: random or ai')
+    parser.add_argument('--ghost-agent', dest='ghost_agent', type=str,
+                        default='random', help='select ghost agent: random or ai')
     parser.set_defaults(graphics=False)
 
     args = parser.parse_args()
 
-    # layout_file = 'originalClassic'
-    # num_ghosts = 4
-    # layout_file = 'mediumClassic'
-    # num_ghosts = 2
-    # layout_file = 'oneGhostMediumClassic'
-    # num_ghosts = 1
-    layout_file = 'ghostlessMediumClassic'
-    num_ghosts = 0
+    if args.experiment_number == 0:
+        layout_file = 'ghostlessMediumClassic'
+        num_ghosts = 0
+    elif args.experiment_number == 1:
+        layout_file = 'oneGhostMediumClassic'
+        num_ghosts = 1
+    elif args.experiment_number == 2:
+        layout_file = 'mediumClassic'
+        num_ghosts = 2
+    elif args.experiment_number == 4:
+        layout_file = 'originalClassic'
+        num_ghosts = 4
+    else:
+        raise ValueError, 'Experiment number must be between 0 and 4'
+
     learn_games = args.learn
     test_games = args.test
     policy_filename = args.policy_filename
     policies = {}
     record = False
-    pacman_class = agents.BehaviorLearningPacmanAgent
-    ghost_class = agents.RandomGhostAgent
-    # pacman_class = agents.RandomPacmanAgent
-    # ghost_class = agents.BehaviorLearningGhostAgent
+
+    if args.pacman_agent == 'random':
+        pacman_class = agents.RandomPacmanAgent
+    elif args.pacman_agent == 'ai':
+        pacman_class = agents.BehaviorLearningPacmanAgent
+    else:
+        raise ValueError, 'Pacman agent must be random or ai'
+
+    if args.ghost_agent == 'random':
+        ghost_class = agents.RandomGhostAgent
+    elif args.ghost_agent == 'ai':
+        ghost_class = agents.BehaviorLearningGhostAgent
+    else:
+        raise ValueError, 'Ghost agent must be random or ai'
 
     if args.graphics:
         display_type = 'Graphic'
