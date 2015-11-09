@@ -105,6 +105,12 @@ class MessageRouter(object):
                 else:
                     eater = False
 
+                if agent_id in self.agents:
+                    del self.agents[agent_id]
+
+                if agent_id in self.game_states:
+                    del self.game_states[agent_id]
+
                 self.agents[agent_id] = self.agent_classes[agent_id](agent_id, ally_ids, enemy_ids)
                 self.game_states[agent_id] = state.GameState(20, 11, [],
                     agent_id=agent_id, ally_ids=ally_ids, enemy_ids=enemy_ids,

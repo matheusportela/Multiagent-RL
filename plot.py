@@ -1,4 +1,5 @@
 from __future__ import division
+import argparse
 import pickle
 import matplotlib.pylab as plt
 import numpy as np
@@ -78,7 +79,15 @@ def plot_behavior_count(agent_id, behavior_count):
     ax.legend()
 
 if __name__ == '__main__':
-    results = load_results('results.txt')
+    parser = argparse.ArgumentParser(description='Run Pacman simulations.')
+    parser.add_argument('-i', '--input', dest='input_filename', type=str,
+                       default='results.txt', help='results input file')
+
+    args = parser.parse_args()
+
+    results_input_filename = args.input_filename
+
+    results = load_results(results_input_filename)
 
     plot_scores(results['learn_scores'], results['test_scores'])
     plot_game_duration(results['behavior_count'])

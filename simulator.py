@@ -202,6 +202,8 @@ def main():
                         default='random', help='select pacman agent: random or ai')
     parser.add_argument('--ghost-agent', dest='ghost_agent', type=str,
                         default='random', help='select ghost agent: random or ai')
+    parser.add_argument('-o', '--output', dest='output_filename', type=str,
+                        default='results.txt', help='results output file')
     parser.set_defaults(graphics=False)
 
     args = parser.parse_args()
@@ -215,6 +217,9 @@ def main():
     elif args.experiment_number == 2:
         layout_file = 'mediumClassic'
         num_ghosts = 2
+    elif args.experiment_number == 3:
+        layout_file = 'classic3Ghosts'
+        num_ghosts = 3
     elif args.experiment_number == 4:
         layout_file = 'originalClassic'
         num_ghosts = 4
@@ -224,6 +229,7 @@ def main():
     learn_games = args.learn
     test_games = args.test
     policy_filename = args.policy_filename
+    results_output_filename = args.output_filename
     policies = {}
     record = False
 
@@ -361,7 +367,7 @@ def main():
     print 'Learn scores:', results['learn_scores']
     print 'Test scores:', results['test_scores']
 
-    save_results('results.txt', results)
+    save_results(results_output_filename, results)
 
 if __name__ == '__main__':
     try:
