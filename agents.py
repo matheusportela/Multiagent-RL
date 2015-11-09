@@ -213,6 +213,8 @@ class EatBehavior(Behavior):
         best_action = None
         min_dist = None
 
+        random.shuffle(legal_actions)
+
         for action in legal_actions:
             diff = agent_map.action_to_pos[action]
             new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
@@ -237,6 +239,8 @@ class FleeBehavior(Behavior):
         best_action = None
         max_distance = None
 
+        random.shuffle(legal_actions)
+
         for action in legal_actions:
             diff = agent_map.action_to_pos[action]
             new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
@@ -258,6 +262,8 @@ class PursueBehavior(Behavior):
 
         best_action = None
         min_distance = None
+
+        random.shuffle(legal_actions)
 
         for action in legal_actions:
             diff = agent_map.action_to_pos[action]

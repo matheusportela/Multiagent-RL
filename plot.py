@@ -42,6 +42,22 @@ def plot_scores(learn_scores, test_scores):
     ax.scatter(range(len(learn_scores), len(learn_scores) + len(test_scores)), test_scores, c=COLOR_TABLE['g'])
     ax.plot(regression, c=COLOR_TABLE['r'])
 
+def plot_game_duration(behavior_count):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    plt.xlabel('Number of games')
+    plt.ylabel('Number of game ticks')
+    plt.title('Game duration')
+
+    data = np.sum(np.array([np.array(b) for b in behavior_count.values()[0].values()]), axis=0)
+
+    coeff = calculate_regression_coefficients(data)
+    regression = [calculate_regression_y(x, coeff) for x in range(len(data))]
+    ax.scatter(range(len(data)), data, c=COLOR_TABLE['b'])
+    ax.plot(regression, c=COLOR_TABLE['r'])
+
+    ax.legend()
+
 def plot_behavior_count(agent_id, behavior_count):
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -65,6 +81,7 @@ if __name__ == '__main__':
     results = load_results('results.txt')
 
     plot_scores(results['learn_scores'], results['test_scores'])
+    plot_game_duration(results['behavior_count'])
     for agent_id, behavior_count in results['behavior_count'].items():
         plot_behavior_count(agent_id, behavior_count)
     plt.show()

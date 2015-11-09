@@ -340,7 +340,7 @@ class GameState(object):
 
     def get_closest_ally(self, state):
         distance = float('inf')
-        closest_ally = None
+        closest_ally = self.ally_ids[0]
 
         for ally_id in self.ally_ids:
             ally_distance = self.get_distance_to_agent(ally_id)
@@ -353,7 +353,7 @@ class GameState(object):
 
     def get_closest_enemy(self, state):
         distance = float('inf')
-        closest_enemy = None
+        closest_enemy = self.enemy_ids[0]
 
         for enemy_id in self.enemy_ids:
             enemy_distance = self.get_distance_to_agent(enemy_id)

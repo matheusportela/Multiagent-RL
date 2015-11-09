@@ -200,12 +200,14 @@ def main():
 
     args = parser.parse_args()
 
-    layout_file = 'mediumClassic'
-    num_ghosts = 2
+    # layout_file = 'originalClassic'
+    # num_ghosts = 4
+    # layout_file = 'mediumClassic'
+    # num_ghosts = 2
     # layout_file = 'oneGhostMediumClassic'
     # num_ghosts = 1
-    # layout_file = 'ghostlessMediumClassic'
-    # num_ghosts = 0
+    layout_file = 'ghostlessMediumClassic'
+    num_ghosts = 0
     learn_games = args.learn
     test_games = args.test
     policy_filename = args.policy_filename
