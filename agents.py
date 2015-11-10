@@ -289,6 +289,7 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
 
         self.behaviors = [EatBehavior(), FleeBehavior(), PursueBehavior()]
 
+        self.K = 1.0 # Learning rate
         self.exploration_rate = 0.1
         self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
             discount_factor=0.9, actions=self.behaviors, features=self.features,
@@ -316,6 +317,8 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
             self.enable_learn_mode()
 
         if not self.test_mode:
+            self.learning.learning_rate = self.K/(self.K + state.iteration)
+            print 'Learning rate:', self.learning.learning_rate
             self.learning.learn(state, self.previous_behavior, reward)
 
         behavior = self.learning.act(state)
@@ -351,6 +354,7 @@ class BehaviorLearningGhostAgent(GhostAgent):
 
         self.behaviors = [FleeBehavior(), PursueBehavior()]
 
+        self.K = 1.0 # Learning rate
         self.exploration_rate = 0.1
         self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
             discount_factor=0.9, actions=self.behaviors, features=self.features,
@@ -378,6 +382,8 @@ class BehaviorLearningGhostAgent(GhostAgent):
             self.enable_learn_mode()
 
         if not self.test_mode:
+            self.learning.learning_rate = self.K/(self.K + state.iteration)
+            print 'Learning rate:', self.learning.learning_rate
             self.learning.learn(state, self.previous_behavior, reward)
 
         behavior = self.learning.act(state)

@@ -15,6 +15,7 @@ class MessageRouter(object):
         self.agent_classes = {}
         self.agent_teams = {}
         self.game_states = {}
+        self.game_number = {}
 
     def register_agent(self, message):
         print 'Registered %s\tID: %d\tClass: %s' % (message.agent_team, message.agent_id, message.agent_class.__name__)
@@ -103,6 +104,7 @@ class MessageRouter(object):
                 if agent_id in self.agents:
                     del self.agents[agent_id]
 
+                self.game_number[agent_id] = 0
                 self.agents[agent_id] = self.agent_classes[agent_id](agent_id, ally_ids, enemy_ids)
                 self.send_message(self.create_ack_message())
                 print 'Initialized %s\tID: %d\tClass: %s' % (self.agent_teams[agent_id], agent_id, self.agent_classes[agent_id].__name__)
@@ -121,9 +123,11 @@ class MessageRouter(object):
 
                 self.game_states[agent_id] = state.GameState(20, 11, [],
                     agent_id=agent_id, ally_ids=ally_ids, enemy_ids=enemy_ids,
-                    eater=eater)
+                    eater=eater, iteration=self.game_number[agent_id])
                 self.send_message(self.create_ack_message())
-                print 'Started game\tID: %d' % agent_id
+                print 'Started game #%d  \tID: %d\tClass: %s' % (self.game_number[agent_id], agent_id, self.agent_classes[agent_id].__name__)
+
+                self.game_number[agent_id] += 1
             elif received_message.msg_type == messages.REGISTER:
                 self.register_agent(received_message)
                 self.send_message(self.create_ack_message())
