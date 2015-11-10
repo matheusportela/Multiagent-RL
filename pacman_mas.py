@@ -100,22 +100,30 @@ class MessageRouter(object):
                 ally_ids = self.get_agent_allies(agent_id)
                 enemy_ids = self.get_agent_enemies(agent_id)
 
+                if agent_id in self.agents:
+                    del self.agents[agent_id]
+
+                self.agents[agent_id] = self.agent_classes[agent_id](agent_id, ally_ids, enemy_ids)
+                self.send_message(self.create_ack_message())
+                print 'Initialized %s\tID: %d\tClass: %s' % (self.agent_teams[agent_id], agent_id, self.agent_classes[agent_id].__name__)
+            elif received_message.msg_type == messages.START:
+                agent_id = received_message.agent_id
+                ally_ids = self.get_agent_allies(agent_id)
+                enemy_ids = self.get_agent_enemies(agent_id)
+
                 if self.agent_teams[agent_id] == 'pacman':
                     eater = True
                 else:
                     eater = False
 
-                if agent_id in self.agents:
-                    del self.agents[agent_id]
-
                 if agent_id in self.game_states:
                     del self.game_states[agent_id]
 
-                self.agents[agent_id] = self.agent_classes[agent_id](agent_id, ally_ids, enemy_ids)
                 self.game_states[agent_id] = state.GameState(20, 11, [],
                     agent_id=agent_id, ally_ids=ally_ids, enemy_ids=enemy_ids,
                     eater=eater)
                 self.send_message(self.create_ack_message())
+                print 'Started game\tID: %d' % agent_id
             elif received_message.msg_type == messages.REGISTER:
                 self.register_agent(received_message)
                 self.send_message(self.create_ack_message())
