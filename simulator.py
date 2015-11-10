@@ -201,7 +201,7 @@ def main():
     parser.add_argument('--no-graphics', dest='graphics', action='store_false',
                         help='do not display graphical user interface')
     parser.add_argument('-e', '--experiment', dest='experiment_number', type=int,
-                        default=3, help='select experiment from 0 to 4')
+                        default=3, help='select experiment from 1 to 4')
     parser.add_argument('--pacman-agent', dest='pacman_agent', type=str,
                         default='random', help='select pacman agent: random or ai')
     parser.add_argument('--ghost-agent', dest='ghost_agent', type=str,
@@ -212,10 +212,7 @@ def main():
 
     args = parser.parse_args()
 
-    if args.experiment_number == 0:
-        layout_file = 'ghostlessMediumClassic'
-        num_ghosts = 0
-    elif args.experiment_number == 1:
+    if args.experiment_number == 1:
         layout_file = 'oneGhostMediumClassic'
         num_ghosts = 1
     elif args.experiment_number == 2:

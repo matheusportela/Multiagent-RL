@@ -287,10 +287,7 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
         for id_ in [agent_id] + ally_ids + enemy_ids:
             self.features.append(FragileAgentFeature(id_))
 
-        self.behaviors = [RandomBehavior(), EatBehavior()]
-        if len(enemy_ids) > 0:
-            self.behaviors.append(FleeBehavior())
-            self.behaviors.append(PursueBehavior())
+        self.behaviors = [EatBehavior(), FleeBehavior(), PursueBehavior()]
 
         self.exploration_rate = 0.1
         self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
@@ -352,10 +349,7 @@ class BehaviorLearningGhostAgent(GhostAgent):
         for id_ in [agent_id] + ally_ids + enemy_ids:
             self.features.append(FragileAgentFeature(id_))
 
-        self.behaviors = [RandomBehavior()]
-        if len(enemy_ids) > 0:
-            self.behaviors.append(FleeBehavior())
-            self.behaviors.append(PursueBehavior())
+        self.behaviors = [FleeBehavior(), PursueBehavior()]
 
         self.exploration_rate = 0.1
         self.learning = learning.QLearningWithApproximation(learning_rate=0.1,
