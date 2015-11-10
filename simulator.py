@@ -77,10 +77,14 @@ class CommunicatingAgent(game.Agent):
 
         return message
 
-    def init_game(self):
+    def init_agent(self):
+        self.send_message(messages.InitMessage(agent_id=self.agent_id))
+        self.receive_message()
+
+    def start_game(self):
         self.previous_score = 0
         self.previous_action = 'Stop'
-        self.send_message(messages.InitMessage(agent_id=self.agent_id))
+        self.send_message(messages.StartMessage(agent_id=self.agent_id))
         self.receive_message()
 
     def register_agent(self, agent_team, agent_class):
@@ -277,12 +281,18 @@ def main():
         with open(policy_filename) as f:
             policies = pickle.loads(f.read())
 
+    # Initialize agents
+    pacman.init_agent()
+    for ghost in ghosts:
+        ghost.init_agent()
+
     for i in range(learn_games + test_games):
         print '\nGame #%d' % (i+1)
 
-        pacman.init_game()
+        # Start new game
+        pacman.start_game()
         for ghost in ghosts:
-            ghost.init_game()
+            ghost.start_game()
 
         # Load policies to agents
         if policy_filename and os.path.isfile(policy_filename):
