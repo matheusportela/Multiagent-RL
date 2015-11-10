@@ -1,6 +1,7 @@
 STATE = 'State'
 ACTION = 'Action'
 INIT = 'Init'
+START = 'Start'
 REGISTER = 'Register'
 ACK = 'Ack'
 REQUEST_BEHAVIOR_COUNT = 'RequestBehaviorCount'
@@ -44,6 +45,12 @@ class ActionMessage(BaseMessage):
 class InitMessage(BaseMessage):
     def __init__(self, agent_id=None):
         super(InitMessage, self).__init__(msg_type=INIT)
+        self.agent_id = agent_id
+
+
+class StartMessage(BaseMessage):
+    def __init__(self, agent_id=None):
+        super(StartMessage, self).__init__(msg_type=START)
         self.agent_id = agent_id
 
 
