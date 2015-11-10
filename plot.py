@@ -34,7 +34,7 @@ def plot_scores(learn_scores, test_scores):
     plt.ylabel('Game final score')
     plt.title('Game scores over time')
     data = learn_scores + test_scores
-    coeff = calculate_regression_coefficients(data)
+    coeff = calculate_regression_coefficients(data, degree=1)
     regression = [calculate_regression_y(x, coeff) for x in range(len(data))]
 
     print 'Regression coefficients:', coeff
@@ -52,7 +52,7 @@ def plot_game_duration(behavior_count):
 
     data = np.sum(np.array([np.array(b) for b in behavior_count.values()[0].values()]), axis=0)
 
-    coeff = calculate_regression_coefficients(data)
+    coeff = calculate_regression_coefficients(data, degree=1)
     regression = [calculate_regression_y(x, coeff) for x in range(len(data))]
     ax.scatter(range(len(data)), data, c=COLOR_TABLE['b'])
     ax.plot(regression, c=COLOR_TABLE['r'])
@@ -65,16 +65,16 @@ def plot_behavior_count(agent_id, behavior_count):
     plt.xlabel('Number of games')
     plt.ylabel('Probability of selecting a behavior')
     plt.title('Probability of agent %d selecting the behavior' % agent_id)
-    plt.ylim([0, 1])
+    plt.ylim([-0.1, 1.1])
 
     data = np.array([b for b in behavior_count.values()])
     prob = data/np.sum(data, axis=0)
 
     for i, behavior in enumerate(behavior_count):
-        coeff = calculate_regression_coefficients(prob[i])
+        coeff = calculate_regression_coefficients(prob[i], degree=4)
         regression = [calculate_regression_y(x, coeff) for x in range(len(prob[i]))]
-        ax.plot(regression, label=behavior, c=COLOR_LIST[i], linewidth=2.0)
-        ax.scatter(range(len(prob[i])), prob[i], c=COLOR_LIST[i], alpha=0.10)
+        ax.plot(regression, label=behavior, c=COLOR_TABLE[COLOR_LIST[i]], linewidth=2.0)
+        ax.scatter(range(len(prob[i])), prob[i], c=COLOR_TABLE[COLOR_LIST[i]], alpha=0.10)
 
     ax.legend()
 
