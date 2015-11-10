@@ -318,7 +318,6 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
 
         if not self.test_mode:
             self.learning.learning_rate = self.K/(self.K + state.iteration)
-            print 'Learning rate:', self.learning.learning_rate
             self.learning.learn(state, self.previous_behavior, reward)
 
         behavior = self.learning.act(state)
@@ -383,7 +382,6 @@ class BehaviorLearningGhostAgent(GhostAgent):
 
         if not self.test_mode:
             self.learning.learning_rate = self.K/(self.K + state.iteration)
-            print 'Learning rate:', self.learning.learning_rate
             self.learning.learn(state, self.previous_behavior, reward)
 
         behavior = self.learning.act(state)
