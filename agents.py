@@ -297,7 +297,6 @@ class PursueBehavior(Behavior):
             enemy_position = (enemy_position[0] + enemy_diff[0], enemy_position[1] + enemy_diff[1])
             simulated_steps += 1
 
-        print 'Enemy position:', enemy_position
         return enemy_position
 
     def __call__(self, state, legal_actions):
