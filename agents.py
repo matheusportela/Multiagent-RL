@@ -278,6 +278,53 @@ class SeekBehavior(Behavior):
         return best_action
 
 
+class PursueBehavior(Behavior):
+    def __init__(self, n=2):
+        self.n = n
+        self.enemy_previous_position = None
+
+    def _estimate_enemy_future_position(self, current_position, agent_map):
+        enemy_position = current_position
+
+        if not self.enemy_previous_position:
+            enemy_diff = (0, 0)
+        else:
+            enemy_diff = (enemy_position[0] - self.enemy_previous_position[0], enemy_position[1] - self.enemy_previous_position[1])
+        self.enemy_previous_position = enemy_position
+        simulated_steps = 0
+
+        while agent_map._is_valid_position(enemy_position) and simulated_steps < self.n:
+            enemy_position = (enemy_position[0] + enemy_diff[0], enemy_position[1] + enemy_diff[1])
+            simulated_steps += 1
+
+        print 'Enemy position:', enemy_position
+        return enemy_position
+
+    def __call__(self, state, legal_actions):
+        agent_map = state.get_map()
+        agent_position = state.get_position()
+        enemy_position = self._estimate_enemy_future_position(
+            state.get_agent_position(state.get_closest_enemy(state)), agent_map)
+
+        best_action = None
+        min_distance = None
+
+        random.shuffle(legal_actions)
+
+        for action in legal_actions:
+            diff = agent_map.action_to_pos[action]
+            new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
+            new_distance = state.calculate_distance(new_position, enemy_position)
+
+            if (best_action == None) or (agent_map._is_valid_position(new_position) and
+                new_distance < min_distance):
+                best_action = action
+                min_distance = new_distance
+
+        return best_action
+
+
+
 class BehaviorLearningPacmanAgent(PacmanAgent):
     def __init__(self, agent_id, ally_ids, enemy_ids):
         super(BehaviorLearningPacmanAgent, self).__init__(agent_id, ally_ids, enemy_ids)
@@ -287,7 +334,8 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
         for id_ in [agent_id] + ally_ids + enemy_ids:
             self.features.append(FragileAgentFeature(id_))
 
-        self.behaviors = [EatBehavior(), FleeBehavior(), SeekBehavior()]
+        self.behaviors = [EatBehavior(), FleeBehavior(), SeekBehavior(),
+            PursueBehavior()]
 
         self.K = 1.0 # Learning rate
         self.exploration_rate = 0.1
@@ -351,8 +399,7 @@ class BehaviorLearningGhostAgent(GhostAgent):
         for id_ in [agent_id] + ally_ids + enemy_ids:
             self.features.append(FragileAgentFeature(id_))
 
-        # self.behaviors = [FleeBehavior(), SeekBehavior()]
-        self.behaviors = [SeekBehavior()]
+        self.behaviors = [FleeBehavior(), SeekBehavior(), PursueBehavior()]
 
         self.K = 1.0 # Learning rate
         self.exploration_rate = 0.1
