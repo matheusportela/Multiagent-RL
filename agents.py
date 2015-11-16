@@ -254,7 +254,7 @@ class FleeBehavior(Behavior):
         return best_action
 
 
-class PursueBehavior(Behavior):
+class SeekBehavior(Behavior):
     def __call__(self, state, legal_actions):
         agent_position = state.get_position()
         enemy_position = state.get_agent_position(state.get_closest_enemy(state))
@@ -287,7 +287,7 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
         for id_ in [agent_id] + ally_ids + enemy_ids:
             self.features.append(FragileAgentFeature(id_))
 
-        self.behaviors = [EatBehavior(), FleeBehavior(), PursueBehavior()]
+        self.behaviors = [EatBehavior(), FleeBehavior(), SeekBehavior()]
 
         self.K = 1.0 # Learning rate
         self.exploration_rate = 0.1
@@ -351,7 +351,8 @@ class BehaviorLearningGhostAgent(GhostAgent):
         for id_ in [agent_id] + ally_ids + enemy_ids:
             self.features.append(FragileAgentFeature(id_))
 
-        self.behaviors = [FleeBehavior(), PursueBehavior()]
+        # self.behaviors = [FleeBehavior(), SeekBehavior()]
+        self.behaviors = [SeekBehavior()]
 
         self.K = 1.0 # Learning rate
         self.exploration_rate = 0.1
