@@ -213,16 +213,16 @@ def main():
     args = parser.parse_args()
 
     if args.experiment_number == 1:
-        layout_file = 'oneGhostMediumClassic'
+        layout_file = 'classic1Ghost'
         num_ghosts = 1
     elif args.experiment_number == 2:
-        layout_file = 'mediumClassic'
+        layout_file = 'classic2Ghosts'
         num_ghosts = 2
     elif args.experiment_number == 3:
         layout_file = 'classic3Ghosts'
         num_ghosts = 3
     elif args.experiment_number == 4:
-        layout_file = 'originalClassic'
+        layout_file = 'classic4Ghosts'
         num_ghosts = 4
     else:
         raise ValueError, 'Experiment number must be between 0 and 4'
