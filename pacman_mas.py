@@ -109,6 +109,8 @@ class MessageRouter(object):
                 self.send_message(self.create_ack_message())
                 print 'Initialized %s\tID: %d\tClass: %s' % (self.agent_teams[agent_id], agent_id, self.agent_classes[agent_id].__name__)
             elif received_message.msg_type == messages.START:
+                width = received_message.map_width
+                height = received_message.map_height
                 agent_id = received_message.agent_id
                 ally_ids = self.get_agent_allies(agent_id)
                 enemy_ids = self.get_agent_enemies(agent_id)
@@ -121,7 +123,7 @@ class MessageRouter(object):
                 if agent_id in self.game_states:
                     del self.game_states[agent_id]
 
-                self.game_states[agent_id] = state.GameState(20, 11, [],
+                self.game_states[agent_id] = state.GameState(width, height, [],
                     agent_id=agent_id, ally_ids=ally_ids, enemy_ids=enemy_ids,
                     eater=eater, iteration=self.game_number[agent_id])
                 self.send_message(self.create_ack_message())

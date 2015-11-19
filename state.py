@@ -7,6 +7,8 @@ class Map(object):
     Every cell contains a value in the interval [0, 1] indicating a probability.
     The entire map sums up to 1.
     """
+    paths = None
+
     def __init__(self, width, height, walls=[]):
         self.width = width
         self.height = height
@@ -17,7 +19,6 @@ class Map(object):
             'West': (0, -1),
             'Stop': (0, 0),
         }
-        self.paths = None
         self._walls = walls
         self.cells = self.generate_cells()
         self.normalize()
@@ -29,7 +30,9 @@ class Map(object):
     @walls.setter
     def walls(self, walls):
         self._walls = walls
-        self._calculate_all_paths()
+
+        if Map.paths == None:
+            self._calculate_all_paths()
 
     def __getitem__(self, i):
         return self.cells[i]
@@ -50,9 +53,9 @@ class Map(object):
         for y in range(self.height-1, -1, -1):
             for x in range(self.width):
                 if self._is_wall((y, x)):
-                    string.append('......')
+                    string.append('.....')
                 else:
-                    string.append('%.4f' % self[y][x])
+                    string.append('%.3f' % self[y][x])
                 string.append(' ')
             string.append('\n')
 
@@ -184,17 +187,17 @@ class Map(object):
                 if self._is_valid_position(pos):
                     paths[pos] = self._calculate_paths(pos, max_distance=max_distance)
 
-        self.paths = paths
+        Map.paths = paths
 
     def calculate_distance(self, pos1, pos2):
-        if self.paths == None:
+        if Map.paths == None:
             self._calculate_all_paths()
 
         if self._is_valid_position(pos1) and self._is_valid_position(pos2):
             if pos1 == pos2:
                 return 0
             else:
-                return len(self.paths[pos1][pos2])
+                return len(Map.paths[pos1][pos2])
         else:
             return float('inf')
 

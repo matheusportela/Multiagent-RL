@@ -49,9 +49,11 @@ class InitMessage(BaseMessage):
 
 
 class StartMessage(BaseMessage):
-    def __init__(self, agent_id=None):
+    def __init__(self, agent_id=None, map_width=None, map_height=None):
         super(StartMessage, self).__init__(msg_type=START)
         self.agent_id = agent_id
+        self.map_width = map_width
+        self.map_height = map_height
 
 
 class RegisterMessage(BaseMessage):

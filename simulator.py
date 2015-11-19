@@ -12,6 +12,7 @@ import argparse
 import agents
 import os
 
+NOISE = 0
 
 class CommunicatingAgent(game.Agent):
     def __init__(self, agent_id):
@@ -34,11 +35,20 @@ class CommunicatingAgent(game.Agent):
     def calculate_reward(self, current_score):
         raise NotImplementedError, 'Communicating agent must calculate score'
 
+    def _introduce_position_error(self, pos, min_, max_):
+        ex = random.choice(range(min_, max_ + 1))
+        ey = random.choice(range(min_, max_ + 1))
+
+        return (pos[0] + ex, pos[1] + ey)
+
     def create_state_message(self, state):
         agent_positions = {}
         agent_positions[0] = state.getPacmanPosition()[::-1]
-        for id_, g in enumerate(state.getGhostPositions()):
-            agent_positions[id_ + 1] = g[::-1]
+        for id_, pos in enumerate(state.getGhostPositions()):
+            if NOISE == 0:
+                agent_positions[id_ + 1] = pos[::-1]
+            else:
+                agent_positions[id_ + 1] = self._introduce_position_error(pos[::-1], -NOISE, NOISE)
 
         food_positions = []
 
@@ -81,10 +91,13 @@ class CommunicatingAgent(game.Agent):
         self.send_message(messages.InitMessage(agent_id=self.agent_id))
         self.receive_message()
 
-    def start_game(self):
+    def start_game(self, map_width, map_height):
         self.previous_score = 0
         self.previous_action = 'Stop'
-        self.send_message(messages.StartMessage(agent_id=self.agent_id))
+        self.send_message(messages.StartMessage(
+            agent_id=self.agent_id,
+            map_width=map_width,
+            map_height=map_height))
         self.receive_message()
 
     def register_agent(self, agent_team, agent_class):
@@ -205,9 +218,11 @@ def main():
     parser.add_argument('--pacman-agent', dest='pacman_agent', type=str,
                         default='random', help='select pacman agent: random or ai')
     parser.add_argument('--ghost-agent', dest='ghost_agent', type=str,
-                        default='random', help='select ghost agent: random or ai')
+                        default='ai', help='select ghost agent: random or ai')
     parser.add_argument('-o', '--output', dest='output_filename', type=str,
                         default='results.txt', help='results output file')
+    parser.add_argument('--noise', dest='noise', type=int, default=0,
+                        help='introduce noise in position measurements')
     parser.set_defaults(graphics=False)
 
     args = parser.parse_args()
@@ -215,17 +230,28 @@ def main():
     if args.experiment_number == 1:
         layout_file = 'classic1Ghost'
         num_ghosts = 1
+        map_width = 28
+        map_height = 28
     elif args.experiment_number == 2:
         layout_file = 'classic2Ghosts'
         num_ghosts = 2
+        map_width = 28
+        map_height = 28
     elif args.experiment_number == 3:
         layout_file = 'classic3Ghosts'
         num_ghosts = 3
+        map_width = 28
+        map_height = 28
     elif args.experiment_number == 4:
         layout_file = 'classic4Ghosts'
         num_ghosts = 4
+        map_width = 28
+        map_height = 28
     else:
         raise ValueError, 'Experiment number must be between 0 and 4'
+
+    global NOISE
+    NOISE = args.noise
 
     learn_games = args.learn
     test_games = args.test
@@ -287,9 +313,9 @@ def main():
         print '\nGame #%d' % (i+1)
 
         # Start new game
-        pacman.start_game()
+        pacman.start_game(map_width, map_height)
         for ghost in ghosts:
-            ghost.start_game()
+            ghost.start_game(map_width, map_height)
 
         # Load policies to agents
         if policy_filename and os.path.isfile(policy_filename):
