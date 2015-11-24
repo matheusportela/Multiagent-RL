@@ -323,6 +323,21 @@ class PursueBehavior(Behavior):
         return best_action
 
 
+class EaterPacmanAgent(PacmanAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(EaterPacmanAgent, self).__init__(agent_id, ally_ids, enemy_ids)
+        self.eat_behavior = EatBehavior()
+
+    def choose_action(self, state, action, reward, legal_actions, test):
+        suggested_action = self.eat_behavior(state, legal_actions)
+
+        if suggested_action in legal_actions:
+            return suggested_action
+        elif legal_actions == []:
+            return 'Stop'
+        else:
+            return random.choice(legal_actions)
+
 
 class BehaviorLearningPacmanAgent(PacmanAgent):
     def __init__(self, agent_id, ally_ids, enemy_ids):

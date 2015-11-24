@@ -256,6 +256,8 @@ def main():
         pacman_class = agents.RandomPacmanAgent
     elif args.pacman_agent == 'ai':
         pacman_class = agents.BehaviorLearningPacmanAgent
+    elif args.pacman_agent == 'eater':
+        pacman_class = agents.EaterPacmanAgent
     else:
         raise ValueError, 'Pacman agent must be random or ai'
 
