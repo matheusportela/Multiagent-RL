@@ -230,23 +230,15 @@ def main():
     if args.experiment_number == 1:
         layout_file = 'classic1Ghost'
         num_ghosts = 1
-        map_width = 28
-        map_height = 28
     elif args.experiment_number == 2:
         layout_file = 'classic2Ghosts'
         num_ghosts = 2
-        map_width = 28
-        map_height = 28
     elif args.experiment_number == 3:
         layout_file = 'classic3Ghosts'
         num_ghosts = 3
-        map_width = 28
-        map_height = 28
     elif args.experiment_number == 4:
         layout_file = 'classic4Ghosts'
         num_ghosts = 4
-        map_width = 28
-        map_height = 28
     else:
         raise ValueError, 'Experiment number must be between 0 and 4'
 
@@ -280,6 +272,9 @@ def main():
         display_type = 'None'
 
     layout = create_layout(layout_file)
+    map_width = layout.width
+    map_height = layout.height
+
     display = create_display(display_type=display_type)
 
     results = {
