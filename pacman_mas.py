@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import division
+import argparse
 import communication as comm
 import pickle
 import agents
@@ -8,9 +9,11 @@ import messages
 import state
 
 
+PORT = 5555
+
 class MessageRouter(object):
-    def __init__(self):
-        self.server = comm.Server()
+    def __init__(self, port):
+        self.server = comm.Server(port=port)
         self.agents = {}
         self.agent_classes = {}
         self.agent_teams = {}
@@ -143,7 +146,12 @@ class MessageRouter(object):
                 self.send_message(self.create_ack_message())
 
 if __name__ == '__main__':
-    router = MessageRouter()
+    parser = argparse.ArgumentParser(description='Run controller system.')
+    parser.add_argument('--port', dest='port', type=int, default=5555,
+                        help='TCP port to connect to adapter')
+    args = parser.parse_args()
+
+    router = MessageRouter(args.port)
 
     try:
         router.run()

@@ -15,10 +15,10 @@ import os
 NOISE = 0
 
 class CommunicatingAgent(game.Agent):
-    def __init__(self, agent_id):
+    def __init__(self, agent_id, port):
         super(CommunicatingAgent, self).__init__()
         self.agent_id = agent_id
-        self.client = comm.Client()
+        self.client = comm.Client(port=port)
         self.previous_score = 0
         self.previous_action = 'Stop'
         self.invalid_action = False
@@ -136,8 +136,8 @@ class CommunicatingAgent(game.Agent):
 
 
 class CommunicatingPacmanAgent(CommunicatingAgent):
-    def __init__(self):
-        super(CommunicatingPacmanAgent, self).__init__(0)
+    def __init__(self, port):
+        super(CommunicatingPacmanAgent, self).__init__(0, port)
         self.actions = ['North', 'South', 'East', 'West', 'Stop']
 
     def act_when_invalid(self, state):
@@ -148,8 +148,8 @@ class CommunicatingPacmanAgent(CommunicatingAgent):
 
 
 class CommunicatingGhostAgent(CommunicatingAgent):
-    def __init__(self, agent_id):
-        super(CommunicatingGhostAgent, self).__init__(agent_id)
+    def __init__(self, agent_id, port):
+        super(CommunicatingGhostAgent, self).__init__(agent_id, port)
         self.previous_action = 'North'
         self.actions = ['North', 'South', 'East', 'West']
 
@@ -168,17 +168,17 @@ def create_layout(layout_file):
 
     return layout
 
-def create_pacman(agent_class):
-    agent = CommunicatingPacmanAgent()
+def create_pacman(agent_class, port):
+    agent = CommunicatingPacmanAgent(port=port)
     agent.register_agent('pacman', agent_class)
     print 'Created Pacman\tID: %d\tClass: %s' % (agent.agent_id, agent_class.__name__)
     return agent
 
-def create_ghosts(num_ghosts, agent_class):
+def create_ghosts(num_ghosts, agent_class, port):
     agents = []
 
     for i in range(num_ghosts):
-        agent = CommunicatingGhostAgent(i+1)
+        agent = CommunicatingGhostAgent(i+1, port=port)
         agent.register_agent('ghost', agent_class)
         print 'Created ghost\tID: %d\tClass: %s' % (agent.agent_id, agent_class.__name__)
         agents.append(agent)
@@ -202,7 +202,7 @@ def save_results(filename, results):
         f.write(pickle.dumps(results))
 
 def main():
-    parser = argparse.ArgumentParser(description='Run Pacman simulations.')
+    parser = argparse.ArgumentParser(description='Run Pacman adapter system.')
     parser.add_argument('-l', '--learn-num', dest='learn', type=int, default=100,
                        help='number of games to learn from')
     parser.add_argument('-t', '--test-num', dest='test', type=int, default=100,
@@ -223,6 +223,8 @@ def main():
                         default='results.txt', help='results output file')
     parser.add_argument('--noise', dest='noise', type=int, default=0,
                         help='introduce noise in position measurements')
+    parser.add_argument('--port', dest='port', type=int, default=5555,
+                        help='TCP port to connect to controller')
     parser.set_defaults(graphics=False)
 
     args = parser.parse_args()
@@ -285,8 +287,8 @@ def main():
         'behavior_count': {}
     }
 
-    pacman = create_pacman(pacman_class)
-    ghosts = create_ghosts(num_ghosts, ghost_class)
+    pacman = create_pacman(pacman_class, args.port)
+    ghosts = create_ghosts(num_ghosts, ghost_class, args.port)
 
     if pacman_class == agents.BehaviorLearningPacmanAgent:
         results['behavior_count'][pacman.agent_id] = {}
