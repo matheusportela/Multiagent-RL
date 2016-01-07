@@ -139,10 +139,6 @@ In order to incorporate stochastic information, the `Map` class stores probabili
 
 The `plot` script allows visualization for simulation data. It plots the scores, probability of selecting each behavior, and game duration.
 
-### Run experiments
-
-The `run_experiments` script batch executes simulations.
-
 ## Installation
 
 This assumes a GNU/Unix distribution (Ubuntu), but everything is in Pỳthon so the setup shouldn't be too different for other platforms. The Pac-Man AI Projects provides six Pac-Man-like simulators that are free to use for educational purposes. The one we will be using is [Project 5: Classification](http://ai.berkeley.edu/classification.html), which provides an arena mimicking the complete Pac-Man game, including various ghosts.
