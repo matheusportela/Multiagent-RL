@@ -14,13 +14,13 @@ The entire system was programmed in [Python 2.7](http://www.python.org) and used
 
 Several modules compose the system, which are presented below with their defined roles.
 
-### Pacman MAS
+### Controller
 
-The `pacman_mas` script implements controller logic to receive simulator messages, route them to each instantiated agent, and send agents' actions to the simulator. In order to communicate with the simulator module via messages, the script instantiates a server object.
+The `controller` script implements logic to control learning and action selection for each agent by receiving simulator messages, routing them to the appropriate agent, and sending agents' actions to the simulator. In order to communicate with the simulator module via messages, the script instantiates a server object.
 
 ### Simulator
 
-The `simulator` script executes the Pac-Man simulator, extracts the state from the current game state, communicates the current state with the `pacman_mas` process through a client instance, receives actions from `pacman_mas`, and save experiment results. This script is tightly coupled to the Pac-Man simulator and must be modified to use this project in new scenarios.
+The `simulator` script executes the Pac-Man simulator, extracts the state from the current game state, communicates the current state with the `controller` process through a client instance, receives actions from `controller`, and save experiment results. This script is tightly coupled to the Pac-Man simulator and must be modified to use this project in new scenarios.
 
 ### Agents
 
@@ -163,12 +163,12 @@ sudo pip install pyzmq
 
 ## Usage
 
-In order to run the system, two processes are necessary: one that implements agents intelligence, in our case `pacman_mas.py`, and another that provides an interface to the real agents. Since we are using the Pacman simulator, we interface it in the module `simulator.py`.
+In order to run the system, two processes are necessary: one that implements agents intelligence, in our case `controller.py`, and another that provides an interface to the real agents. Since we are using the Pacman simulator, we interface it in the module `simulator.py`.
 
-First, it's necessary to run the `pacman_mas.py` script, which will launch a server that listens to simulator messages, process them by learning with new information, and returns actions for each agent.
+First, it's necessary to run the `controller.py` script, which will launch a server that listens to simulator messages, process them by learning with new information, and returns actions for each agent.
 
 ```bash
-python pacman_mas.py
+python controller.py
 ```
 
 Next, we can launch the Pac-Man simulation with default settings by invoking the command below.
