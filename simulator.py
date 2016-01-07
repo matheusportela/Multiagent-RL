@@ -214,7 +214,7 @@ def main():
     parser.add_argument('--no-graphics', dest='graphics', action='store_false',
                         help='do not display graphical user interface')
     parser.add_argument('-e', '--experiment', dest='experiment_number', type=int,
-                        default=3, help='select experiment from 1 to 4')
+                        default=3, help='select experiment from 1 to 6')
     parser.add_argument('--pacman-agent', dest='pacman_agent', type=str,
                         default='random', help='select pacman agent: random, ai, or eater')
     parser.add_argument('--ghost-agent', dest='ghost_agent', type=str,
@@ -230,19 +230,25 @@ def main():
     args = parser.parse_args()
 
     if args.experiment_number == 1:
-        layout_file = 'classic1Ghost'
+        layout_file = 'simulator/layouts/classic1Ghost'
         num_ghosts = 1
     elif args.experiment_number == 2:
-        layout_file = 'classic2Ghosts'
+        layout_file = 'simulator/layouts/classic2Ghosts'
         num_ghosts = 2
     elif args.experiment_number == 3:
-        layout_file = 'classic3Ghosts'
+        layout_file = 'simulator/layouts/classic3Ghosts'
         num_ghosts = 3
     elif args.experiment_number == 4:
-        layout_file = 'classic4Ghosts'
+        layout_file = 'simulator/layouts/classic4Ghosts'
         num_ghosts = 4
+    elif args.experiment_number == 5:
+        layout_file = 'simulator/layouts/medium1Ghosts'
+        num_ghosts = 1
+    elif args.experiment_number == 6:
+        layout_file = 'simulator/layouts/medium2Ghosts'
+        num_ghosts = 2
     else:
-        raise ValueError, 'Experiment number must be between 0 and 4'
+        raise ValueError, 'Experiment number must be between 1 and 6'
 
     global NOISE
     NOISE = args.noise
