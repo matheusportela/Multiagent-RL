@@ -1,8 +1,17 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 from __future__ import division
 import argparse
 import pickle
 import matplotlib.pylab as plt
 import numpy as np
+
+T = {
+    'FleeBehavior': u'Fuga',
+    'PursueBehavior': u'Perseguição',
+    'SeekBehavior': u'Busca',
+}
 
 COLOR_TABLE = {
     'r': '#c0392b',
@@ -30,25 +39,27 @@ def calculate_regression_y(x, coeff):
 def plot_scores(learn_scores, test_scores):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    plt.xlabel('Number of games')
-    plt.ylabel('Game final score')
-    plt.title('Game scores over time')
+    plt.xlabel(u'Número de jogos')
+    plt.ylabel(u'Pontuação final')
+    plt.title(u'Pontuação final ao longo dos jogos')
+    plt.xlim([0, 115])
     data = learn_scores + test_scores
     coeff = calculate_regression_coefficients(data, degree=1)
     regression = [calculate_regression_y(x, coeff) for x in range(len(data))]
 
     print 'Regression coefficients:', coeff
 
-    ax.scatter(range(len(learn_scores)), learn_scores, c=COLOR_TABLE['b'])
-    ax.scatter(range(len(learn_scores), len(learn_scores) + len(test_scores)), test_scores, c=COLOR_TABLE['g'])
-    ax.plot(regression, c=COLOR_TABLE['r'])
+    ax.scatter(range(len(learn_scores)), learn_scores, c=COLOR_TABLE['r'], marker='o')
+    ax.scatter(range(len(learn_scores), len(learn_scores) + len(test_scores)), test_scores, c=COLOR_TABLE['g'], marker='D')
+    ax.plot(regression, c=COLOR_TABLE['b'], linewidth=2.0)
 
 def plot_game_duration(behavior_count):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    plt.xlabel('Number of games')
-    plt.ylabel('Number of game ticks')
-    plt.title('Game duration')
+    plt.xlabel(u'Número de jogos')
+    plt.ylabel(u'Número de instantes de jogo')
+    plt.title(u'Duração dos jogos')
+    plt.xlim([0, 115])
 
     data = np.sum(np.array([np.array(b) for b in behavior_count.values()[0].values()]), axis=0)
 
@@ -62,9 +73,10 @@ def plot_game_duration(behavior_count):
 def plot_behavior_count(agent_id, behavior_count):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    plt.xlabel('Number of games')
-    plt.ylabel('Probability of selecting a behavior')
-    plt.title('Probability of agent %d selecting the behavior' % agent_id)
+    plt.xlabel(u'Número de jogos')
+    plt.ylabel(u'Probabilidades de selecionar comportamento')
+    plt.title(u'Probabilidades do agente %d selecionar comportamento' % agent_id)
+    plt.xlim([0, 115])
     plt.ylim([-0.1, 1.1])
 
     data = np.array([b for b in behavior_count.values()])
@@ -73,8 +85,8 @@ def plot_behavior_count(agent_id, behavior_count):
     for i, behavior in enumerate(behavior_count):
         coeff = calculate_regression_coefficients(prob[i], degree=4)
         regression = [calculate_regression_y(x, coeff) for x in range(len(prob[i]))]
-        ax.plot(regression, label=behavior, c=COLOR_TABLE[COLOR_LIST[i]], linewidth=2.0)
-        ax.scatter(range(len(prob[i])), prob[i], c=COLOR_TABLE[COLOR_LIST[i]], alpha=0.10)
+        ax.plot(regression, label=T[behavior], c=COLOR_TABLE[COLOR_LIST[i]], linewidth=2.0)
+        # ax.scatter(range(len(prob[i])), prob[i], c=COLOR_TABLE[COLOR_LIST[i]], alpha=0.10)
 
     ax.legend()
 

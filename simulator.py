@@ -216,7 +216,7 @@ def main():
     parser.add_argument('-e', '--experiment', dest='experiment_number', type=int,
                         default=3, help='select experiment from 1 to 4')
     parser.add_argument('--pacman-agent', dest='pacman_agent', type=str,
-                        default='random', help='select pacman agent: random or ai')
+                        default='random', help='select pacman agent: random, ai, or eater')
     parser.add_argument('--ghost-agent', dest='ghost_agent', type=str,
                         default='ai', help='select ghost agent: random or ai')
     parser.add_argument('-o', '--output', dest='output_filename', type=str,
@@ -261,7 +261,7 @@ def main():
     elif args.pacman_agent == 'eater':
         pacman_class = agents.EaterPacmanAgent
     else:
-        raise ValueError, 'Pacman agent must be random or ai'
+        raise ValueError, 'Pacman agent must be random, ai, or eater'
 
     if args.ghost_agent == 'random':
         ghost_class = agents.RandomGhostAgent
