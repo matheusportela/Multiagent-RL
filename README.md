@@ -141,7 +141,7 @@ The `plot` script allows visualization for simulation data. It plots the scores,
 
 ## Installation
 
-This assumes a GNU/Unix distribution (Ubuntu), but everything is in Pỳthon so the setup shouldn't be too different for other platforms. The Pac-Man AI Projects provides six Pac-Man-like simulators that are free to use for educational purposes. The one we will be using is [Project 5: Classification](http://ai.berkeley.edu/classification.html), which provides an arena mimicking the complete Pac-Man game, including various ghosts.
+ The Pac-Man AI Projects provides six Pac-Man-like simulators that are free to use for educational purposes. The one we will be using is [Project 5: Classification](http://ai.berkeley.edu/classification.html), which provides an arena mimicking the complete Pac-Man game, including various ghosts.
 
 This project requires the following Python packages:
 
@@ -150,11 +150,30 @@ This project requires the following Python packages:
 * *[Matplotlib](http://matplotlib.org/)*: graphics plotting
 * *[Numpy](http://www.numpy.org/)*: numerical computation
 
+### GNU/Unix
+
+This assumes a GNU/Unix distribution (Ubuntu), but everything is in Pỳthon so the setup shouldn't be too different for other platforms.
+
 Install by running the following commands.
 
 ```bash
 sudo apt-get install python python-dev python-pip python-tk libzmq-dev python-matplotlib
 sudo pip install pyzmq
+```
+
+### Mac OS X
+
+Installing on an OS X distribution requires a special setup using Homebrew and the XCode.
+
+* *[Homebrew](http://brew.sh)*: package manager
+* *[XCode](https://developer.apple.com/xcode/)*: IDE developed by Apple
+
+XCode shall be downloaded from the provided link or in your App Store. Then you need to run the following commands.
+
+```bash
+ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+brew install python --with-tcl-tk --enable-threads --with-x11
+pip install matplotlib bumpy pyzmq
 ```
 
 ## Usage
