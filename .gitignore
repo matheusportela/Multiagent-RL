@@ -1,15 +1,6 @@
 # Python Byte-compiled / optimized / DLL files
 *.py[cod]
 
-# Sublime
-*.sublime-project
-*.sublime-workspace
+*results.txt
 
-# Simulation results
-behavior_count*
-learn_scores*
-pacman_policy*
-test_scores*
-results/
-retrieve_policy.sh
-retrieve_results.sh
+wiki/*
