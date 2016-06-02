@@ -1,8 +1,15 @@
-from simulator import pacman as pacman_simulator
-from simulator import layout as simulator_layout
-from simulator import textDisplay
-from simulator import graphicsDisplay
-from simulator import game
+#  -*- coding: utf-8 -*-
+##    @package simulator.py
+#      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
+#
+# Adapts communication between controller and the Berkeley
+# Pac-man simulator.
+
+from berkeley.game import Agent as BerkeleyGameAgent
+from berkeley.graphicsDisplay import PacmanGraphics as BerkeleyGraphics
+from berkeley.layout import getLayout as get_berkeley_layout
+from berkeley.pacman import runGames as run_berkeley_games
+from berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics, PacmanGraphics as BerkeleyTextGraphics
 
 import communication as comm
 import messages
@@ -14,7 +21,7 @@ import os
 
 NOISE = 0
 
-class CommunicatingAgent(game.Agent):
+class CommunicatingAgent(object, BerkeleyGameAgent):
     def __init__(self, agent_id, port):
         super(CommunicatingAgent, self).__init__()
         self.agent_id = agent_id
@@ -161,7 +168,7 @@ class CommunicatingGhostAgent(CommunicatingAgent):
 
 
 def create_layout(layout_file):
-    layout = simulator_layout.getLayout(layout_file)
+    layout = get_berkeley_layout(layout_file)
 
     if layout == None:
         raise Exception("The layout " + layout_file + " cannot be found")
@@ -187,11 +194,11 @@ def create_ghosts(num_ghosts, agent_class, port):
 
 def create_display(display_type='None', zoom=1.0, frameTime=0.1):
     if display_type == 'Text':
-        display = textDisplay.PacmanGraphics()
+        display = BerkeleyTextGraphics()
     elif display_type == 'Graphic':
-        display = graphicsDisplay.PacmanGraphics(zoom, frameTime=frameTime)
+        display = BerkeleyGraphics(zoom, frameTime=frameTime)
     elif display_type == 'None':
-        display = textDisplay.NullGraphics()
+        display = BerkeleyNullGraphics()
     else:
         raise ValueError, 'Display type must be either Text, Graphic, or None'
 
@@ -230,22 +237,22 @@ def main():
     args = parser.parse_args()
 
     if args.experiment_number == 1:
-        layout_file = 'simulator/layouts/classic1Ghost'
+        layout_file = 'layouts/classic1Ghost'
         num_ghosts = 1
     elif args.experiment_number == 2:
-        layout_file = 'simulator/layouts/classic2Ghosts'
+        layout_file = 'layouts/classic2Ghosts'
         num_ghosts = 2
     elif args.experiment_number == 3:
-        layout_file = 'simulator/layouts/classic3Ghosts'
+        layout_file = 'layouts/classic3Ghosts'
         num_ghosts = 3
     elif args.experiment_number == 4:
-        layout_file = 'simulator/layouts/classic4Ghosts'
+        layout_file = 'layouts/classic4Ghosts'
         num_ghosts = 4
     elif args.experiment_number == 5:
-        layout_file = 'simulator/layouts/medium1Ghosts'
+        layout_file = 'layouts/medium1Ghosts'
         num_ghosts = 1
     elif args.experiment_number == 6:
-        layout_file = 'simulator/layouts/medium2Ghosts'
+        layout_file = 'layouts/medium2Ghosts'
         num_ghosts = 2
     else:
         raise ValueError, 'Experiment number must be between 1 and 6'
@@ -347,7 +354,7 @@ def main():
             for ghost in ghosts:
                 ghost.enable_test_mode()
 
-        games = pacman_simulator.runGames(layout, pacman, ghosts, display, 1, record)
+        games = run_berkeley_games(layout, pacman, ghosts, display, 1, record)
 
         # Do this so as agents can receive the last reward
         pacman.send_message(pacman.create_state_message(games[0].state))

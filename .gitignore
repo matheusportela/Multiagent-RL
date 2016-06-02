@@ -2,5 +2,6 @@
 *.py[cod]
 
 *results.txt
+*.pol
 
 wiki/*
