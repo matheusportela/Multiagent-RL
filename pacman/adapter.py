@@ -13,7 +13,7 @@ import os
 from berkeley.graphicsDisplay import PacmanGraphics as BerkeleyGraphics
 from berkeley.layout import getLayout as get_berkeley_layout
 from berkeley.pacman import runGames as run_berkeley_games
-from berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics, PacmanGraphics as BerkeleyTextGraphics
+from berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics
 
 import agents
 from communication import DEFAULT_CLIENT_ADDRESS, DEFAULT_TCP_PORT
@@ -88,6 +88,12 @@ def __build_parser__():
 
     return parser
 
+def __get_display__(display_graphics, zoom=1.0, frameTime=0.1):
+    if display_graphics:
+        return BerkeleyPacmanGraphics(zoom, frameTime=frameTime)
+    else:
+        return BerkeleyNullGraphics()
+
 def __get_layout__(layout, num_ghosts):
     LAYOUT_PATH = 'layouts'
     file_name = str(num_ghosts) + 'Ghosts'
@@ -97,17 +103,6 @@ def __get_layout__(layout, num_ghosts):
 
     if not layout:
         raise ValueError("The layout " + layout_file + " cannot be found")
-
-    log('Loaded {}.'.format(layout_file))
-
-    return layout
-
-
-def create_layout(layout_file):
-    layout = get_berkeley_layout(layout_file)
-
-    if layout is None:
-        raise Exception("The layout " + layout_file + " cannot be found")
 
     log('Loaded {}.'.format(layout_file))
 
@@ -131,20 +126,6 @@ def create_ghosts(num_ghosts, agent_class, port):
         ghosts.append(ghost)
 
     return ghosts
-
-
-def create_display(display_type='None', zoom=1.0, frameTime=0.1):
-    if display_type == 'Text':
-        display = BerkeleyTextGraphics()
-    elif display_type == 'Graphic':
-        display = BerkeleyGraphics(zoom, frameTime=frameTime)
-    elif display_type == 'None':
-        display = BerkeleyNullGraphics()
-    else:
-        raise ValueError, 'Display type must be either Text, Graphic, or None'
-
-    return display
-
 
 def save_results(filename, results):
     with open(filename, 'w') as f:
@@ -180,16 +161,11 @@ def main():
     else:
         raise ValueError, 'Ghost agent must be random or ai'
 
-    if args.graphics:
-        display_type = 'Graphic'
-    else:
-        display_type = 'None'
-
     layout = __get_layout__(args.layout, args.num_ghosts)
     map_width = layout.width
     map_height = layout.height
 
-    display = create_display(display_type=display_type)
+    display = __get_display__(args.graphics)
 
     results = {
         'learn_scores': [],
