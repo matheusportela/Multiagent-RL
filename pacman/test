@@ -1,41 +1,62 @@
 #!/bin/bash
 #
-# http://stackoverflow.com/questions/2694588/fork-two-processes-and-kill-the-second-when-the-first-is-done
+# @author Guilherme N. Ramos (gnramos@unb.br)
+#
+# Runs tests. There are 2 options:
+#
+# ./test     - which runs a simple test with a medium layout and 2 ghosts
+# ./test all - which runs all possible configurations of layouts and ghosts
+#              (may take a while....)
 
-# Basic testing for all experiments (may take a while....)
+# Test configurations
 ADAPTER="adapter.py"
 CONTROLLER="controller.py"
-AGENT_OPTIONS="--ghost-agent ai --pacman-agent ai"
+AGENT_OPTIONS="--ghost-agent ai"
 ITERATION_OPTIONS="--learn-num 2 --test-num 1"
 
-for LAYOUT in "medium" "classic"
-do
-	for NUM_GHOSTS in "1" "2" "3" "4"
+function setup_options {
+	EXP="$LAYOUT $NUM_GHOSTS ghosts"
+	LAYOUT_OPTIONS="--layout $LAYOUT --num-ghosts $NUM_GHOSTS"
+	OPTIONS="$AGENT_OPTIONS $ITERATION_OPTIONS $LAYOUT_OPTIONS"
+}
+
+function add_policy {
+	POLICY_FILE="$LAYOUT-$NUM_GHOSTS.pol"
+	rm -f $POLICY_FILE
+	OPTIONS="$OPTIONS --policy-file $POLICY_FILE"
+	EXP="$EXP with policy"
+}
+
+function process {
+	echo -e "\n\n$EXP\n"
+
+	python2 $CONTROLLER & pid_controller=$!
+	python2 $ADAPTER $OPTIONS & pid_adapter=$!
+	wait $pid_adapter
+	kill $pid_controller
+}
+
+function test_with_current_setup {
+	setup_options
+	process
+
+	add_policy
+	process
+
+	EXP="$EXP (existing file)"
+	process
+}
+
+if [ "$1" == "all" ]; then
+	for LAYOUT in "medium" "classic"
 	do
-		EXP="$LAYOUT $NUM_GHOSTS ghosts"
-		POLICY_FILE="$LAYOUT-$NUM_GHOSTS.pol"
-		POLICY_OPTIONS="--policy-file $POLICY_FILE"
-		LAYOUT_OPTIONS="--layout $LAYOUT --num-ghosts $NUM_GHOSTS"
-		OPTIONS="$AGENT_OPTIONS $ITERATION_OPTIONS $LAYOUT_OPTIONS"
-
-		echo -e "\n\n$EXP\n"
-
-		python2 $CONTROLLER & pid_controller=$!
-		python2 $ADAPTER $OPTIONS & pid_adapter=$!
-		wait $pid_adapter
-		kill $pid_controller
-
-		echo -e "\n\n$EXP with new policies\n"
-		rm -f $POLICY_FILE
-		python2 $CONTROLLER & pid_controller=$!
-		python2 $ADAPTER $OPTIONS $POLICY_OPTIONS & pid_adapter=$!
-		wait $pid_adapter
-		kill $pid_controller
-
-		echo -e "\n\n$EXP with existing policy file\n"
-		python2 $CONTROLLER & pid_controller=$!
-		python2 $ADAPTER $OPTIONS $POLICY_OPTIONS & pid_adapter=$!
-		wait $pid_adapter
-		kill $pid_controller
+		for NUM_GHOSTS in "1" "2" "3" "4"
+		do
+			test_with_current_setup
+		done
 	done
-done
+else
+	LAYOUT="medium"
+	NUM_GHOSTS="2"
+	test_with_current_setup
+fi
