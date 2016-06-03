@@ -1,11 +1,174 @@
-#!/usr/bin/env python
+#  -*- coding: utf-8 -*-
+##    @package agents.py
+#      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
+#
+# Defines the agents.
+
+
 import math
+import pickle
 import random
 
+from berkeley.game import Agent as BerkeleyGameAgent
+
 import behaviors
+import communication as comm
 import features
 import learning
+import messages
 
+
+NOISE = 0
+
+
+class CommunicatingAgent(object, BerkeleyGameAgent):
+    def __init__(self, agent_id, port):
+        super(CommunicatingAgent, self).__init__()
+        self.agent_id = agent_id
+        self.client = comm.Client(port=port)
+        self.previous_score = 0
+        self.previous_action = 'Stop'
+        self.invalid_action = False
+        self.actions = []
+        self.init = True
+        self.test_mode = False
+
+    def enable_test_mode(self):
+        self.test_mode = True
+
+    def enable_learn_mode(self):
+        self.test_mode = False
+
+    def calculate_reward(self, current_score):
+        raise NotImplementedError, 'Communicating agent must calculate score'
+
+    def _introduce_position_error(self, pos, min_, max_):
+        ex = random.choice(range(min_, max_ + 1))
+        ey = random.choice(range(min_, max_ + 1))
+
+        return (pos[0] + ex, pos[1] + ey)
+
+    def create_state_message(self, state):
+        agent_positions = {}
+        agent_positions[0] = state.getPacmanPosition()[::-1]
+        for id_, pos in enumerate(state.getGhostPositions()):
+            if NOISE == 0:
+                agent_positions[id_ + 1] = pos[::-1]
+            else:
+                agent_positions[id_ + 1] = self._introduce_position_error(pos[::-1], -NOISE, NOISE)
+
+        food_positions = []
+
+        for x, k in enumerate(state.getFood()):
+            for y, l in enumerate(k):
+                if l:
+                    food_positions.append((y, x))
+
+        fragile_agents = {}
+        for id_, s in enumerate(state.data.agentStates):
+            if s.scaredTimer > 0:
+                fragile_agents[id_] = 1.0
+            else:
+                fragile_agents[id_] = 0.0
+
+        wall_positions = []
+
+        for x, k in enumerate(state.getWalls()):
+            for y, l in enumerate(k):
+                if l:
+                    wall_positions.append((y, x))
+
+        reward = self.calculate_reward(state.getScore())
+        self.previous_score = state.getScore()
+
+        message = messages.StateMessage(
+            agent_id=self.agent_id,
+            agent_positions=agent_positions,
+            food_positions=food_positions,
+            fragile_agents=fragile_agents,
+            wall_positions=wall_positions,
+            legal_actions=state.getLegalActions(self.agent_id),
+            reward=reward,
+            executed_action=self.previous_action,
+            test_mode=self.test_mode)
+
+        return message
+
+    def init_agent(self):
+        self.send_message(messages.InitMessage(agent_id=self.agent_id))
+        self.receive_message()
+
+    def start_game(self, map_width, map_height):
+        self.previous_score = 0
+        self.previous_action = 'Stop'
+        self.send_message(messages.StartMessage(
+            agent_id=self.agent_id,
+            map_width=map_width,
+            map_height=map_height))
+        self.receive_message()
+
+    def register_agent(self, agent_team, agent_class):
+        message = messages.RegisterMessage(
+            agent_id=self.agent_id,
+            agent_team=agent_team,
+            agent_class=agent_class)
+        self.send_message(message)
+        self.receive_message()
+
+    def send_message(self, message):
+        self.client.send(pickle.dumps(message))
+
+    def receive_message(self):
+        return pickle.loads(self.client.recv())
+
+    def act_when_invalid(self, state):
+        raise NotImplementedError
+
+    def getAction(self, state):
+        message = self.create_state_message(state)
+        self.send_message(message)
+
+        message = self.receive_message()
+        while message.agent_id != self.agent_id:
+            message = self.receive_message()
+
+        self.previous_action = message.action
+
+        if message.action not in state.getLegalActions(self.agent_id):
+            self.invalid_action = True
+            return self.act_when_invalid(state)
+        else:
+            self.invalid_action = False
+            return message.action
+
+
+class CommunicatingPacmanAgent(CommunicatingAgent):
+    def __init__(self, port):
+        super(CommunicatingPacmanAgent, self).__init__(0, port)
+        self.actions = ['North', 'South', 'East', 'West', 'Stop']
+
+    def act_when_invalid(self, state):
+        return 'Stop'
+
+    def calculate_reward(self, current_score):
+        return current_score - self.previous_score
+
+
+class CommunicatingGhostAgent(CommunicatingAgent):
+    def __init__(self, agent_id, port):
+        super(CommunicatingGhostAgent, self).__init__(agent_id, port)
+        self.previous_action = 'North'
+        self.actions = ['North', 'South', 'East', 'West']
+
+    def act_when_invalid(self, state):
+        return random.choice(state.getLegalActions(self.agent_id))
+
+    def calculate_reward(self, current_score):
+        return self.previous_score - current_score
+
+###############################################################################
+###############################################################################
+###############################################################################
 
 class PacmanAgent(object):
     """Pacman agent abstract class.
