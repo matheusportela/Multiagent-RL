@@ -1,4 +1,8 @@
-#!/usr/bin/env python
+#  -*- coding: utf-8 -*-
+##    @package controller.py
+#      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
+#
+# Routes messages between server and agents.
 
 from __future__ import division
 import argparse
@@ -11,6 +15,10 @@ import state
 
 PORT = 5555
 
+
+def log(msg):
+    print '[Controller] {}'.format(msg)
+
 class MessageRouter(object):
     def __init__(self, port):
         self.server = comm.Server(port=port)
@@ -21,7 +29,9 @@ class MessageRouter(object):
         self.game_number = {}
 
     def register_agent(self, message):
-        print 'Registered %s\tID: %d\tClass: %s' % (message.agent_team, message.agent_id, message.agent_class.__name__)
+        log('Registered {} #{} ({})'.format(message.agent_team,
+                                            message.agent_id,
+                                            message.agent_class.__name__))
 
         self.agent_classes[message.agent_id] = message.agent_class
         self.agent_teams[message.agent_id] = message.agent_team
@@ -110,7 +120,7 @@ class MessageRouter(object):
                 self.game_number[agent_id] = 0
                 self.agents[agent_id] = self.agent_classes[agent_id](agent_id, ally_ids, enemy_ids)
                 self.send_message(self.create_ack_message())
-                print 'Initialized %s\tID: %d\tClass: %s' % (self.agent_teams[agent_id], agent_id, self.agent_classes[agent_id].__name__)
+                log('Initialized {} #{}'.format(self.agent_teams[agent_id], agent_id))
             elif received_message.msg_type == messages.START:
                 width = received_message.map_width
                 height = received_message.map_height
@@ -130,7 +140,8 @@ class MessageRouter(object):
                     agent_id=agent_id, ally_ids=ally_ids, enemy_ids=enemy_ids,
                     eater=eater, iteration=self.game_number[agent_id])
                 self.send_message(self.create_ack_message())
-                print 'Started game #%d  \tID: %d\tClass: %s' % (self.game_number[agent_id], agent_id, self.agent_classes[agent_id].__name__)
+                log('Start game for {} #{}'.format(self.agent_teams[agent_id],
+                                           agent_id))
 
                 self.game_number[agent_id] += 1
             elif received_message.msg_type == messages.REGISTER:

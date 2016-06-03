@@ -21,6 +21,9 @@ import os
 
 NOISE = 0
 
+def log(msg):
+    print '[  Adapter ] {}'.format(msg)
+
 class CommunicatingAgent(object, BerkeleyGameAgent):
     def __init__(self, agent_id, port):
         super(CommunicatingAgent, self).__init__()
@@ -173,12 +176,14 @@ def create_layout(layout_file):
     if layout == None:
         raise Exception("The layout " + layout_file + " cannot be found")
 
+    log('Loaded {}.'.format(layout_file))
+
     return layout
 
 def create_pacman(agent_class, port):
     agent = CommunicatingPacmanAgent(port=port)
     agent.register_agent('pacman', agent_class)
-    print 'Created Pacman\tID: %d\tClass: %s' % (agent.agent_id, agent_class.__name__)
+    log('Created {} #{}.'.format(agent_class.__name__, agent.agent_id))
     return agent
 
 def create_ghosts(num_ghosts, agent_class, port):
@@ -187,7 +192,7 @@ def create_ghosts(num_ghosts, agent_class, port):
     for i in range(num_ghosts):
         agent = CommunicatingGhostAgent(i+1, port=port)
         agent.register_agent('ghost', agent_class)
-        print 'Created ghost\tID: %d\tClass: %s' % (agent.agent_id, agent_class.__name__)
+        log('Created {} #{}.'.format(agent_class.__name__, agent.agent_id))
         agents.append(agent)
 
     return agents
@@ -312,7 +317,7 @@ def main():
 
     # Load policies from file
     if policy_filename and os.path.isfile(policy_filename):
-        print 'Loading policies from file'
+        log('Loading policies from {}.'.format(policy_filename))
         with open(policy_filename) as f:
             policies = pickle.loads(f.read())
 
@@ -322,7 +327,10 @@ def main():
         ghost.init_agent()
 
     for i in range(learn_games + test_games):
-        print '\nGame #%d' % (i+1)
+        if i >= i:
+            log('Game {} (of {})'.format(i+1, learn_games))
+        else:
+            log('Game {} (of {})'.format(i+1-learn_games, test_games))
 
         # Start new game
         pacman.start_game(map_width, map_height)
@@ -331,9 +339,9 @@ def main():
 
         # Load policies to agents
         if policy_filename and os.path.isfile(policy_filename):
-            print 'Loading policies to agents'
             if pacman.agent_id in policies:
-                print 'Loading Pacman policy'
+                log('Loading {} #{} policy.'.format(type(pacman).__name__,
+                                            pacman.agent_id))
                 pacman.send_message(messages.PolicyMessage(
                     agent_id=pacman.agent_id,
                     policy=policies[pacman.agent_id]))
@@ -342,7 +350,8 @@ def main():
 
             for ghost in ghosts:
                 if ghost.agent_id in policies:
-                    print 'Loading ghost %d policy' % ghost.agent_id
+                    log('Loading {} #{} policy.'.format(type(ghost).__name__,
+                                            ghost.agent_id))
                     ghost.send_message(messages.PolicyMessage(
                         agent_id=ghost.agent_id,
                         policy=policies[ghost.agent_id]))
@@ -369,7 +378,8 @@ def main():
             msg = messages.RequestBehaviorCountMessage(agent_id=pacman.agent_id)
             pacman.send_message(msg)
             behavior_count_msg = pacman.receive_message()
-            print 'Pacman behavior count:', behavior_count_msg.count
+            log('{} behavior count: {}.'.format(type(pacman).__name__,
+                                            behavior_count_msg.count))
             for behavior, count in behavior_count_msg.count.items():
                 if behavior not in results['behavior_count'][pacman.agent_id]:
                     results['behavior_count'][pacman.agent_id][behavior] = []
@@ -380,7 +390,8 @@ def main():
                 msg = messages.RequestBehaviorCountMessage(agent_id=ghost.agent_id)
                 ghost.send_message(msg)
                 behavior_count_msg = ghost.receive_message()
-                print 'Ghost', ghost.agent_id, 'behavior count:', behavior_count_msg.count
+                log('{} behavior count: {}.'.format(type(ghost).__name__,
+                                            behavior_count_msg.count))
                 for behavior, count in behavior_count_msg.count.items():
                     if behavior not in results['behavior_count'][ghost.agent_id]:
                         results['behavior_count'][ghost.agent_id][behavior] = []
