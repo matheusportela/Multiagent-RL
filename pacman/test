@@ -8,27 +8,34 @@ CONTROLLER="controller.py"
 AGENT_OPTIONS="--ghost-agent ai --pacman-agent ai"
 ITERATION_OPTIONS="--learn-num 2 --test-num 1"
 
-OPTIONS="$AGENT_OPTIONS $ITERATION_OPTIONS"
-
-for EXP in "1" "2" "3" "4" "5" "6"
+for LAYOUT in "medium" "classic"
 do
-	echo -e "\n\nExperiment $EXP\n"
-	python2 $CONTROLLER & pid_controller=$!
-	python2 $ADAPTER $OPTIONS -e $EXP & pid_adapter=$!
-	wait $pid_adapter
-	kill $pid_controller
+	for NUM_GHOSTS in "1" "2" "3" "4"
+	do
+		EXP="$LAYOUT $NUM_GHOSTS ghosts"
+		POLICY_FILE="$LAYOUT-$NUM_GHOSTS.pol"
+		POLICY_OPTIONS="--policy-file $POLICY_FILE"
+		LAYOUT_OPTIONS="--layout $LAYOUT --num-ghosts $NUM_GHOSTS"
+		OPTIONS="$AGENT_OPTIONS $ITERATION_OPTIONS $LAYOUT_OPTIONS"
 
-	echo -e "\n\nExperiment $EXP with new policies\n"
-	POLICY_FILE="experiment_$EXP.pol"
-	rm -f $POLICY_FILE
-	python2 $CONTROLLER & pid_controller=$!
-	python2 $ADAPTER $OPTIONS -e $EXP --policy-file $POLICY_FILE & pid_adapter=$!
-	wait $pid_adapter
-	kill $pid_controller
+		echo -e "\n\n$EXP\n"
 
-	echo -e "\n\nExperiment $EXP test with existing policy file\n"
-	python2 $CONTROLLER & pid_controller=$!
-	python2 $ADAPTER $OPTIONS -e $EXP --policy-file $POLICY_FILE & pid_adapter=$!
-	wait $pid_adapter
-	kill $pid_controller
+		python2 $CONTROLLER & pid_controller=$!
+		python2 $ADAPTER $OPTIONS & pid_adapter=$!
+		wait $pid_adapter
+		kill $pid_controller
+
+		echo -e "\n\n$EXP with new policies\n"
+		rm -f $POLICY_FILE
+		python2 $CONTROLLER & pid_controller=$!
+		python2 $ADAPTER $OPTIONS $POLICY_OPTIONS & pid_adapter=$!
+		wait $pid_adapter
+		kill $pid_controller
+
+		echo -e "\n\n$EXP with existing policy file\n"
+		python2 $CONTROLLER & pid_controller=$!
+		python2 $ADAPTER $OPTIONS $POLICY_OPTIONS & pid_adapter=$!
+		wait $pid_adapter
+		kill $pid_controller
+	done
 done

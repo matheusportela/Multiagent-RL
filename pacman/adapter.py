@@ -19,24 +19,47 @@ import messages
 import agents
 
 
+# Default settings (CLI parsing)
+DEFAULT_LAYOUT = 'classic'
+DEFAULT_NUMBER_OF_GHOSTS = 1
+
+
 def log(msg):
     print '[  Adapter ] {}'.format(msg)
+
+
+def __get_layout__(layout, num_ghosts):
+    LAYOUT_PATH = 'layouts'
+    file_name = str(num_ghosts) + 'Ghosts'
+    layout_file = '/'.join([LAYOUT_PATH, layout, file_name])
+
+    layout = get_berkeley_layout(layout_file)
+
+    if not layout:
+        raise ValueError("The layout " + layout_file + " cannot be found")
+
+    log('Loaded {}.'.format(layout_file))
+
+    return layout
+
 
 def create_layout(layout_file):
     layout = get_berkeley_layout(layout_file)
 
-    if layout == None:
+    if layout is None:
         raise Exception("The layout " + layout_file + " cannot be found")
 
     log('Loaded {}.'.format(layout_file))
 
     return layout
 
+
 def create_pacman(agent_class, port):
     pacman = agents.CommunicatingPacmanAgent(port=port)
     pacman.register_agent('pacman', agent_class)
     log('Created {} #{}.'.format(agent_class.__name__, pacman.agent_id))
     return pacman
+
 
 def create_ghosts(num_ghosts, agent_class, port):
     ghosts = []
@@ -48,6 +71,7 @@ def create_ghosts(num_ghosts, agent_class, port):
         ghosts.append(ghost)
 
     return ghosts
+
 
 def create_display(display_type='None', zoom=1.0, frameTime=0.1):
     if display_type == 'Text':
@@ -61,9 +85,11 @@ def create_display(display_type='None', zoom=1.0, frameTime=0.1):
 
     return display
 
+
 def save_results(filename, results):
     with open(filename, 'w') as f:
         f.write(pickle.dumps(results))
+
 
 def main():
     parser = argparse.ArgumentParser(description='Run Pacman adapter system.')
@@ -77,8 +103,6 @@ def main():
                         help='display graphical user interface')
     parser.add_argument('--no-graphics', dest='graphics', action='store_false',
                         help='do not display graphical user interface')
-    parser.add_argument('-e', '--experiment', dest='experiment_number', type=int,
-                        default=3, help='select experiment from 1 to 6')
     parser.add_argument('--pacman-agent', dest='pacman_agent', type=str,
                         default='random', help='select pacman agent: random, ai, or eater')
     parser.add_argument('--ghost-agent', dest='ghost_agent', type=str,
@@ -90,29 +114,16 @@ def main():
     parser.add_argument('--port', dest='port', type=int, default=5555,
                         help='TCP port to connect to controller')
     parser.set_defaults(graphics=False)
+    parser.add_argument('--num-ghosts', dest='num_ghosts',
+                        type=int, choices=xrange(1, 5),
+                        default=DEFAULT_NUMBER_OF_GHOSTS,
+                        help='number of ghosts in game')
+    parser.add_argument('--layout', dest='layout', type=str,
+                        default=DEFAULT_LAYOUT,
+                        choices=['classic', 'medium'],
+                        help='Game layout')
 
     args = parser.parse_args()
-
-    if args.experiment_number == 1:
-        layout_file = 'layouts/classic1Ghost'
-        num_ghosts = 1
-    elif args.experiment_number == 2:
-        layout_file = 'layouts/classic2Ghosts'
-        num_ghosts = 2
-    elif args.experiment_number == 3:
-        layout_file = 'layouts/classic3Ghosts'
-        num_ghosts = 3
-    elif args.experiment_number == 4:
-        layout_file = 'layouts/classic4Ghosts'
-        num_ghosts = 4
-    elif args.experiment_number == 5:
-        layout_file = 'layouts/medium1Ghosts'
-        num_ghosts = 1
-    elif args.experiment_number == 6:
-        layout_file = 'layouts/medium2Ghosts'
-        num_ghosts = 2
-    else:
-        raise ValueError, 'Experiment number must be between 1 and 6'
 
     agents.NOISE = args.noise
 
@@ -144,7 +155,7 @@ def main():
     else:
         display_type = 'None'
 
-    layout = create_layout(layout_file)
+    layout = __get_layout__(args.layout, args.num_ghosts)
     map_width = layout.width
     map_height = layout.height
 
@@ -157,7 +168,7 @@ def main():
     }
 
     pacman = create_pacman(pacman_class, args.port)
-    ghosts = create_ghosts(num_ghosts, ghost_class, args.port)
+    ghosts = create_ghosts(args.num_ghosts, ghost_class, args.port)
 
     if pacman_class == agents.BehaviorLearningPacmanAgent:
         results['behavior_count'][pacman.agent_id] = {}
@@ -178,10 +189,10 @@ def main():
         ghost.init_agent()
 
     for i in range(learn_games + test_games):
-        if i >= i:
-            log('Game {} (of {})'.format(i+1, learn_games))
+        if i >= learn_games:
+            log('TEST Game {} (of {})'.format(i+1-learn_games, test_games))
         else:
-            log('Game {} (of {})'.format(i+1-learn_games, test_games))
+            log('LEARN Game {} (of {})'.format(i+1, learn_games))
 
         # Start new game
         pacman.start_game(map_width, map_height)
