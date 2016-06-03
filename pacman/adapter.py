@@ -2,8 +2,7 @@
 ##    @package simulator.py
 #      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
 #
-# Adapts communication between controller and the Berkeley
-# Pac-man simulator.
+# Adapts communication between controller and the Berkeley Pac-man simulator.
 
 from argparse import ArgumentParser
 import pickle
@@ -94,6 +93,12 @@ def __get_display__(display_graphics, zoom=1.0, frameTime=0.1):
     else:
         return BerkeleyNullGraphics()
 
+def __get_ghost_class__(ghost_agent):
+    if ghost_agent == 'random':
+        return agents.RandomGhostAgent
+    else:  # args.ghost_agent == 'ai':
+        return agents.BehaviorLearningGhostAgent
+
 def __get_layout__(layout, num_ghosts):
     LAYOUT_PATH = 'layouts'
     file_name = str(num_ghosts) + 'Ghosts'
@@ -108,6 +113,25 @@ def __get_layout__(layout, num_ghosts):
 
     return layout
 
+def __get_pacman_class__(pacman_agent):
+    if pacman_agent == 'random':
+        return agents.RandomPacmanAgent
+    elif args.pacman_agent == 'ai':
+        return agents.BehaviorLearningPacmanAgent
+    else:  # args.pacman_agent == 'eater':
+        return agents.EaterPacmanAgent
+
+def __load_policies_from_file__(policy_filename):
+    policies = {}
+    if policy_filename and os.path.isfile(policy_filename):
+        log('Loading policies from {}.'.format(policy_filename))
+        with open(policy_filename) as f:
+            policies = pickle.loads(f.read())
+    return policies
+
+def __write_to_file__(filename, content):
+    with open(filename, 'w') as f:
+        f.write(pickle.dumps(content))
 
 def create_pacman(agent_class, port):
     pacman = agents.CommunicatingPacmanAgent(port=port)
@@ -127,10 +151,6 @@ def create_ghosts(num_ghosts, agent_class, port):
 
     return ghosts
 
-def save_results(filename, results):
-    with open(filename, 'w') as f:
-        f.write(pickle.dumps(results))
-
 
 def main():
     parser = __build_parser__()
@@ -140,26 +160,11 @@ def main():
 
     learn_games = args.learn
     test_games = args.test
-    policy_filename = args.policy_filename
     results_output_filename = args.output_filename
-    policies = {}
     record = False
 
-    if args.pacman_agent == 'random':
-        pacman_class = agents.RandomPacmanAgent
-    elif args.pacman_agent == 'ai':
-        pacman_class = agents.BehaviorLearningPacmanAgent
-    elif args.pacman_agent == 'eater':
-        pacman_class = agents.EaterPacmanAgent
-    else:
-        raise ValueError, 'Pacman agent must be random, ai, or eater'
-
-    if args.ghost_agent == 'random':
-        ghost_class = agents.RandomGhostAgent
-    elif args.ghost_agent == 'ai':
-        ghost_class = agents.BehaviorLearningGhostAgent
-    else:
-        raise ValueError, 'Ghost agent must be random or ai'
+    pacman_class = __get_pacman_class__(args.pacman_agent)
+    ghost_class = __get_ghost_class__(args.ghost_agent)
 
     layout = __get_layout__(args.layout, args.num_ghosts)
     map_width = layout.width
@@ -167,15 +172,15 @@ def main():
 
     display = __get_display__(args.graphics)
 
-    results = {
-        'learn_scores': [],
-        'test_scores': [],
-        'behavior_count': {}
-    }
+    results = {'learn_scores': [],
+               'test_scores': [],
+               'behavior_count': {}}
 
     pacman = create_pacman(pacman_class, args.port)
     ghosts = create_ghosts(args.num_ghosts, ghost_class, args.port)
 
+    ## @todo this as one list, probably by checking if agent is instance of
+    # BehaviorLearningAgent (needs refactoring).
     if pacman_class == agents.BehaviorLearningPacmanAgent:
         results['behavior_count'][pacman.agent_id] = {}
 
@@ -184,17 +189,14 @@ def main():
             results['behavior_count'][ghost.agent_id] = {}
 
     # Load policies from file
-    if policy_filename and os.path.isfile(policy_filename):
-        log('Loading policies from {}.'.format(policy_filename))
-        with open(policy_filename) as f:
-            policies = pickle.loads(f.read())
+    policies = __load_policies_from_file__(args.policy_filename)
 
     # Initialize agents
     pacman.init_agent()
     for ghost in ghosts:
         ghost.init_agent()
 
-    for i in range(learn_games + test_games):
+    for i in xrange(learn_games + test_games):
         if i >= learn_games:
             log('TEST Game {} (of {})'.format(i+1-learn_games, test_games))
         else:
@@ -206,7 +208,7 @@ def main():
             ghost.start_game(map_width, map_height)
 
         # Load policies to agents
-        if policy_filename and os.path.isfile(policy_filename):
+        if args.policy_filename and os.path.isfile(args.policy_filename):
             if pacman.agent_id in policies:
                 log('Loading {} #{} policy.'.format(type(pacman).__name__,
                                             pacman.agent_id))
@@ -272,7 +274,7 @@ def main():
             results['learn_scores'].append(games[0].state.getScore())
 
     # Save policies
-    if policy_filename:
+    if args.policy_filename:
         if pacman_class == agents.BehaviorLearningPacmanAgent:
             pacman.send_message(messages.RequestPolicyMessage(pacman.agent_id))
             msg = pacman.receive_message()
@@ -284,14 +286,12 @@ def main():
                 msg = ghost.receive_message()
                 policies[ghost.agent_id] = msg.policy
 
-        with open(policy_filename, 'w') as f:
-            f.write(pickle.dumps(policies))
+        __write_to_file__(args.policy_filename, policies)
 
-    # Save results
-    print 'Learn scores:', results['learn_scores']
-    print 'Test scores:', results['test_scores']
+    log('Learn scores: {}'.format(results['learn_scores']))
+    log('Test scores: {}'.format(results['test_scores']))
 
-    save_results(results_output_filename, results)
+    __write_to_file__(results_output_filename, results)
 
 if __name__ == '__main__':
     try:
