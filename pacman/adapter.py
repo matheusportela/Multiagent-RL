@@ -5,7 +5,7 @@
 # Adapts communication between controller and the Berkeley
 # Pac-man simulator.
 
-import argparse
+from argparse import ArgumentParser
 import pickle
 import random
 import os
@@ -15,18 +15,78 @@ from berkeley.layout import getLayout as get_berkeley_layout
 from berkeley.pacman import runGames as run_berkeley_games
 from berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics, PacmanGraphics as BerkeleyTextGraphics
 
-import messages
 import agents
+from communication import DEFAULT_CLIENT_ADDRESS, DEFAULT_TCP_PORT
+import messages
 
 
 # Default settings (CLI parsing)
+DEFAULT_GHOST_AGENT = 'ai'
 DEFAULT_LAYOUT = 'classic'
 DEFAULT_NUMBER_OF_GHOSTS = 1
+DEFAULT_NUMBER_OF_LEARNING_RUNS = 100
+DEFAULT_NUMBER_OF_TEST_RUNS = 15
+DEFAULT_OUTPUT_FILE = 'results.txt'
+DEFAULT_PACMAN_AGENT = 'random'
 
 
 def log(msg):
     print '[  Adapter ] {}'.format(msg)
 
+
+## @todo define pacman-agent choices ad ghost-agent choices from agents.py
+# file
+#
+# @todo define layout choices from layouts dir
+def __build_parser__():
+    parser = ArgumentParser(description='Run Pac-Man adapter system.')
+    parser.add_argument('-g', '--graphics', dest='graphics', default=False,
+                        action='store_true',
+                        help='display graphical user interface')
+    parser.add_argument('-o', '--output', dest='output_filename', type=str,
+                        default=DEFAULT_OUTPUT_FILE,
+                        help='results output file')
+
+    group = parser.add_argument_group('Experimental Setup')
+    group.add_argument('--ghost-agent', dest='ghost_agent', type=str,
+                        choices=['random', 'ai'],
+                        default=DEFAULT_GHOST_AGENT,
+                        help='select ghost agent')
+    group.add_argument('-l', '--learn-num', dest='learn', type=int,
+                        default=DEFAULT_NUMBER_OF_LEARNING_RUNS,
+                        help='number of games to learn from')
+    group.add_argument('--layout', dest='layout', type=str,
+                        default=DEFAULT_LAYOUT,
+                        choices=['classic', 'medium'],
+                        help='Game layout')
+    group.add_argument('--noise', dest='noise', type=int,
+                        default=agents.DEFAULT_NOISE,
+                        help='introduce noise in position measurements')
+    group.add_argument('--num-ghosts', dest='num_ghosts',
+                        type=int, choices=xrange(1, 5),
+                        default=DEFAULT_NUMBER_OF_GHOSTS,
+                        help='number of ghosts in game')
+    group.add_argument('--pacman-agent', dest='pacman_agent',
+                        type=str, choices=['random', 'ai', 'eater'],
+                        default=DEFAULT_PACMAN_AGENT,
+                        help='select Pac-Man agent')
+    group.add_argument('--policy-file', dest='policy_filename',
+                        type=lambda s: unicode(s, 'utf8'),
+                        help='load and save Pac-Man policy from the given'
+                        'file')
+    group.add_argument('-t', '--test-num', dest='test', type=int,
+                        default=DEFAULT_NUMBER_OF_TEST_RUNS,
+                        help='number of games to test learned policy')
+
+    group = parser.add_argument_group('Communication')
+    group.add_argument('--addr', dest='address', type=str,
+                        default=DEFAULT_CLIENT_ADDRESS,
+                        help='Client address to connect to adapter')
+    group.add_argument('--port', dest='port', type=int,
+                        default=DEFAULT_TCP_PORT,
+                        help='TCP port to connect to controller')
+
+    return parser
 
 def __get_layout__(layout, num_ghosts):
     LAYOUT_PATH = 'layouts'
@@ -92,37 +152,7 @@ def save_results(filename, results):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Run Pacman adapter system.')
-    parser.add_argument('-l', '--learn-num', dest='learn', type=int, default=100,
-                       help='number of games to learn from')
-    parser.add_argument('-t', '--test-num', dest='test', type=int, default=100,
-                       help='number of games to test learned policy')
-    parser.add_argument('-p', '--policy-file', dest='policy_filename', type=str,
-                        help='load and save Pacman policy from the given file')
-    parser.add_argument('-g', '--graphics', dest='graphics', action='store_true',
-                        help='display graphical user interface')
-    parser.add_argument('--no-graphics', dest='graphics', action='store_false',
-                        help='do not display graphical user interface')
-    parser.add_argument('--pacman-agent', dest='pacman_agent', type=str,
-                        default='random', help='select pacman agent: random, ai, or eater')
-    parser.add_argument('--ghost-agent', dest='ghost_agent', type=str,
-                        default='ai', help='select ghost agent: random or ai')
-    parser.add_argument('-o', '--output', dest='output_filename', type=str,
-                        default='results.txt', help='results output file')
-    parser.add_argument('--noise', dest='noise', type=int, default=0,
-                        help='introduce noise in position measurements')
-    parser.add_argument('--port', dest='port', type=int, default=5555,
-                        help='TCP port to connect to controller')
-    parser.set_defaults(graphics=False)
-    parser.add_argument('--num-ghosts', dest='num_ghosts',
-                        type=int, choices=xrange(1, 5),
-                        default=DEFAULT_NUMBER_OF_GHOSTS,
-                        help='number of ghosts in game')
-    parser.add_argument('--layout', dest='layout', type=str,
-                        default=DEFAULT_LAYOUT,
-                        choices=['classic', 'medium'],
-                        help='Game layout')
-
+    parser = __build_parser__()
     args = parser.parse_args()
 
     agents.NOISE = args.noise

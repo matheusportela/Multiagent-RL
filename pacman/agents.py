@@ -17,7 +17,10 @@ import features
 import learning
 import messages
 
+# Default settings
+DEFAULT_NOISE = 0
 
+# Global variable
 NOISE = 0
 
 
