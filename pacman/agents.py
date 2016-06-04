@@ -11,7 +11,6 @@ import random
 from berkeley.game import Agent as BerkeleyGameAgent
 
 import behaviors
-import communication as comm
 import features
 import learning
 import messages

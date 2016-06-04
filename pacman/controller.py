@@ -5,10 +5,10 @@
 # Routes messages between server and agents.
 
 from __future__ import division
-from argparse import ArgumentParser
 
 import agents
-from communication import ZMQServer, DEFAULT_TCP_PORT
+import cliparser
+from communication import ZMQServer
 import messages
 import state
 
@@ -20,12 +20,18 @@ def log(msg):
 class Controller(object):
     """Keeps the agent states and controls messages to clients."""
     def __init__(self, server):
+
+        if not isinstance(server, ZMQServer):
+            raise ValueError('Invalid server')
+
         self.server = server
         self.agents = {}
         self.agent_classes = {}
         self.agent_teams = {}
         self.game_states = {}
         self.game_number = {}
+
+        log('Up and running')
 
     def __choose_action__(self, state):
         # Update agent state
@@ -158,19 +164,10 @@ class Controller(object):
             elif msg.msg_type == messages.POLICY:
                 self.__set_agent_policy__(msg)
 
+
 if __name__ == '__main__':
-    parser = ArgumentParser(description='Run Pac-Man controller system.')
-    parser.add_argument('--port', dest='port', type=int,
-                        default=DEFAULT_TCP_PORT,
-                        help='TCP port to connect to adapter')
-    args = parser.parse_args()
-
-    ## @todo setup an option for a "memory" server (direct communication with
-    # Adapter)
-    server = ZMQServer(port=args.port)
-
     try:
-        controller = Controller(server)
+        controller = cliparser.get_Controller()
         controller.run()
     except KeyboardInterrupt:
         print '\n\nInterrupted execution\n'

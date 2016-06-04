@@ -4,7 +4,6 @@
 #
 # Adapts communication between controller and the Berkeley Pac-man simulator.
 
-from argparse import ArgumentParser
 import pickle
 import random
 import os
@@ -15,9 +14,10 @@ from berkeley.pacman import runGames as run_berkeley_games
 from berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics
 
 import agents
-from communication import MessengerBase, ZMQClient
-from communication import DEFAULT_CLIENT_ADDRESS, DEFAULT_TCP_PORT
+from communication import ZMQClient
 import messages
+
+import cliparser
 
 
 # Default settings (CLI parsing)
@@ -56,13 +56,12 @@ class Adapter(object):
                  output_file=DEFAULT_OUTPUT_FILE,
                  graphics=False):
         # Setup layout
-        LAYOUT_PATH = 'layouts'
+        LAYOUT_PATH = 'pacman/layouts'
         file_name = str(num_ghosts) + 'Ghosts'
         layout_file = '/'.join([LAYOUT_PATH, layout, file_name])
-        if not os.path.isfile(layout_file + '.lay'):
-            raise ValueError('The layout {} cannot be found'.format(layout_file))
-
         self.layout = get_berkeley_layout(layout_file)
+        if not self.layout:
+            raise ValueError('Layout {} missing.'.format(layout_file))
         log('Loaded {}.'.format(layout_file))
 
         # Setup Pac-Man agent
@@ -75,12 +74,13 @@ class Adapter(object):
         else:
             raise ValueError('Pac-Man agent must be ai, random or eater.')
 
-        if client is None or not isinstance(client, MessengerBase):
+        if not isinstance(client, ZMQClient):
             raise ValueError('Invalid client')
 
         self.pacman = agents.CommunicatingPacmanAgent(client=client)
-        self.pacman.register_agent('pacman', self.pacman_class)
         log('Created {} #{}.'.format(self.pacman_class.__name__, self.pacman.agent_id))
+        log('Request register for {} #{}.'.format(self.pacman_class.__name__, self.pacman.agent_id))
+        self.pacman.register_agent('pacman', self.pacman_class)
 
         # Setup Ghost agents
         self.num_ghosts = int(num_ghosts)
@@ -97,8 +97,9 @@ class Adapter(object):
         self.ghosts = []
         for x in xrange(num_ghosts):
             ghost = agents.CommunicatingGhostAgent(x+1, client=client)
-            ghost.register_agent('ghost', self.ghost_class)
             log('Created {} #{}.'.format(self.ghost_class.__name__, ghost.agent_id))
+            log('Request register for {} #{}.'.format(self.ghost_class.__name__, ghost.agent_id))
+            ghost.register_agent('ghost', self.ghost_class)
             self.ghosts.append(ghost)
 
         self.all_agents = [self.pacman] + self.ghosts
@@ -121,6 +122,8 @@ class Adapter(object):
             self.display = BerkeleyPacmanGraphics(zoom, frameTime=frameTime)
         else:
             self.display = BerkeleyNullGraphics()
+
+        log('Up and running')
 
     def __communicate_state__(self, agent, state):
         msg = agent.create_state_message(state)
@@ -250,75 +253,9 @@ class Adapter(object):
 
         self.__write_to_file__(self.output_file, results)
 
-
-def get_Adapter_from_CLI_arguments():
-    parser = ArgumentParser(description='Run Pac-Man adapter system.')
-    parser.add_argument('-g', '--graphics', dest='graphics', default=False,
-                        action='store_true',
-                        help='display graphical user interface')
-    parser.add_argument('-o', '--output', dest='output_file', type=str,
-                        default=DEFAULT_OUTPUT_FILE,
-                        help='results output file')
-
-    group = parser.add_argument_group('Experimental Setup')
-    group.add_argument('--ghost-agent', dest='ghost_agent', type=str,
-                        choices=['random', 'ai'],
-                        default=DEFAULT_GHOST_AGENT,
-                        help='select ghost agent')
-    group.add_argument('-l', '--learn-num', dest='learn_runs', type=int,
-                        default=DEFAULT_NUMBER_OF_LEARNING_RUNS,
-                        help='number of games to learn from')
-    group.add_argument('--layout', dest='layout', type=str,
-                        default=DEFAULT_LAYOUT,
-                        choices=['classic', 'medium'],
-                        help='Game layout')
-    group.add_argument('--noise', dest='noise', type=int,
-                        default=agents.DEFAULT_NOISE,
-                        help='introduce noise in position measurements')
-    group.add_argument('--num-ghosts', dest='num_ghosts',
-                        type=int, choices=xrange(1, 5),
-                        default=DEFAULT_NUMBER_OF_GHOSTS,
-                        help='number of ghosts in game')
-    group.add_argument('--pacman-agent', dest='pacman_agent',
-                        type=str, choices=['random', 'ai', 'eater'],
-                        default=DEFAULT_PACMAN_AGENT,
-                        help='select Pac-Man agent')
-    group.add_argument('--policy-file', dest='policy_file',
-                        type=lambda s: unicode(s, 'utf8'),
-                        help='load and save Pac-Man policy from the given'
-                        'file')
-    group.add_argument('-t', '--test-num', dest='test_runs', type=int,
-                        default=DEFAULT_NUMBER_OF_TEST_RUNS,
-                        help='number of games to test learned policy')
-
-    group = parser.add_argument_group('Communication')
-    group.add_argument('--addr', dest='address', type=str,
-                        default=DEFAULT_CLIENT_ADDRESS,
-                        help='Client address to connect to adapter')
-    group.add_argument('--port', dest='port', type=int,
-                        default=DEFAULT_TCP_PORT,
-                        help='TCP port to connect to controller')
-    args = parser.parse_args()
-
-    client = ZMQClient(args.address, args.port)
-
-    adapter = Adapter(pacman_agent=args.pacman_agent,
-                      ghost_agent=args.ghost_agent,
-                      num_ghosts=args.num_ghosts,
-                      noise=args.noise,
-                      policy_file=args.policy_file,
-                      layout=args.layout,
-                      learn_runs=args.learn_runs,
-                      test_runs=args.test_runs,
-                      client=client,
-                      output_file=args.output_file,
-                      graphics=args.graphics)
-
-    return adapter
-
 if __name__ == '__main__':
     try:
-        adapter = get_Adapter_from_CLI_arguments()
+        adapter = cliparser.get_Adapter()
         adapter.run()
     except KeyboardInterrupt:
         print '\n\nInterrupted execution\n'

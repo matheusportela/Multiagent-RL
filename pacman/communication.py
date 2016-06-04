@@ -10,29 +10,14 @@ import zmq
 
 
 # Default settings
-DEFAULT_TCP_PORT = 5555
+DEFAULT_IPC_PIPE = 'ipc:///tmp/multiagent-rl.pipe'
 DEFAULT_CLIENT_ADDRESS = 'localhost'
+DEFAULT_TCP_PORT = 5555
 
 
-class MessengerBase(object):
-    """Base class for simple communicating messages."""
-    def receive(self):
-        """Requests a message and returns it."""
-        raise NotImplementedError('Messenger class must receive messages.')
-
-    def send(self, msg):
-        """Sends the given message."""
-        raise NotImplementedError('Messenger class must send messages.')
-
-###############################################################################
-###############################################################################
-###############################################################################
-
-
-class ZMQMessenger(MessengerBase):
+class ZMQMessenger(object):
     """Base class for simple communicating messages through zmq."""
-    def __init__(self, port=DEFAULT_TCP_PORT):
-        self.port = port
+    def __init__(self):
         self.__configure_socket__()
 
     def __configure_socket__(self):
@@ -48,23 +33,38 @@ class ZMQMessenger(MessengerBase):
 
 
 class ZMQServer(ZMQMessenger):
-    """Communication server."""
-    def __init__(self, port=DEFAULT_TCP_PORT):
-        super(ZMQServer, self).__init__(port=port)
+    """Inter-process communication server."""
+    def __init__(self, binding=DEFAULT_IPC_PIPE):
+        self.binding = binding
+        super(ZMQServer, self).__init__()
 
     def __configure_socket__(self):
         context = zmq.Context()
         self.socket = context.socket(zmq.REP)
-        self.socket.bind('tcp://*:{}'.format(self.port))
+        self.socket.bind(self.binding)
 
 
 class ZMQClient(ZMQMessenger):
-    """Communication client."""
-    def __init__(self, address=DEFAULT_CLIENT_ADDRESS, port=DEFAULT_TCP_PORT):
-        self.address = address
-        super(ZMQClient, self).__init__(port=port)
+    """Inter-process communication client."""
+    def __init__(self, connection=DEFAULT_IPC_PIPE):
+        self.connection = connection
+        super(ZMQClient, self).__init__()
 
     def __configure_socket__(self):
         context = zmq.Context()
         self.socket = context.socket(zmq.REQ)
-        self.socket.connect('tcp://{}:{}'.format(self.address, self.port))
+        self.socket.connect(self.connection)
+
+
+class TCPServer(ZMQServer):
+    """Inter-process communication server."""
+    def __init__(self, port=DEFAULT_TCP_PORT):
+        binding = 'tcp://*:{}'.format(port)
+        super(TCPServer, self).__init__(binding)
+
+
+class TCPClient(ZMQClient):
+    """Inter-process communication client."""
+    def __init__(self, address=DEFAULT_CLIENT_ADDRESS, port=DEFAULT_TCP_PORT):
+        connection = 'tcp://{}:{}'.format(address, port)
+        super(TCPClient, self).__init__(connection)
