@@ -24,10 +24,10 @@ NOISE = 0
 
 
 class CommunicatingAgent(object, BerkeleyGameAgent):
-    def __init__(self, agent_id, port):
+    def __init__(self, agent_id, client):
         super(CommunicatingAgent, self).__init__()
         self.agent_id = agent_id
-        self.client = comm.ZMQClient(port=port)
+        self.client = client
         self.previous_score = 0
         self.previous_action = 'Stop'
         self.invalid_action = False
@@ -143,8 +143,8 @@ class CommunicatingAgent(object, BerkeleyGameAgent):
 
 
 class CommunicatingPacmanAgent(CommunicatingAgent):
-    def __init__(self, port):
-        super(CommunicatingPacmanAgent, self).__init__(0, port)
+    def __init__(self, client):
+        super(CommunicatingPacmanAgent, self).__init__(0, client)
         self.actions = ['North', 'South', 'East', 'West', 'Stop']
 
     def act_when_invalid(self, state):
@@ -155,8 +155,8 @@ class CommunicatingPacmanAgent(CommunicatingAgent):
 
 
 class CommunicatingGhostAgent(CommunicatingAgent):
-    def __init__(self, agent_id, port):
-        super(CommunicatingGhostAgent, self).__init__(agent_id, port)
+    def __init__(self, agent_id, client):
+        super(CommunicatingGhostAgent, self).__init__(agent_id, client)
         self.previous_action = 'North'
         self.actions = ['North', 'South', 'East', 'West']
 

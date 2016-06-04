@@ -15,6 +15,7 @@ from berkeley.pacman import runGames as run_berkeley_games
 from berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics
 
 import agents
+from communication import MessengerBase, ZMQClient
 from communication import DEFAULT_CLIENT_ADDRESS, DEFAULT_TCP_PORT
 import messages
 
@@ -31,6 +32,7 @@ DEFAULT_PACMAN_AGENT = 'random'
 # Pac-Man game configuration
 NUMBER_OF_BERKELEY_GAMES = 1
 RECORD_BERKELEY_GAMES = False
+
 
 def log(msg):
     print '[  Adapter ] {}'.format(msg)
@@ -50,8 +52,7 @@ class Adapter(object):
                  layout=DEFAULT_LAYOUT,
                  learn_runs=DEFAULT_NUMBER_OF_LEARNING_RUNS,
                  test_runs=DEFAULT_NUMBER_OF_TEST_RUNS,
-                 address=DEFAULT_CLIENT_ADDRESS,
-                 port=DEFAULT_TCP_PORT,
+                 client=None,
                  output_file=DEFAULT_OUTPUT_FILE,
                  graphics=False):
         # Setup layout
@@ -65,10 +66,6 @@ class Adapter(object):
         log('Loaded {}.'.format(layout_file))
 
         # Setup Pac-Man agent
-        port_ = int(port)
-        if port_ < 1:
-            raise ValueError('Communication port must be at least 1.')
-
         if pacman_agent == 'random':
             self.pacman_class = agents.RandomPacmanAgent
         elif pacman_agent == 'ai':
@@ -78,7 +75,10 @@ class Adapter(object):
         else:
             raise ValueError('Pac-Man agent must be ai, random or eater.')
 
-        self.pacman = agents.CommunicatingPacmanAgent(port=port)
+        if client is None or not isinstance(client, MessengerBase):
+            raise ValueError('Invalid client')
+
+        self.pacman = agents.CommunicatingPacmanAgent(client=client)
         self.pacman.register_agent('pacman', self.pacman_class)
         log('Created {} #{}.'.format(self.pacman_class.__name__, self.pacman.agent_id))
 
@@ -96,7 +96,7 @@ class Adapter(object):
 
         self.ghosts = []
         for x in xrange(num_ghosts):
-            ghost = agents.CommunicatingGhostAgent(x+1, port=port)
+            ghost = agents.CommunicatingGhostAgent(x+1, client=client)
             ghost.register_agent('ghost', self.ghost_class)
             log('Created {} #{}.'.format(self.ghost_class.__name__, ghost.agent_id))
             self.ghosts.append(ghost)
@@ -300,6 +300,8 @@ def get_Adapter_from_CLI_arguments():
                         help='TCP port to connect to controller')
     args = parser.parse_args()
 
+    client = ZMQClient(args.address, args.port)
+
     adapter = Adapter(pacman_agent=args.pacman_agent,
                       ghost_agent=args.ghost_agent,
                       num_ghosts=args.num_ghosts,
@@ -308,8 +310,7 @@ def get_Adapter_from_CLI_arguments():
                       layout=args.layout,
                       learn_runs=args.learn_runs,
                       test_runs=args.test_runs,
-                      address=args.address,
-                      port=args.port,
+                      client=client,
                       output_file=args.output_file,
                       graphics=args.graphics)
 
