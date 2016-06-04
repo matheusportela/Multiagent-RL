@@ -13,14 +13,30 @@ import zmq
 DEFAULT_TCP_PORT = 5555
 DEFAULT_CLIENT_ADDRESS = 'localhost'
 
+
 class MessengerBase(object):
     """Base class for simple communicating messages."""
+    def receive(self):
+        """Requests a message and returns it."""
+        raise NotImplementedError('Messenger class must receive messages.')
+
+    def send(self, msg):
+        """Sends the given message."""
+        raise NotImplementedError('Messenger class must send messages.')
+
+###############################################################################
+###############################################################################
+###############################################################################
+
+
+class ZMQMessenger(MessengerBase):
+    """Base class for simple communicating messages through zmq."""
     def __init__(self, port=DEFAULT_TCP_PORT):
         self.port = port
         self.__configure_socket__()
 
     def __configure_socket__(self):
-        raise NotImplementedError('MessengerBase must configure socket.')
+        raise NotImplementedError('ZMQMessenger must configure socket.')
 
     def receive(self):
         """Requests a message and returns it."""
@@ -31,10 +47,10 @@ class MessengerBase(object):
         self.socket.send(pickle.dumps(msg))
 
 
-class ServerMessenger(MessengerBase):
+class ZMQServer(ZMQMessenger):
     """Communication server."""
     def __init__(self, port=DEFAULT_TCP_PORT):
-        super(ServerMessenger, self).__init__(port=port)
+        super(ZMQServer, self).__init__(port=port)
 
     def __configure_socket__(self):
         context = zmq.Context()
@@ -42,11 +58,11 @@ class ServerMessenger(MessengerBase):
         self.socket.bind('tcp://*:{}'.format(self.port))
 
 
-class ClientMessenger(MessengerBase):
+class ZMQClient(ZMQMessenger):
     """Communication client."""
     def __init__(self, address=DEFAULT_CLIENT_ADDRESS, port=DEFAULT_TCP_PORT):
         self.address = address
-        super(ClientMessenger, self).__init__(port=port)
+        super(ZMQClient, self).__init__(port=port)
 
     def __configure_socket__(self):
         context = zmq.Context()

@@ -27,7 +27,7 @@ class CommunicatingAgent(object, BerkeleyGameAgent):
     def __init__(self, agent_id, port):
         super(CommunicatingAgent, self).__init__()
         self.agent_id = agent_id
-        self.client = comm.ClientMessenger(port=port)
+        self.client = comm.ZMQClient(port=port)
         self.previous_score = 0
         self.previous_action = 'Stop'
         self.invalid_action = False

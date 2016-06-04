@@ -8,7 +8,7 @@ from __future__ import division
 from argparse import ArgumentParser
 
 import agents
-from communication import ServerMessenger, DEFAULT_TCP_PORT
+from communication import ZMQServer, DEFAULT_TCP_PORT
 import messages
 import state
 
@@ -167,7 +167,7 @@ if __name__ == '__main__':
 
     ## @todo setup an option for a "memory" server (direct communication with
     # Adapter)
-    server = ServerMessenger(port=args.port)
+    server = ZMQServer(port=args.port)
 
     try:
         controller = Controller(server)
