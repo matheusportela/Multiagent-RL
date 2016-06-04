@@ -124,13 +124,11 @@ class Adapter(object):
 
     def __communicate_state__(self, agent, state):
         msg = agent.create_state_message(state)
-        agent.send_message(msg)
-        agent.receive_message()
+        agent.communicate(msg)
 
     def __get_current_policy__(self, agent):
         msg = messages.RequestPolicyMessage(agent.agent_id)
-        agent.send_message(msg)
-        reply_msg = agent.receive_message()
+        reply_msg = agent.communicate(msg)
         return reply_msg.policy
 
     def __load_policies_from_file__(self, policy_filename):
@@ -146,13 +144,11 @@ class Adapter(object):
                                             agent.agent_id))
 
         msg = messages.PolicyMessage(agent_id=agent.agent_id, policy=policy)
-        agent.send_message(msg)
-        agent.receive_message()
+        agent.communicate(msg)
 
     def __log_behavior_count__(self, agent, results):
         msg = messages.RequestBehaviorCountMessage(agent_id=agent.agent_id)
-        agent.send_message(msg)
-        reply_msg = agent.receive_message()
+        reply_msg =agent.communicate(msg)
 
         log('{} behavior count: {}.'.format(type(agent).__name__,
                                             reply_msg.count))

@@ -6,7 +6,6 @@
 
 
 import math
-import pickle
 import random
 
 from berkeley.game import Agent as BerkeleyGameAgent
@@ -28,13 +27,17 @@ class CommunicatingAgent(object, BerkeleyGameAgent):
     def __init__(self, agent_id, port):
         super(CommunicatingAgent, self).__init__()
         self.agent_id = agent_id
-        self.client = comm.Client(port=port)
+        self.client = comm.ClientMessenger(port=port)
         self.previous_score = 0
         self.previous_action = 'Stop'
         self.invalid_action = False
         self.actions = []
         self.init = True
         self.test_mode = False
+
+    def communicate(self, msg):
+        self.client.send(msg)
+        return self.client.receive()
 
     def enable_test_mode(self):
         self.test_mode = True
@@ -98,42 +101,36 @@ class CommunicatingAgent(object, BerkeleyGameAgent):
         return message
 
     def init_agent(self):
-        self.send_message(messages.InitMessage(agent_id=self.agent_id))
-        self.receive_message()
+        self.client.send(messages.InitMessage(agent_id=self.agent_id))
+        self.client.receive()
 
     def start_game(self, map_width, map_height):
         self.previous_score = 0
         self.previous_action = 'Stop'
-        self.send_message(messages.StartMessage(
+        self.client.send(messages.StartMessage(
             agent_id=self.agent_id,
             map_width=map_width,
             map_height=map_height))
-        self.receive_message()
+        self.client.receive()
 
     def register_agent(self, agent_team, agent_class):
         message = messages.RegisterMessage(
             agent_id=self.agent_id,
             agent_team=agent_team,
             agent_class=agent_class)
-        self.send_message(message)
-        self.receive_message()
-
-    def send_message(self, message):
-        self.client.send(pickle.dumps(message))
-
-    def receive_message(self):
-        return pickle.loads(self.client.recv())
+        self.client.send(message)
+        self.client.receive()
 
     def act_when_invalid(self, state):
         raise NotImplementedError
 
     def getAction(self, state):
         message = self.create_state_message(state)
-        self.send_message(message)
+        self.client.send(message)
 
-        message = self.receive_message()
+        message = self.client.receive()
         while message.agent_id != self.agent_id:
-            message = self.receive_message()
+            message = self.client.receive()
 
         self.previous_action = message.action
 
