@@ -14,8 +14,7 @@ from berkeley.pacman import runGames as run_berkeley_games
 from berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics
 
 import agents
-from communication import ZMQClient
-import messages
+import communication as comm
 
 import cliparser
 
@@ -74,12 +73,14 @@ class Adapter(object):
         else:
             raise ValueError('Pac-Man agent must be ai, random or eater.')
 
-        if not isinstance(client, ZMQClient):
+        if not isinstance(client, comm.MessengerBase):
             raise ValueError('Invalid client')
 
         self.pacman = agents.CommunicatingPacmanAgent(client=client)
-        log('Created {} #{}.'.format(self.pacman_class.__name__, self.pacman.agent_id))
-        log('Request register for {} #{}.'.format(self.pacman_class.__name__, self.pacman.agent_id))
+        log('Created {} #{}.'.format(self.pacman_class.__name__,
+                                     self.pacman.agent_id))
+        log('Request register for {} #{}.'.format(self.pacman_class.__name__,
+                                                  self.pacman.agent_id))
         self.pacman.register_agent('pacman', self.pacman_class)
 
         # Setup Ghost agents
@@ -94,11 +95,13 @@ class Adapter(object):
         else:
             raise ValueError('Ghost agent must be ai or random.')
 
+        ghost_name = self.ghost_class.__name__
         self.ghosts = []
         for x in xrange(num_ghosts):
             ghost = agents.CommunicatingGhostAgent(x+1, client=client)
-            log('Created {} #{}.'.format(self.ghost_class.__name__, ghost.agent_id))
-            log('Request register for {} #{}.'.format(self.ghost_class.__name__, ghost.agent_id))
+            log('Created {} #{}.'.format(ghost_name, ghost.agent_id))
+            log('Request register for {} #{}.'.format(ghost_name,
+                                                      ghost.agent_id))
             ghost.register_agent('ghost', self.ghost_class)
             self.ghosts.append(ghost)
 
@@ -123,14 +126,14 @@ class Adapter(object):
         else:
             self.display = BerkeleyNullGraphics()
 
-        log('Up and running')
+        log('Ready')
 
     def __communicate_state__(self, agent, state):
         msg = agent.create_state_message(state)
         agent.communicate(msg)
 
     def __get_current_policy__(self, agent):
-        msg = messages.RequestPolicyMessage(agent.agent_id)
+        msg = comm.RequestPolicyMessage(agent.agent_id)
         reply_msg = agent.communicate(msg)
         return reply_msg.policy
 
@@ -146,12 +149,12 @@ class Adapter(object):
         log('Loading {} #{} policy.'.format(type(agent).__name__,
                                             agent.agent_id))
 
-        msg = messages.PolicyMessage(agent_id=agent.agent_id, policy=policy)
+        msg = comm.PolicyMessage(agent_id=agent.agent_id, policy=policy)
         agent.communicate(msg)
 
     def __log_behavior_count__(self, agent, results):
-        msg = messages.RequestBehaviorCountMessage(agent_id=agent.agent_id)
-        reply_msg =agent.communicate(msg)
+        msg = comm.RequestBehaviorCountMessage(agent_id=agent.agent_id)
+        reply_msg = agent.communicate(msg)
 
         log('{} behavior count: {}.'.format(type(agent).__name__,
                                             reply_msg.count))
@@ -172,6 +175,7 @@ class Adapter(object):
                 if agent.agent_id in policies:
                     self.__load_policy__(agent, policies[agent.agent_id])
 
+        log('Simulate game')
         simulated_game = run_berkeley_games(self.layout, self.pacman,
                                             self.ghosts, self.display,
                                             NUMBER_OF_BERKELEY_GAMES,
@@ -182,7 +186,7 @@ class Adapter(object):
             self.__communicate_state__(agent, simulated_game.state)
 
         ## @todo this as one list, probably by checking if agent is
-        #instance of BehaviorLearningAgent (needs refactoring).
+        # instance of BehaviorLearningAgent (needs refactoring).
 
         # Log behavior count
         if self.pacman_class == agents.BehaviorLearningPacmanAgent:
@@ -197,11 +201,14 @@ class Adapter(object):
 
     def __save_policies__(self, filename, policies):
         if self.pacman_class == agents.BehaviorLearningPacmanAgent:
-            policies[pacman.agent_id] = self.__get_current_policy__(self.pacman)
+            agent_id = pacman.agent_id
+            ## @todo keep policy in agent?
+            policies[agent_id] = self.__get_current_policy__(self.pacman)
 
         if self.ghost_class == agents.BehaviorLearningGhostAgent:
             for ghost in self.ghosts:
-                policies[ghost.agent_id] = self.__get_current_policy__(self.ghost)
+                agent_id = ghost.agent_id
+                policies[agent_id] = self.__get_current_policy__(ghost)
 
         self.__write_to_file__(filename, policies)
 
@@ -209,10 +216,10 @@ class Adapter(object):
         with open(filename, 'w') as f:
             f.write(pickle.dumps(content))
 
-
     def run(self):
-        results = {'learn_scores': [], 'test_scores': [], 'behavior_count': {}}
+        log('Now running')
 
+        results = {'learn_scores': [], 'test_scores': [], 'behavior_count': {}}
 
         ## @todo this as one list, probably by checking if agent is instance of
         # BehaviorLearningAgent (needs refactoring).

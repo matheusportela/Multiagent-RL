@@ -13,7 +13,10 @@ from berkeley.game import Agent as BerkeleyGameAgent
 import behaviors
 import features
 import learning
-import messages
+from communication import (#AckMessage, ActionMessage, BehaviorCountMessage, PolicyMessage,
+                            RequestInitializationMessage, # RequestBehaviorCountMessage,
+                            RequestGameStartMessage, RequestRegisterMessage, #RequestPolicyMessage,
+                            StateMessage)
 
 # Default settings
 DEFAULT_NOISE = 0
@@ -86,7 +89,7 @@ class CommunicatingAgent(object, BerkeleyGameAgent):
         reward = self.calculate_reward(state.getScore())
         self.previous_score = state.getScore()
 
-        message = messages.StateMessage(
+        message = StateMessage(
             agent_id=self.agent_id,
             agent_positions=agent_positions,
             food_positions=food_positions,
@@ -100,20 +103,20 @@ class CommunicatingAgent(object, BerkeleyGameAgent):
         return message
 
     def init_agent(self):
-        self.client.send(messages.InitMessage(agent_id=self.agent_id))
+        self.client.send(RequestInitializationMessage(agent_id=self.agent_id))
         self.client.receive()
 
     def start_game(self, map_width, map_height):
         self.previous_score = 0
         self.previous_action = 'Stop'
-        self.client.send(messages.StartMessage(
+        self.client.send(RequestGameStartMessage(
             agent_id=self.agent_id,
             map_width=map_width,
             map_height=map_height))
         self.client.receive()
 
     def register_agent(self, agent_team, agent_class):
-        message = messages.RegisterMessage(
+        message = RequestRegisterMessage(
             agent_id=self.agent_id,
             agent_team=agent_team,
             agent_class=agent_class)

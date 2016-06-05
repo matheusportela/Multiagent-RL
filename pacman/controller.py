@@ -8,9 +8,8 @@ from __future__ import division
 
 import agents
 import cliparser
-from communication import ZMQServer
-import messages
-import state
+import communication as comm
+from state import GameState
 
 
 def log(msg):
@@ -21,7 +20,7 @@ class Controller(object):
     """Keeps the agent states and controls messages to clients."""
     def __init__(self, server):
 
-        if not isinstance(server, ZMQServer):
+        if not isinstance(server, comm.MessengerBase):
             raise ValueError('Invalid server')
 
         self.server = server
@@ -31,7 +30,7 @@ class Controller(object):
         self.game_states = {}
         self.game_number = {}
 
-        log('Up and running')
+        log('Ready')
 
     def __choose_action__(self, state):
         # Update agent state
@@ -76,7 +75,7 @@ class Controller(object):
                                                              enemy_ids)
         log('Initialized {} #{}'.format(self.agent_teams[agent_id], agent_id))
 
-        reply_msg = messages.AckMessage()
+        reply_msg = comm.AckMessage()
         self.server.send(reply_msg)
 
     def __register_agent__(self, msg):
@@ -86,12 +85,12 @@ class Controller(object):
         log('Registered {} #{} ({})'.format(msg.agent_team,  msg.agent_id,
                                             msg.agent_class.__name__))
 
-        reply_msg = messages.AckMessage()
+        reply_msg = comm.AckMessage()
         self.server.send(reply_msg)
 
     def __request_behavior_count__(self, agent_id):
         count = self.agents[agent_id].behavior_count
-        reply_msg = messages.BehaviorCountMessage(count)
+        reply_msg = comm.BehaviorCountMessage(count)
         self.server.send(reply_msg)
 
         self.agents[agent_id].reset_behavior_count()
@@ -102,21 +101,21 @@ class Controller(object):
         game_state.set_food_positions(msg.food_positions)
 
         agent_action = self.__choose_action__(msg)
-        reply_msg = messages.ActionMessage(agent_id=msg.agent_id,
-                                           action=agent_action)
+        reply_msg = comm.ActionMessage(agent_id=msg.agent_id,
+                                       action=agent_action)
         self.server.send(reply_msg)
 
         return agent_action
 
     def __send_policy_request__(self, msg):
         policy = self.agents[msg.agent_id].get_policy()
-        reply_message = messages.PolicyMessage(agent_id=msg.agent_id,
-                                               policy=policy)
+        reply_message = comm.PolicyMessage(agent_id=msg.agent_id,
+                                           policy=policy)
         self.server.send(reply_message)
 
     def __set_agent_policy__(self, msg):
         self.agents[msg.agent_id].set_policy(msg.policy)
-        self.server.send(messages.AckMessage())
+        self.server.send(comm.AckMessage())
 
     def __start_game_for_agent__(self, msg):
         ally_ids = self.__get_allies__(msg.agent_id)
@@ -128,40 +127,42 @@ class Controller(object):
             del self.game_states[msg.agent_id]
 
         iteration = self.game_number[msg.agent_id]
-        self.game_states[msg.agent_id] = state.GameState(width=msg.map_width,
-                                                         height=msg.map_height,
-                                                         walls=[],
-                                                         agent_id=msg.agent_id,
-                                                         ally_ids=ally_ids,
-                                                         enemy_ids=enemy_ids,
-                                                         eater=eater,
-                                                         iteration=iteration)
+        self.game_states[msg.agent_id] = GameState(width=msg.map_width,
+                                                   height=msg.map_height,
+                                                   walls=[],
+                                                   agent_id=msg.agent_id,
+                                                   ally_ids=ally_ids,
+                                                   enemy_ids=enemy_ids,
+                                                   eater=eater,
+                                                   iteration=iteration)
 
-        reply_msg = messages.AckMessage()
+        reply_msg = comm.AckMessage()
         self.server.send(reply_msg)
         log('Start game for {} #{}'.format(self.agent_teams[msg.agent_id],
                                            msg.agent_id))
 
     def run(self):
+        log('Now running')
+
         self.last_action = 'Stop'
 
         while True:
             msg = self.server.receive()
 
-            if msg.msg_type == messages.STATE:
+            if msg.type == comm.STATE_MSG:
                 self.last_action = self.__send_agent_action__(msg)
-            elif msg.msg_type == messages.INIT:
+            elif msg.type == comm.REQUEST_INIT_MSG:
                 self.__initialize_agent__(msg)
-            elif msg.msg_type == messages.START:
+            elif msg.type == comm.REQUEST_GAME_START_MSG:
                 self.__start_game_for_agent__(msg)
                 self.game_number[msg.agent_id] += 1
-            elif msg.msg_type == messages.REGISTER:
+            elif msg.type == comm.REQUEST_REGISTER_MSG:
                 self.__register_agent__(msg)
-            elif msg.msg_type == messages.REQUEST_BEHAVIOR_COUNT:
+            elif msg.type == comm.REQUEST_BEHAVIOR_COUNT_MSG:
                 self.__request_behavior_count__(msg.agent_id)
-            elif msg.msg_type == messages.REQUEST_POLICY:
+            elif msg.type == comm.REQUEST_POLICY_MSG:
                 self.__send_policy_request__(msg)
-            elif msg.msg_type == messages.POLICY:
+            elif msg.type == comm.POLICY_MSG:
                 self.__set_agent_policy__(msg)
 
 

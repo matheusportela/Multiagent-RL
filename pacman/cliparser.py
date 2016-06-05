@@ -56,10 +56,12 @@ def get_Adapter():
     group = parser.add_argument_group('Communication')
     group.add_argument('--addr', dest='address', type=str,
                        default=DEFAULT_CLIENT_ADDRESS,
-                       help='Client address to connect to adapter')
+                       help='Client address to connect to adapter (TCP '
+                            'connection)')
     group.add_argument('--port', dest='port', type=int,
                        default=DEFAULT_TCP_PORT,
-                       help='TCP port to connect to controller')
+                       help='Port to connect to controller (TCP connection)')
+
     args, unknown = parser.parse_known_args()
 
     client = TCPClient(args.address, args.port)
@@ -87,7 +89,7 @@ def get_Controller():
     args, unknown = parser.parse_known_args()
 
     ## @todo setup an option for a "memory" server (direct communication with
-    # Adapter)
+    # Adapter) (zmq inproc?)
     server = TCPServer(port=args.port)
 
     return Controller(server)
