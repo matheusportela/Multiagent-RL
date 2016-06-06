@@ -1,5 +1,5 @@
 #  -*- coding: utf-8 -*-
-##    @package simulator.py
+##    @package adapter.py
 #      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
 #
 # Adapts communication between controller and the Berkeley Pac-man simulator.
@@ -73,15 +73,10 @@ class Adapter(object):
         else:
             raise ValueError('Pac-Man agent must be ai, random or eater.')
 
-        if not isinstance(client, comm.ZMQMessengerBase):
-            raise ValueError('Invalid client')
-
-        self.pacman = agents.CommunicatingPacmanAgent(client=client)
+        self.pacman = agents.PacmanAdapterAgent(client=client)
         log('Created {} #{}.'.format(self.pacman_class.__name__,
                                      self.pacman.agent_id))
-        log('Request register for {} #{}.'.format(self.pacman_class.__name__,
-                                                  self.pacman.agent_id))
-        self.pacman.register_agent('pacman', self.pacman_class)
+        self.__register_agent__(self.pacman, 'pacman', self.pacman_class)
 
         # Setup Ghost agents
         self.num_ghosts = int(num_ghosts)
@@ -98,17 +93,15 @@ class Adapter(object):
         ghost_name = self.ghost_class.__name__
         self.ghosts = []
         for x in xrange(num_ghosts):
-            ghost = agents.CommunicatingGhostAgent(x+1, client=client)
+            ghost = agents.GhostAdapterAgent(x+1, client=client)
             log('Created {} #{}.'.format(ghost_name, ghost.agent_id))
-            log('Request register for {} #{}.'.format(ghost_name,
-                                                      ghost.agent_id))
-            ghost.register_agent('ghost', self.ghost_class)
+            self.__register_agent__(ghost, 'ghost', self.ghost_class)
             self.ghosts.append(ghost)
 
         self.all_agents = [self.pacman] + self.ghosts
 
         # Setup policy file
-        self.policy_file = str(policy_file)
+        self.policy_file = str(policy_file) if policy_file else None
 
         # Setup runs
         self.learn_runs = int(learn_runs)
@@ -128,54 +121,55 @@ class Adapter(object):
 
         log('Ready')
 
-    def __communicate_state__(self, agent, state):
-        msg = agent.create_state_message(state)
+    def __initialize__(self, agent):
+        msg = comm.RequestInitializationMessage(agent_id=agent.agent_id)
         agent.communicate(msg)
 
-    def __get_current_policy__(self, agent):
+    def __get_behavior_count__(self, agent):
+        msg = comm.RequestBehaviorCountMessage(agent_id=agent.agent_id)
+        reply_msg = agent.communicate(msg)
+        return reply_msg.count
+
+    def __get_policy__(self, agent):
         msg = comm.RequestPolicyMessage(agent.agent_id)
         reply_msg = agent.communicate(msg)
         return reply_msg.policy
 
-    def __load_policies_from_file__(self, policy_filename):
+    def __load_policy__(self, agent, policy):
+        msg = comm.PolicyMessage(agent_id=agent.agent_id, policy=policy)
+        return agent.communicate(msg)
+
+    def __load_policies_from_file__(self, filename):
         policies = {}
-        if policy_filename and os.path.isfile(policy_filename):
-            log('Loading policies from {}.'.format(policy_filename))
-            with open(policy_filename) as f:
+        if filename and os.path.isfile(filename):
+            log('Loading policies from {}.'.format(filename))
+            with open(filename) as f:
                 policies = pickle.loads(f.read())
         return policies
 
-    def __load_policy__(self, agent, policy):
-        log('Loading {} #{} policy.'.format(type(agent).__name__,
-                                            agent.agent_id))
-
-        msg = comm.PolicyMessage(agent_id=agent.agent_id, policy=policy)
-        agent.communicate(msg)
-
     def __log_behavior_count__(self, agent, results):
-        msg = comm.RequestBehaviorCountMessage(agent_id=agent.agent_id)
-        reply_msg = agent.communicate(msg)
+        behavior_count = self.__get_behavior_count__(agent)
 
-        log('{} behavior count: {}.'.format(type(agent).__name__,
-                                            reply_msg.count))
-
-        for behavior, count in reply_msg.count.items():
+        for behavior, count in behavior_count.items():
             if behavior not in results['behavior_count'][agent.agent_id]:
                 results['behavior_count'][agent.agent_id][behavior] = []
             results['behavior_count'][agent.agent_id][behavior].append(count)
 
+        log('{} behavior count: {}.'.format(type(agent).__name__,
+                                            behavior_count))
+
     def __process_game__(self, policies, results):
         # Start new game
         for agent in self.all_agents:
-            agent.start_game(self.layout.width, self.layout.height)
+            agent.start_game(self.layout)
 
         # Load policies to agents
-        if policies:
+        if self.policy_file:
             for agent in self.all_agents:
                 if agent.agent_id in policies:
                     self.__load_policy__(agent, policies[agent.agent_id])
 
-        log('Simulate game')
+        log('Simulating game...')
         simulated_game = run_berkeley_games(self.layout, self.pacman,
                                             self.ghosts, self.display,
                                             NUMBER_OF_BERKELEY_GAMES,
@@ -183,7 +177,7 @@ class Adapter(object):
 
         # Do this so as agents can receive the last reward
         for agent in self.all_agents:
-            self.__communicate_state__(agent, simulated_game.state)
+            agent.update(simulated_game.state)
 
         ## @todo this as one list, probably by checking if agent is
         # instance of BehaviorLearningAgent (needs refactoring).
@@ -199,18 +193,25 @@ class Adapter(object):
         # Log score
         return simulated_game.state.getScore()
 
-    def __save_policies__(self, filename, policies):
+    def __register_agent__(self, agent, agent_team, agent_class):
+        log('Request register for {} #{}.'.format(agent_class.__name__,
+                                                  agent.agent_id))
+        msg = comm.RequestRegisterMessage(agent_id=agent.agent_id,
+                                          agent_team=agent_team,
+                                          agent_class=agent_class)
+        return agent.communicate(msg)
+
+    def __save_policies__(self, policies):
         if self.pacman_class == agents.BehaviorLearningPacmanAgent:
-            agent_id = pacman.agent_id
             ## @todo keep policy in agent?
-            policies[agent_id] = self.__get_current_policy__(self.pacman)
+            policies[pacman.agent_id] = self.__get_policy__(pacman)
 
         if self.ghost_class == agents.BehaviorLearningGhostAgent:
             for ghost in self.ghosts:
-                agent_id = ghost.agent_id
-                policies[agent_id] = self.__get_current_policy__(ghost)
+                policies[ghost.agent_id] = self.__get_policy__(ghost)
 
-        self.__write_to_file__(filename, policies)
+        self.__write_to_file__(self.policy_file, policies)
+
 
     def __write_to_file__(self, filename, content):
         with open(filename, 'w') as f:
@@ -235,7 +236,7 @@ class Adapter(object):
 
         # Initialize agents
         for agent in self.all_agents:
-            agent.init_agent()
+            self.__initialize__(agent)
 
         for x in xrange(self.learn_runs):
             log('LEARN game {} (of {})'.format(x+1, self.learn_runs))
@@ -252,8 +253,8 @@ class Adapter(object):
             score = self.__process_game__(policies, results)
             results['test_scores'].append(score)
 
-        if policies:
-            self.__save_policies__(self.policy_file, policies)
+        if self.policy_file:
+            self.__save_policies__(policies)
 
         log('Learn scores: {}'.format(results['learn_scores']))
         log('Test scores: {}'.format(results['test_scores']))

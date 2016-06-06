@@ -42,9 +42,10 @@ class Controller(object):
 
         # Choose action
         agent_state = self.game_states[state.agent_id]
-        choose = self.agents[state.agent_id].choose_action
-        agent_action = choose(agent_state, state.executed_action, state.reward,
-                              state.legal_actions, state.test_mode)
+        choose_action = self.agents[state.agent_id].choose_action
+        agent_action = choose_action(agent_state, state.executed_action,
+                                     state.reward, state.legal_actions,
+                                     state.test_mode)
 
         for id_ in self.game_states:
             agent_state.predict_agent(id_, agent_action)
@@ -141,7 +142,7 @@ class Controller(object):
         log('Start game for {} #{}'.format(self.agent_teams[msg.agent_id],
                                            msg.agent_id))
 
-    def process(self, msg):
+    def __process__(self, msg):
         if msg.type == comm.STATE_MSG:
             self.last_action = self.__send_agent_action__(msg)
         elif msg.type == comm.REQUEST_INIT_MSG:
@@ -165,7 +166,7 @@ class Controller(object):
 
         while True:
             msg = self.server.receive()
-            self.process(msg)
+            self.__process__(msg)
 
 
 if __name__ == '__main__':
