@@ -11,17 +11,17 @@
 # Test configurations
 ADAPTER="adapter.py"
 CONTROLLER="controller.py"
-AGENT_OPTIONS="--ghost-agent ai"
-ITERATION_OPTIONS="--learn-num 2 --test-num 1"
 
 function setup_options {
-	EXP="$LAYOUT $NUM_GHOSTS ghosts"
+	EXP="[$PACMAN] $LAYOUT $NUM_GHOSTS [$GHOST] ghosts"
+	AGENT_OPTIONS="--ghost-agent $GHOST --pacman-agent $PACMAN"
+	ITERATION_OPTIONS="--learn-num 2 --test-num 1"
 	LAYOUT_OPTIONS="--layout $LAYOUT --num-ghosts $NUM_GHOSTS"
 	OPTIONS="$AGENT_OPTIONS $ITERATION_OPTIONS $LAYOUT_OPTIONS"
 }
 
 function add_policy {
-	POLICY_FILE="$LAYOUT-$NUM_GHOSTS.pol"
+	POLICY_FILE="${PACMAN}_${LAYOUT}_${NUM_GHOSTS}_${GHOST}.pol"
 	rm -f $POLICY_FILE
 	OPTIONS="$OPTIONS --policy-file $POLICY_FILE"
 	EXP="$EXP with policy"
@@ -32,7 +32,7 @@ function process {
 
 	python2 $CONTROLLER & pid_controller=$!
 	python2 $ADAPTER $OPTIONS & pid_adapter=$!
-	wait $pid_adapter
+	wait $pid_adapter > /dev/null
 	kill $pid_controller
 }
 
@@ -50,13 +50,21 @@ function test_with_current_setup {
 if [ "$1" == "all" ]; then
 	for LAYOUT in "medium" "classic"
 	do
-		for NUM_GHOSTS in "1" "2" "3" "4"
+		for GHOST in "random" "ai"
 		do
-			test_with_current_setup
+			for PACMAN in "random " "ai" "eater"
+			do
+				for NUM_GHOSTS in "1" "2" "3" "4"
+				do
+					test_with_current_setup
+				done
+			done
 		done
 	done
 else
+	PACMAN="random"
 	LAYOUT="medium"
 	NUM_GHOSTS="2"
+	GHOST="ai"
 	test_with_current_setup
 fi
