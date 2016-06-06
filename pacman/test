@@ -32,7 +32,7 @@ function process {
 
 	python2 $CONTROLLER & pid_controller=$!
 	python2 $ADAPTER $OPTIONS & pid_adapter=$!
-	wait $pid_adapter > /dev/null
+	wait $pid_adapter > /dev/null 2>&1
 	kill $pid_controller
 }
 
@@ -43,7 +43,7 @@ function test_with_current_setup {
 	add_policy
 	process
 
-	EXP="$EXP (existing file)"
+	EXP="$EXP ($POLICY_FILE)"
 	process
 }
 

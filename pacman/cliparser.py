@@ -8,8 +8,7 @@ from argparse import ArgumentParser
 
 from adapter import (Adapter, DEFAULT_GHOST_AGENT, DEFAULT_LAYOUT,
                      DEFAULT_NUMBER_OF_GHOSTS, DEFAULT_NUMBER_OF_LEARNING_RUNS,
-                     DEFAULT_NUMBER_OF_TEST_RUNS, DEFAULT_OUTPUT_FILE,
-                     DEFAULT_PACMAN_AGENT)
+                     DEFAULT_NUMBER_OF_TEST_RUNS, DEFAULT_PACMAN_AGENT)
 from agents import DEFAULT_NOISE
 from controller import Controller
 from communication import (TCPClient, TCPServer, DEFAULT_CLIENT_ADDRESS,
@@ -22,7 +21,6 @@ def get_Adapter():
                         action='store_true',
                         help='display graphical user interface')
     parser.add_argument('-o', '--output', dest='output_file', type=str,
-                        default=DEFAULT_OUTPUT_FILE,
                         help='results output file')
 
     group = parser.add_argument_group('Experimental Setup')

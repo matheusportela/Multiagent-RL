@@ -25,7 +25,6 @@ DEFAULT_LAYOUT = 'classic'
 DEFAULT_NUMBER_OF_GHOSTS = 3
 DEFAULT_NUMBER_OF_LEARNING_RUNS = 100
 DEFAULT_NUMBER_OF_TEST_RUNS = 15
-DEFAULT_OUTPUT_FILE = 'results.txt'
 DEFAULT_PACMAN_AGENT = 'random'
 
 # Pac-Man game configuration
@@ -52,7 +51,7 @@ class Adapter(object):
                  learn_runs=DEFAULT_NUMBER_OF_LEARNING_RUNS,
                  test_runs=DEFAULT_NUMBER_OF_TEST_RUNS,
                  client=None,
-                 output_file=DEFAULT_OUTPUT_FILE,
+                 output_file=None,
                  graphics=False):
         # Setup layout
         LAYOUT_PATH = 'pacman/layouts'
@@ -112,7 +111,13 @@ class Adapter(object):
         if self.test_runs < 1:
             raise ValueError('Number of test runs must be at least 1.')
 
-        self.output_file = str(output_file)
+        if output_file:
+            self.output_file = str(output_file)
+        else:
+            self.output_file = '{}_{}_{}_{}.res'.format(pacman_agent,
+                                                        ghost_agent,
+                                                        num_ghosts,
+                                                        ghost_agent)
 
         if graphics:
             self.display = BerkeleyGraphics()
@@ -214,6 +219,7 @@ class Adapter(object):
 
 
     def __write_to_file__(self, filename, content):
+        log('Saving results to {}'.format(filename))
         with open(filename, 'w') as f:
             f.write(pickle.dumps(content))
 
