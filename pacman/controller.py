@@ -19,7 +19,6 @@ def log(msg):
 class Controller(object):
     """Keeps the agent states and controls messages to clients."""
     def __init__(self, server):
-
         if not isinstance(server, comm.ZMQMessengerBase):
             raise ValueError('Invalid server')
 
@@ -167,7 +166,6 @@ class Controller(object):
         while True:
             msg = self.server.receive()
             self.__process__(msg)
-
 
 if __name__ == '__main__':
     try:

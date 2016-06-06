@@ -17,7 +17,6 @@ DEFAULT_TCP_PORT = 5555
 ###############################################################################
 #                                Messengers                                   #
 ###############################################################################
-
 class ZMQMessengerBase(object):
     """Base class for simple communicating messages through zmq."""
     def __init__(self, context, socket_type):
@@ -44,6 +43,7 @@ class ZMQServer(ZMQMessengerBase):
         # peer at a time. If you connect a REP socket to multiple peers,
         # requests are read from peers in fair fashion, and replies are always
         # sent to the same peer that made the last request.
+
 
 class ZMQClient(ZMQMessengerBase):
     """Inter-process communication server."""
@@ -176,9 +176,6 @@ class RequestRegisterMessage(RequestMessage):
         self.agent_id = agent_id
         self.agent_team = agent_team
         self.agent_class = agent_class
-
-    def __str__(self):
-        return 'Request register of {} #{}'.format(agent_class, agent_id)
 
 
 class RequestPolicyMessage(RequestMessage):

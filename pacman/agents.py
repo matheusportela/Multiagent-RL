@@ -13,6 +13,7 @@ from berkeley.game import Agent as BerkeleyGameAgent, Directions
 import behaviors
 import features
 import learning
+
 from communication import (ZMQMessengerBase,
                            # AckMessage, ActionMessage, BehaviorCountMessage,
                            RequestInitializationMessage,
@@ -20,6 +21,7 @@ from communication import (ZMQMessengerBase,
                            RequestGameStartMessage, RequestRegisterMessage,
                            # RequestPolicyMessage,
                            StateMessage)
+
 
 # Default settings
 DEFAULT_NOISE = 0
