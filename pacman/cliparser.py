@@ -43,7 +43,7 @@ def get_Adapter():
                        default=DEFAULT_NUMBER_OF_GHOSTS,
                        help='number of ghosts in game')
     group.add_argument('--pacman-agent', dest='pacman_agent', type=str,
-                       choices=['random', 'ai', 'eater'],
+                       choices=['random', 'random2', 'ai', 'eater'],
                        default=DEFAULT_PACMAN_AGENT,
                        help='select Pac-Man agent')
     group.add_argument('--policy-file', dest='policy_file',
