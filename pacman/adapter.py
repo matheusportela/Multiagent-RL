@@ -66,6 +66,8 @@ class Adapter(object):
         # Setup Pac-Man agent
         if pacman_agent == 'random':
             self.pacman_class = agents.RandomPacmanAgent
+        elif pacman_agent == 'random2':
+            sef.pacman_class = agents.RandomPacmanAgentTwo
         elif pacman_agent == 'ai':
             self.pacman_class = agents.BehaviorLearningPacmanAgent
         elif pacman_agent == 'eater':
