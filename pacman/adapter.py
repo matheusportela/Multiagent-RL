@@ -117,7 +117,7 @@ class Adapter(object):
         self.output_file = str(output_file)
 
         if graphics:
-            self.display = BerkeleyPacmanGraphics(zoom, frameTime=frameTime)
+            self.display = BerkeleyGraphics()
         else:
             self.display = BerkeleyNullGraphics()
 
