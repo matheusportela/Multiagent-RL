@@ -73,7 +73,7 @@ class Adapter(object):
         elif pacman_agent == 'eater':
             self.pacman_class = agents.EaterPacmanAgent
         else:
-            raise ValueError('Pac-Man agent must be ai, random or eater.')
+            raise ValueError('Pac-Man agent must be ai, random, random2 or eater.')
 
         self.pacman = agents.PacmanAdapterAgent(client=client)
         log('Created {} #{}.'.format(self.pacman_class.__name__,
