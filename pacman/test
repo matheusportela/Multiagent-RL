@@ -4,17 +4,19 @@
 #
 # Runs tests. There are 3 options:
 #
-# ./test          - runs a simple test with a medium layout and 2 ghosts
-# ./test classic  - runs a simple test with the classic layout and 4 ghosts
-# ./test all      - runs all possible configurations of layouts and ghosts
-#                   (may take a while....)
+# ./test             - runs a simple test with a medium layout and 2 ghosts
+# ./test classic     - runs a simple test with the classic layout and 4 ghosts
+# ./test all layout  - runs all combinations for Pac-Man and 2 Ghosts on the
+#                      given layout
+# ./test all         - runs all possible configurations of layouts and ghosts
+#                      (may take a while....)
 
 # Test configurations
 ADAPTER="adapter.py"
 CONTROLLER="controller.py"
 
 function setup_options {
-	EXP="[${PACMAN}] Pac-Man on ${LAYOUT} layout X ${NUM_GHOSTS} ${GHOST} ghosts"
+	EXP="[${LAYOUT}] ${PACMAN} Pac-Man X ${NUM_GHOSTS} ${GHOST} ghosts"
 	AGENT_OPTIONS="--ghost-agent ${GHOST} --pacman-agent ${PACMAN}"
 	ITERATION_OPTIONS="--learn-num 2 --test-num 1"
 	LAYOUT_OPTIONS="--layout ${LAYOUT} --num-ghosts ${NUM_GHOSTS}"
