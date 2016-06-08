@@ -4,11 +4,12 @@
 #
 # Routes messages between server and agents.
 
+
 from __future__ import division
 
 import agents
 import cliparser
-import communication as comm
+import messages
 from state import GameState
 
 
@@ -19,9 +20,6 @@ def log(msg):
 class Controller(object):
     """Keeps the agent states and controls messages to clients."""
     def __init__(self, server):
-        if not isinstance(server, comm.ZMQMessengerBase):
-            raise ValueError('Invalid server')
-
         self.agents = {}
         self.agent_classes = {}
         self.agent_teams = {}
@@ -75,7 +73,7 @@ class Controller(object):
                                                              enemy_ids)
         log('Initialized {} #{}'.format(self.agent_teams[agent_id], agent_id))
 
-        reply_msg = comm.AckMessage()
+        reply_msg = messages.AckMessage()
         self.server.send(reply_msg)
 
     def __register_agent__(self, msg):
@@ -85,12 +83,12 @@ class Controller(object):
         log('Registered {} #{} ({})'.format(msg.agent_team, msg.agent_id,
                                             msg.agent_class.__name__))
 
-        reply_msg = comm.AckMessage()
+        reply_msg = messages.AckMessage()
         self.server.send(reply_msg)
 
     def __request_behavior_count__(self, agent_id):
         count = self.agents[agent_id].behavior_count
-        reply_msg = comm.BehaviorCountMessage(count)
+        reply_msg = messages.BehaviorCountMessage(count)
         self.server.send(reply_msg)
 
         self.agents[agent_id].reset_behavior_count()
@@ -101,7 +99,7 @@ class Controller(object):
         game_state.set_food_positions(msg.food_positions)
 
         agent_action = self.__choose_action__(msg)
-        reply_msg = comm.ActionMessage(agent_id=msg.agent_id,
+        reply_msg = messages.ActionMessage(agent_id=msg.agent_id,
                                        action=agent_action)
         self.server.send(reply_msg)
 
@@ -109,13 +107,13 @@ class Controller(object):
 
     def __send_policy_request__(self, msg):
         policy = self.agents[msg.agent_id].get_policy()
-        reply_message = comm.PolicyMessage(agent_id=msg.agent_id,
+        reply_message = messages.PolicyMessage(agent_id=msg.agent_id,
                                            policy=policy)
         self.server.send(reply_message)
 
     def __set_agent_policy__(self, msg):
         self.agents[msg.agent_id].set_policy(msg.policy)
-        self.server.send(comm.AckMessage())
+        self.server.send(messages.AckMessage())
 
     def __start_game_for_agent__(self, msg):
         ally_ids = self.__get_allies__(msg.agent_id)
@@ -136,26 +134,26 @@ class Controller(object):
                                                    eater=eater,
                                                    iteration=iteration)
 
-        reply_msg = comm.AckMessage()
+        reply_msg = messages.AckMessage()
         self.server.send(reply_msg)
         log('Start game for {} #{}'.format(self.agent_teams[msg.agent_id],
                                            msg.agent_id))
 
     def __process__(self, msg):
-        if msg.type == comm.STATE_MSG:
+        if msg.type == messages.STATE_MSG:
             self.last_action = self.__send_agent_action__(msg)
-        elif msg.type == comm.REQUEST_INIT_MSG:
+        elif msg.type == messages.REQUEST_INIT_MSG:
             self.__initialize_agent__(msg)
-        elif msg.type == comm.REQUEST_GAME_START_MSG:
+        elif msg.type == messages.REQUEST_GAME_START_MSG:
             self.__start_game_for_agent__(msg)
             self.game_number[msg.agent_id] += 1
-        elif msg.type == comm.REQUEST_REGISTER_MSG:
+        elif msg.type == messages.REQUEST_REGISTER_MSG:
             self.__register_agent__(msg)
-        elif msg.type == comm.REQUEST_BEHAVIOR_COUNT_MSG:
+        elif msg.type == messages.REQUEST_BEHAVIOR_COUNT_MSG:
             self.__request_behavior_count__(msg.agent_id)
-        elif msg.type == comm.REQUEST_POLICY_MSG:
+        elif msg.type == messages.REQUEST_POLICY_MSG:
             self.__send_policy_request__(msg)
-        elif msg.type == comm.POLICY_MSG:
+        elif msg.type == messages.POLICY_MSG:
             self.__set_agent_policy__(msg)
 
     def run(self):

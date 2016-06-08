@@ -15,7 +15,10 @@ from communication import (TCPClient, TCPServer, DEFAULT_CLIENT_ADDRESS,
                            DEFAULT_TCP_PORT)
 
 
-def get_Adapter():
+def get_Adapter(client=None):
+    """Parses arguments and returns an Adapter.
+
+    If no client is given, instantiates a TCPClient."""
     parser = ArgumentParser(description='Run Pac-Man adapter system.')
     parser.add_argument('-g', '--graphics', dest='graphics', default=False,
                         action='store_true',
@@ -62,7 +65,8 @@ def get_Adapter():
 
     args, unknown = parser.parse_known_args()
 
-    client = TCPClient(args.address, args.port)
+    if not client:
+        client = TCPClient(args.address, args.port)
 
     adapter = Adapter(pacman_agent=args.pacman_agent,
                       ghost_agent=args.ghost_agent,
@@ -79,15 +83,17 @@ def get_Adapter():
     return adapter
 
 
-def get_Controller():
+def get_Controller(server=None):
+    """Parses arguments and returns a Controller.
+
+    If no server is given, instantiates a TCPServer."""
     parser = ArgumentParser(description='Run Pac-Man controller system.')
     parser.add_argument('--port', dest='port', type=int,
                         default=DEFAULT_TCP_PORT,
                         help='TCP port to connect to adapter')
     args, unknown = parser.parse_known_args()
 
-    ## @todo setup an option for a "memory" server (direct communication with
-    # Adapter) (zmq inproc?)
-    server = TCPServer(port=args.port)
+    if not server:
+        server = TCPServer(port=args.port)
 
     return Controller(server)

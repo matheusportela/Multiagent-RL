@@ -4,6 +4,7 @@
 #
 # Adapts communication between controller and the Berkeley Pac-man simulator.
 
+
 import pickle
 import random
 import os
@@ -14,9 +15,13 @@ from berkeley.pacman import runGames as run_berkeley_games
 from berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics
 
 import agents
-import communication as comm
-
 import cliparser
+import messages
+
+## @todo properly include communication module from parent folder
+import sys
+sys.path.insert(0, '..')
+import communication as comm
 
 
 # Default settings (CLI parsing)
@@ -115,33 +120,33 @@ class Adapter(object):
             self.output_file = str(output_file)
         else:
             self.output_file = '{}_{}_{}_{}.res'.format(pacman_agent,
-                                                        ghost_agent,
+                                                        layout,
                                                         num_ghosts,
                                                         ghost_agent)
 
         if graphics:
-            self.display = BerkeleyGraphics()
+            self.display = BerkeleyGraphics(zoom=1.0, frameTime=0.1)
         else:
             self.display = BerkeleyNullGraphics()
 
         log('Ready')
 
     def __initialize__(self, agent):
-        msg = comm.RequestInitializationMessage(agent_id=agent.agent_id)
+        msg = messages.RequestInitializationMessage(agent_id=agent.agent_id)
         agent.communicate(msg)
 
     def __get_behavior_count__(self, agent):
-        msg = comm.RequestBehaviorCountMessage(agent_id=agent.agent_id)
+        msg = messages.RequestBehaviorCountMessage(agent_id=agent.agent_id)
         reply_msg = agent.communicate(msg)
         return reply_msg.count
 
     def __get_policy__(self, agent):
-        msg = comm.RequestPolicyMessage(agent.agent_id)
+        msg = messages.RequestPolicyMessage(agent.agent_id)
         reply_msg = agent.communicate(msg)
         return reply_msg.policy
 
     def __load_policy__(self, agent, policy):
-        msg = comm.PolicyMessage(agent_id=agent.agent_id, policy=policy)
+        msg = messages.PolicyMessage(agent_id=agent.agent_id, policy=policy)
         return agent.communicate(msg)
 
     def __load_policies_from_file__(self, filename):
@@ -201,9 +206,9 @@ class Adapter(object):
     def __register_agent__(self, agent, agent_team, agent_class):
         log('Request register for {} #{}.'.format(agent_class.__name__,
                                                   agent.agent_id))
-        msg = comm.RequestRegisterMessage(agent_id=agent.agent_id,
-                                          agent_team=agent_team,
-                                          agent_class=agent_class)
+        msg = messages.RequestRegisterMessage(agent_id=agent.agent_id,
+                                              agent_team=agent_team,
+                                              agent_class=agent_class)
         return agent.communicate(msg)
 
     def __save_policies__(self, policies):
@@ -216,7 +221,6 @@ class Adapter(object):
                 policies[ghost.agent_id] = self.__get_policy__(ghost)
 
         self.__write_to_file__(self.policy_file, policies)
-
 
     def __write_to_file__(self, filename, content):
         log('Saving results to {}'.format(filename))

@@ -13,14 +13,13 @@ from berkeley.game import Agent as BerkeleyGameAgent, Directions
 import behaviors
 import features
 import learning
+from messages import (RequestInitializationMessage, RequestGameStartMessage,
+                      RequestRegisterMessage, StateMessage)
 
-from communication import (ZMQMessengerBase,
-                           # AckMessage, ActionMessage, BehaviorCountMessage,
-                           RequestInitializationMessage,
-                           # RequestBehaviorCountMessage, PolicyMessage,
-                           RequestGameStartMessage, RequestRegisterMessage,
-                           # RequestPolicyMessage,
-                           StateMessage)
+## @todo properly include communication module from parent folder
+import sys
+sys.path.insert(0, '..')
+from communication import ZMQMessengerBase
 
 
 # Default settings
@@ -45,10 +44,6 @@ class AdapterAgent(object, BerkeleyGameAgent):
         BerkeleyGameAgent.__init__(self, agent_id)
 
         self.agent_id = agent_id
-
-        if not isinstance(client, ZMQMessengerBase):
-            raise ValueError('Invalid client')
-
         self.client = client
 
         self.previous_action = Directions.STOP
@@ -181,7 +176,7 @@ class ControllerAgent(object):
         self.agent_id = agent_id
 
     def choose_action(self, state, action, reward, legal_actions, explore):
-        """Select an action to be executed by the agent.
+        """Return an action to be executed by the agent.
 
         Args:
             state: Current game state.
@@ -194,7 +189,8 @@ class ControllerAgent(object):
             A Direction for the agent to follow (NORTH, SOUTH, EAST, WEST or
             STOP).
         """
-        raise NotImplementedError('Agent must implement choose_action.')
+        raise NotImplementedError('ControllerAgent must implement '
+                                  'choose_action.')
 
 
 class PacmanAgent(ControllerAgent):
