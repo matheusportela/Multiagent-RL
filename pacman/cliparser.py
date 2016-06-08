@@ -11,6 +11,10 @@ from adapter import (Adapter, DEFAULT_GHOST_AGENT, DEFAULT_LAYOUT,
                      DEFAULT_NUMBER_OF_TEST_RUNS, DEFAULT_PACMAN_AGENT)
 from agents import DEFAULT_NOISE
 from controller import Controller
+
+## @todo properly include communication module from parent folder
+import sys
+sys.path.insert(0, '..')
 from communication import (TCPClient, TCPServer, DEFAULT_CLIENT_ADDRESS,
                            DEFAULT_TCP_PORT)
 
