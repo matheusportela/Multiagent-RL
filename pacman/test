@@ -4,36 +4,37 @@
 #
 # Runs tests. There are 2 options:
 #
-# ./test     - which runs a simple test with a medium layout and 2 ghosts
-# ./test all - which runs all possible configurations of layouts and ghosts
-#              (may take a while....)
+# ./test          - runs a simple test with a medium layout and 2 ghosts
+# ./test classic  - runs a simple test with the classic layout and 4 ghosts
+# ./test all      - runs all possible configurations of layouts and ghosts
+#                   (may take a while....)
 
 # Test configurations
 ADAPTER="adapter.py"
 CONTROLLER="controller.py"
 
 function setup_options {
-	EXP="[$PACMAN] $LAYOUT $NUM_GHOSTS [$GHOST] ghosts"
-	AGENT_OPTIONS="--ghost-agent $GHOST --pacman-agent $PACMAN"
+	EXP="[${PACMAN}] ${LAYOUT} ${NUM_GHOSTS} [${GHOST}] ghosts"
+	AGENT_OPTIONS="--ghost-agent ${GHOST} --pacman-agent ${PACMAN}"
 	ITERATION_OPTIONS="--learn-num 2 --test-num 1"
-	LAYOUT_OPTIONS="--layout $LAYOUT --num-ghosts $NUM_GHOSTS"
-	OPTIONS="$AGENT_OPTIONS $ITERATION_OPTIONS $LAYOUT_OPTIONS"
+	LAYOUT_OPTIONS="--layout ${LAYOUT} --num-ghosts ${NUM_GHOSTS}"
+	OPTIONS="${AGENT_OPTIONS} ${ITERATION_OPTIONS} ${LAYOUT_OPTIONS}"
 }
 
 function add_policy {
 	POLICY_FILE="${PACMAN}_${LAYOUT}_${NUM_GHOSTS}_${GHOST}.pol"
-	rm -f $POLICY_FILE
-	OPTIONS="$OPTIONS --policy-file $POLICY_FILE"
-	EXP="$EXP with policy"
+	rm -f ${POLICY_FILE}
+	OPTIONS="${OPTIONS} --policy-file ${POLICY_FILE}"
+	EXP="${EXP} with policy"
 }
 
 function process {
-	echo -e "\n\n$EXP\n"
+	echo -e "\n\n${EXP}\n"
 
-	python2 $CONTROLLER & pid_controller=$!
-	python2 $ADAPTER $OPTIONS & pid_adapter=$!
-	wait $pid_adapter > /dev/null 2>&1
-	kill $pid_controller
+	python2 ${CONTROLLER} & pid_controller=$!
+	python2 ${ADAPTER} ${OPTIONS} & pid_adapter=$!
+	wait ${pid_adapter} > /dev/null 2>&1
+	kill ${pid_controller}
 }
 
 function test_with_current_setup {
@@ -43,28 +44,33 @@ function test_with_current_setup {
 	add_policy
 	process
 
-	EXP="$EXP ($POLICY_FILE)"
+	EXP="${EXP} (${POLICY_FILE})"
 	process
 }
 
-if [ "$1" == "all" ]; then
-	for LAYOUT in "medium" "classic"
-	do
-		for GHOST in "random" "ai"
-		do
-			for PACMAN in "random " "ai" "eater"
-			do
-				for NUM_GHOSTS in "1" "2" "3" "4"
-				do
+TEST="${1}"
+if [ ${TEST} == "all" ]; then
+	for LAYOUT in "medium" "classic"; do
+		for GHOST in "random" "ai"; do
+			for PACMAN in "random " "ai" "eater"; do
+				for NUM_GHOSTS in "1" "2" "3" "4"; do
 					test_with_current_setup
 				done
 			done
 		done
 	done
 else
-	PACMAN="random"
-	LAYOUT="medium"
-	NUM_GHOSTS="2"
-	GHOST="ai"
-	test_with_current_setup
+	if [ ${TEST} == "classic" ]; then
+		PACMAN="eater"
+		LAYOUT="classic"
+		NUM_GHOSTS="4"
+		GHOST="ai"
+		test_with_current_setup
+	else
+		PACMAN="random"
+		LAYOUT="medium"
+		NUM_GHOSTS="2"
+		GHOST="ai"
+		test_with_current_setup
+	fi
 fi
