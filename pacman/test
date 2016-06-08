@@ -14,7 +14,7 @@ ADAPTER="adapter.py"
 CONTROLLER="controller.py"
 
 function setup_options {
-	EXP="[${PACMAN}] ${LAYOUT} ${NUM_GHOSTS} [${GHOST}] ghosts"
+	EXP="[${PACMAN}] Pac-Man on ${LAYOUT} layout X ${NUM_GHOSTS} ${GHOST} ghosts"
 	AGENT_OPTIONS="--ghost-agent ${GHOST} --pacman-agent ${PACMAN}"
 	ITERATION_OPTIONS="--learn-num 2 --test-num 1"
 	LAYOUT_OPTIONS="--layout ${LAYOUT} --num-ghosts ${NUM_GHOSTS}"
@@ -49,16 +49,26 @@ function test_with_current_setup {
 }
 
 TEST="${1}"
+LAYOUT="${2}"
 if [ "${TEST}" = "all" ]; then
-	for LAYOUT in "medium" "classic"; do
+	if [ -n "${LAYOUT}" ]; then
+		NUM_GHOSTS="2"
 		for GHOST in "random" "ai"; do
-			for PACMAN in "random " "ai" "eater"; do
-				for NUM_GHOSTS in "1" "2" "3" "4"; do
-					test_with_current_setup
+			for PACMAN in "random" "ai" "eater"; do
+				test_with_current_setup
+			done
+		done
+	else
+		for LAYOUT in "medium" "classic"; do
+			for GHOST in "random" "ai"; do
+				for PACMAN in "random " "ai" "eater"; do
+					for NUM_GHOSTS in "1" "2" "3" "4"; do
+						test_with_current_setup
+					done
 				done
 			done
 		done
-	done
+	fi
 else
 	if [ "${TEST}" = "classic" ]; then
 		PACMAN="eater"
