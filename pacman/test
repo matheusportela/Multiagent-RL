@@ -2,7 +2,7 @@
 #
 # @author Guilherme N. Ramos (gnramos@unb.br)
 #
-# Runs tests. There are 2 options:
+# Runs tests. There are 3 options:
 #
 # ./test          - runs a simple test with a medium layout and 2 ghosts
 # ./test classic  - runs a simple test with the classic layout and 4 ghosts
@@ -49,7 +49,7 @@ function test_with_current_setup {
 }
 
 TEST="${1}"
-if [ ${TEST} == "all" ]; then
+if [ "${TEST}" = "all" ]; then
 	for LAYOUT in "medium" "classic"; do
 		for GHOST in "random" "ai"; do
 			for PACMAN in "random " "ai" "eater"; do
@@ -60,7 +60,7 @@ if [ ${TEST} == "all" ]; then
 		done
 	done
 else
-	if [ ${TEST} == "classic" ]; then
+	if [ "${TEST}" = "classic" ]; then
 		PACMAN="eater"
 		LAYOUT="classic"
 		NUM_GHOSTS="4"

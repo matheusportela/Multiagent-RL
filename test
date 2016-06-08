@@ -1,0 +1,12 @@
+#!/bin/bash
+#
+# @author Guilherme N. Ramos (gnramos@unb.br)
+#
+# Call the "test" script for a given module, if it exists.
+
+PROBLEM_MODULE=${1:-'pacman'}
+
+if [ -d "${PROBLEM_MODULE}" ]; then
+	cd ${PROBLEM_MODULE}
+	./test "$@"
+fi
