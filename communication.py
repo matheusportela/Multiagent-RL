@@ -55,6 +55,24 @@ class ZMQClient(ZMQMessengerBase):
         # turn at a time.
 
 
+class InprocServer(ZMQServer):
+    """Inter-process communication client."""
+    def __init__(self, context, endpoint):
+        binding = 'inproc://{}'.format(endpoint)
+        super(InprocServer, self).__init__(context, binding)
+
+
+class InprocClient(ZMQClient):
+    """Inter-process communication client."""
+    def __init__(self, context, endpoint):
+        connection = 'inproc://{}'.format(endpoint)
+        super(InprocClient, self).__init__(context, connection)
+        # If you're using inproc, make sure both sockets are in the same
+        # context. Otherwise the connecting side will in fact fail. Also, bind
+        # first, then connect. inproc is not a disconnected transport like tcp.
+        # (http://zguide.zeromq.org/php:chapter2)
+
+
 class TCPServer(ZMQServer):
     """Inter-process communication client."""
     def __init__(self, address=DEFAULT_CLIENT_ADDRESS, port=DEFAULT_TCP_PORT):
