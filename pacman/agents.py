@@ -5,7 +5,6 @@
 # Defines the agents.
 
 
-import math
 import random
 
 from berkeley.game import Agent as BerkeleyGameAgent, Directions
@@ -13,13 +12,11 @@ from berkeley.game import Agent as BerkeleyGameAgent, Directions
 import behaviors
 import features
 import learning
-from messages import (RequestInitializationMessage, RequestGameStartMessage,
-                      RequestRegisterMessage, StateMessage)
-
-## @todo properly include communication module from parent folder
-import sys
-sys.path.insert(0, '..')
-from communication import ZMQMessengerBase
+from messages import (PolicyMessage, RequestBehaviorCountMessage,
+                      RequestInitializationMessage,
+                      RequestGameStartMessage,
+                      RequestPolicyMessage, RequestRegisterMessage,
+                      StateMessage)
 
 
 # Default settings
@@ -37,28 +34,66 @@ PACMAN_INDEX = 0
 #                                AdapterAgents                                #
 ###############################################################################
 
+## @todo properly include communication module from parent folder
+import sys
+sys.path.insert(0, '..')
+from communication import ZMQClient
 
-class AdapterAgent(object, BerkeleyGameAgent):
-    """Communicating client for game adapter."""
-    def __init__(self, agent_id, client):
+
+def log(msg):
+    print '[  Client  ] {}'.format(msg)
+
+
+class ClientAgent(ZMQClient, BerkeleyGameAgent):
+    def __init__(self, agent_id, context, connection):
+        super(ClientAgent, self).__init__(context, connection)
         BerkeleyGameAgent.__init__(self, agent_id)
 
-        self.agent_id = agent_id
-        self.client = client
-
-        self.previous_action = Directions.STOP
-
+        self.previous_action = self.__first_action__()
         self.test_mode = False
 
+        self.log('instantiated')
+
+    # Communication stuff #####################################################
+
+    def log(self, msg):
+        log('{} #{} {}.'.format(self.__class__.__name__, self.agent_id, msg))
+
+    def receive(self):
+        raise AttributeError('ClientAgent cannot receive messages.')
+
+    def send(self, msg):
+        raise AttributeError('ClientAgent cannot send messages.')
+
+    def communicate(self, msg):
+        """Synchronous communication."""
+        ZMQClient.send(self, msg)
+        return ZMQClient.receive(self)
+
+    # BerkeleyGameAgent stuff #################################################
+
+    @property
+    def agent_id(self):
+        return self.index  # from BerkeleyGameAgent
+
+    def getAction(self, state):
+        """Returns a legal action (from Directions)."""
+
+        reply_msg = self.update(state)
+        self.previous_action = reply_msg.action
+        return reply_msg.action
+
+    # Other stuff #############################################################
+
+    def __first_action__(self):
+        raise NotImplementedError('Agent must define an initial action')
+
     def __noise_error__(self):
+        ## @todo Put this in the right place (when perceiving the environment)
         return random.randrange(-NOISE, NOISE + 1)
 
     def calculate_reward(self, current_score):
         raise NotImplementedError('Communicating agent must calculate score')
-
-    def communicate(self, msg):
-        self.client.send(msg)
-        return self.client.receive()
 
     def create_state_message(self, state):
         agent_positions = {}
@@ -107,63 +142,68 @@ class AdapterAgent(object, BerkeleyGameAgent):
     def enable_test_mode(self):
         self.test_mode = True
 
-    def getAction(self, state):
-        """Returns an action from Directions."""
-        msg = self.create_state_message(state)
+    # Messaging ###############################################################
+    def get_behavior_count(self):
+        msg = RequestBehaviorCountMessage(self.agent_id)
         reply_msg = self.communicate(msg)
+        self.log(' got behavior count: {}'.format(reply_msg.count))
+        return reply_msg.count
 
-        self.previous_action = reply_msg.action
+    def get_policy(self):
+        msg = RequestPolicyMessage(self.agent_id)
+        reply_msg = self.communicate(msg)
+        self.log(' got policy')
+        return reply_msg.policy
 
-        if reply_msg.action not in state.getLegalActions(self.agent_id):
-            self.invalid_action = True
-            return self.act_when_invalid(state)
-        else:
-            self.invalid_action = False
-            return reply_msg.action
+    def initialize(self):
+        self.log('requested initialization')
+        msg = RequestInitializationMessage(self.agent_id)
+        return self.communicate(msg)
+
+    def load_policy(self, policy):
+        self.log('sent policy')
+        msg = PolicyMessage(policy)
+        return self.communicate(msg)
+
+    def register(self, agent_team, agent_class):
+        self.log('requested register {}/{}'.format(agent_team, agent_class.__name__))
+        msg = RequestRegisterMessage(self.agent_id, agent_team, agent_class)
+        return self.communicate(msg)
 
     def start_game(self, layout):
+        self.log('requested game start')
         self.previous_score = 0
-        self.previous_action = Directions.STOP
+        self.previous_action = self.__first_action__()
         msg = RequestGameStartMessage(agent_id=self.agent_id,
                                       map_width=layout.width,
                                       map_height=layout.height)
-        self.communicate(msg)
+        return self.communicate(msg)
 
     def update(self, state):
         msg = self.create_state_message(state)
-        self.communicate(msg)
+        return self.communicate(msg)
 
 
-class PacmanAdapterAgent(AdapterAgent):
-    def __init__(self, client):
-        super(PacmanAdapterAgent, self).__init__(agent_id=PACMAN_INDEX,
-                                                 client=client)
+class PacmanAdapterAgent(ClientAgent):
+    def __init__(self, context, connection):
+        super(PacmanAdapterAgent, self).__init__(PACMAN_INDEX, context, connection)
 
-    ## @todo is this ever used?
-    # def act_when_invalid(self, state):
-    #     return Directions.STOP
+    def __first_action__(self):
+        self.previous_action = Directions.STOP
 
     def calculate_reward(self, current_score):
         return current_score - self.previous_score
 
 
-class GhostAdapterAgent(AdapterAgent):
-    def __init__(self, agent_id, client):
-        super(GhostAdapterAgent, self).__init__(agent_id, client)
+class GhostAdapterAgent(ClientAgent):
+    def __init__(self, agent_id, context, connection):
+        super(GhostAdapterAgent, self).__init__(agent_id, context, connection)
 
+    def __first_action__(self):
         self.previous_action = Directions.NORTH
-        # self.actions = GHOST_ACTIONS
-
-    ## @todo is this ever used?
-    # def act_when_invalid(self, state):
-    #     return random.choice(state.getLegalActions(self.agent_id))
 
     def calculate_reward(self, current_score):
         return self.previous_score - current_score
-
-###############################################################################
-#                                                                             #
-###############################################################################
 
 ###############################################################################
 #                              ControllerAgents                               #
@@ -194,34 +234,38 @@ class ControllerAgent(object):
 
 
 class PacmanAgent(ControllerAgent):
-    def __init__(self, agent_id, ally_ids, enemy_ids):
+    def __init__(self, agent_id):
         super(PacmanAgent, self).__init__(agent_id)
-        self.actions = PACMAN_ACTIONS
 
 
 class GhostAgent(ControllerAgent):
-    def __init__(self, agent_id, ally_ids, enemy_ids):
+    def __init__(self, agent_id):
         super(GhostAgent, self).__init__(agent_id)
-        self.actions = GHOST_ACTIONS
 
 
-class RandomPacmanAgent(PacmanAgent):
+class RandomPacman(PacmanAgent):
     """Agent that randomly selects an action."""
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(RandomPacman, self).__init__(agent_id)
+
     def choose_action(self, state, action, reward, legal_actions, explore):
-        if len(legal_actions) > 0:
+        if legal_actions:
             return random.choice(legal_actions)
 
 
-class RandomGhostAgent(GhostAgent):
+class RandomGhost(GhostAgent):
     """Agent that randomly selects an action."""
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(RandomGhost, self).__init__(agent_id)
+
     def choose_action(self, state, action, reward, legal_actions, explore):
-        if len(legal_actions) > 0:
+        if legal_actions:
             return random.choice(legal_actions)
 
 
 class EaterPacmanAgent(PacmanAgent):
     def __init__(self, agent_id, ally_ids, enemy_ids):
-        super(EaterPacmanAgent, self).__init__(agent_id, ally_ids, enemy_ids)
+        super(EaterPacmanAgent, self).__init__(agent_id)
         self.eat_behavior = behaviors.EatBehavior()
 
     def choose_action(self, state, action, reward, legal_actions, test):
@@ -237,8 +281,7 @@ class EaterPacmanAgent(PacmanAgent):
 
 class BehaviorLearningPacmanAgent(PacmanAgent):
     def __init__(self, agent_id, ally_ids, enemy_ids):
-        super(BehaviorLearningPacmanAgent, self).__init__(agent_id, ally_ids,
-                                                          enemy_ids)
+        super(BehaviorLearningPacmanAgent, self).__init__(agent_id)
         self.features = [features.FoodDistanceFeature()]
         for enemy_id in enemy_ids:
             self.features.append(features.EnemyDistanceFeature(enemy_id))
@@ -308,8 +351,7 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
 
 class BehaviorLearningGhostAgent(GhostAgent):
     def __init__(self, agent_id, ally_ids, enemy_ids):
-        super(BehaviorLearningGhostAgent, self).__init__(agent_id, ally_ids,
-                                                         enemy_ids)
+        super(BehaviorLearningGhostAgent, self).__init__(agent_id)
         self.features = [features.FoodDistanceFeature()]
         for enemy_id in enemy_ids:
             self.features.append(features.EnemyDistanceFeature(enemy_id))

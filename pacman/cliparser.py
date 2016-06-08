@@ -5,6 +5,7 @@
 # Parses CLI arguments to provide Adapter and Controller instances.
 
 from argparse import ArgumentParser
+from zmq import Context as zmq_Context
 
 from adapter import (Adapter, DEFAULT_GHOST_AGENT, DEFAULT_LAYOUT,
                      DEFAULT_NUMBER_OF_GHOSTS, DEFAULT_NUMBER_OF_LEARNING_RUNS,
@@ -15,14 +16,12 @@ from controller import Controller
 ## @todo properly include communication module from parent folder
 import sys
 sys.path.insert(0, '..')
-from communication import (TCPClient, TCPServer, DEFAULT_CLIENT_ADDRESS,
+from communication import (InprocServer, TCPServer, DEFAULT_CLIENT_ADDRESS,
                            DEFAULT_TCP_PORT)
 
 
-def get_Adapter(client=None):
-    """Parses arguments and returns an Adapter.
-
-    If no client is given, instantiates a TCPClient."""
+def get_Adapter(context=None, endpoint=None):
+    """Parses arguments and returns an Adapter."""
     parser = ArgumentParser(description='Run Pac-Man adapter system.')
     parser.add_argument('-g', '--graphics', dest='graphics', default=False,
                         action='store_true',
@@ -44,7 +43,7 @@ def get_Adapter(client=None):
                        default=DEFAULT_NOISE,
                        help='introduce noise in position measurements')
     group.add_argument('--num-ghosts', dest='num_ghosts',
-                       type=int, choices=xrange(1, 5),
+                       type=int, choices=range(1, 5),
                        default=DEFAULT_NUMBER_OF_GHOSTS,
                        help='number of ghosts in game')
     group.add_argument('--pacman-agent', dest='pacman_agent', type=str,
@@ -69,25 +68,28 @@ def get_Adapter(client=None):
 
     args, unknown = parser.parse_known_args()
 
-    if not client:
-        client = TCPClient(args.address, args.port)
+    if context and endpoint:
+        connection = 'inproc://{}'.format(endpoint)
+    else:
+        context = zmq_Context()
+        connection = 'tcp://{}:{}'.format(args.address, args.port)
 
     adapter = Adapter(pacman_agent=args.pacman_agent,
                       ghost_agent=args.ghost_agent,
                       num_ghosts=args.num_ghosts,
                       noise=args.noise,
                       policy_file=args.policy_file,
-                      layout=args.layout,
+                      layout_map=args.layout,
                       learn_runs=args.learn_runs,
                       test_runs=args.test_runs,
-                      client=client,
                       output_file=args.output_file,
-                      graphics=args.graphics)
+                      graphics=args.graphics,
+                      context=context, connection=connection)
 
     return adapter
 
 
-def get_Controller(server=None):
+def get_Controller(context=None, endpoint=None):
     """Parses arguments and returns a Controller.
 
     If no server is given, instantiates a TCPServer."""
@@ -97,7 +99,9 @@ def get_Controller(server=None):
                         help='TCP port to connect to adapter')
     args, unknown = parser.parse_known_args()
 
-    if not server:
+    if context and endpoint:
+        server = InprocServer(context, endpoint)
+    else:
         server = TCPServer(port=args.port)
 
     return Controller(server)

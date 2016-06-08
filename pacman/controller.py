@@ -27,7 +27,7 @@ class Controller(object):
         self.game_number = {}
         self.server = server
 
-        log('Ready')
+        log('Ready!')
 
     def __choose_action__(self, state):
         # Update agent state
@@ -80,8 +80,7 @@ class Controller(object):
         self.agent_classes[msg.agent_id] = msg.agent_class
         self.agent_teams[msg.agent_id] = msg.agent_team
 
-        log('Registered {} #{} ({})'.format(msg.agent_team, msg.agent_id,
-                                            msg.agent_class.__name__))
+        log('Registered {} #{}'.format(msg.agent_class.__name__, msg.agent_id))
 
         reply_msg = messages.AckMessage()
         self.server.send(reply_msg)
@@ -99,20 +98,19 @@ class Controller(object):
         game_state.set_food_positions(msg.food_positions)
 
         agent_action = self.__choose_action__(msg)
-        reply_msg = messages.ActionMessage(agent_id=msg.agent_id,
-                                       action=agent_action)
+        reply_msg = messages.ActionMessage(msg.agent_id, agent_action)
         self.server.send(reply_msg)
 
         return agent_action
 
     def __send_policy_request__(self, msg):
         policy = self.agents[msg.agent_id].get_policy()
-        reply_message = messages.PolicyMessage(agent_id=msg.agent_id,
-                                           policy=policy)
+        reply_message = messages.PolicyMessage(msg.agent_id, policy)
         self.server.send(reply_message)
 
     def __set_agent_policy__(self, msg):
-        self.agents[msg.agent_id].set_policy(msg.policy)
+        if msg.policy:
+            self.agents[msg.agent_id].set_policy(msg.policy)
         self.server.send(messages.AckMessage())
 
     def __start_game_for_agent__(self, msg):

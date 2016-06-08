@@ -34,18 +34,17 @@ if __name__ == '__main__':
     module_name = get_module_name()
 
     context = zmq_Context()
-    server = InprocServer(context, module_name)
-    client = InprocClient(context, module_name)
+    ## @todo one client per thread
 
     parser_module = import_module(module_name + '.cliparser')
     get_Controller = getattr(parser_module, 'get_Controller')
-    controller = get_Controller(server)
+    controller = get_Controller(context, module_name)
     controller_thread = threading.Thread(target=controller.run)
     controller_thread.daemon = True
     controller_thread.start()
 
     get_Adapter = getattr(parser_module, 'get_Adapter')
-    adapter = get_Adapter(client)
+    adapter = get_Adapter(context, module_name)
     adapter_thread = threading.Thread(target=adapter.run)
     adapter_thread.start()
     adapter_thread.join()  # block until adapter process terminates
