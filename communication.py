@@ -75,7 +75,7 @@ class InprocClient(ZMQClient):
 
 class TCPServer(ZMQServer):
     """Inter-process communication client."""
-    def __init__(self, address=DEFAULT_CLIENT_ADDRESS, port=DEFAULT_TCP_PORT):
+    def __init__(self, port=DEFAULT_TCP_PORT):
         binding = 'tcp://*:{}'.format(port)
         super(TCPServer, self).__init__(zmq.Context(), binding)
 

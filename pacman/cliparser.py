@@ -99,9 +99,11 @@ def get_Controller(context=None, endpoint=None):
                         help='TCP port to connect to adapter')
     args, unknown = parser.parse_known_args()
 
-    if context and endpoint:
-        server = InprocServer(context, endpoint)
-    else:
-        server = TCPServer(port=args.port)
 
-    return Controller(server)
+    if context and endpoint:
+        binding = 'inproc://{}'.format(endpoint)
+    else:
+        context = zmq_Context()
+        binding = 'tcp://*:{}'.format(args.port)
+
+    return Controller(context, binding)
