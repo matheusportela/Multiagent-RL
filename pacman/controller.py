@@ -117,6 +117,7 @@ class Controller(ZMQServer):
 
     def __send_agent_action__(self, msg):
         game_state = self.game_states[msg.agent_id]
+        ## @todo is it necessary to set walls every time?
         game_state.set_walls(msg.wall_positions)
         game_state.set_food_positions(msg.food_positions)
 

@@ -1,50 +1,58 @@
-#!/usr/bin/env python
+#  -*- coding: utf-8 -*-
+##    @package behaviors.py
+#      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
+#
+#
+
 
 import random
 
-class Behavior(object):
+from berkeley.game import Directions
+
+
+class BehaviorBase(object):
+    """Base class for behaviors."""
     def __str__(self):
         return self.__class__.__name__
 
     def __call__(self, state, legal_actions):
-        raise NotImplementedError, 'Behavior must implement __call__'
+        raise NotImplementedError('BehaviorBase must implement __call__')
 
 
-class RandomBehavior(Behavior):
+class RandomBehavior(BehaviorBase):
+    """Implements a random behavior."""
     def __call__(self, state, legal_actions):
-        if legal_actions == []:
-            return 'Stop'
-        else:
+        """Returns a random action from the legal possibilities."""
+        if legal_actions:
             return random.choice(legal_actions)
+        return Directions.STOP
 
 
-class EatBehavior(Behavior):
+class EatBehavior(BehaviorBase):
+    """Implements an eating behavior."""
     def __call__(self, state, legal_actions):
         agent_position = state.get_position()
         agent_map = state.get_map()
         food_map = state.food_map
         food_prob_threshold = food_map.max() / 2.0
-        best_action = None
-        min_dist = None
-
-        random.shuffle(legal_actions)
+        best_action, min_dist = None, None
 
         for action in legal_actions:
-            diff = agent_map.action_to_pos[action]
+            diff = agent_map.offsets[action]
             new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
 
             for x in range(food_map.width):
                 for y in range(food_map.height):
                     new_distance = state.calculate_distance(new_position, (y, x))
 
-                    if (best_action == None) or (food_map[y][x] > food_prob_threshold and new_distance < min_dist):
+                    if not best_action or (food_map[y][x] > food_prob_threshold and new_distance < min_dist):
                         min_dist = new_distance
                         best_action = action
 
         return best_action
 
 
-class FleeBehavior(Behavior):
+class FleeBehavior(BehaviorBase):
     def __call__(self, state, legal_actions):
         agent_position = state.get_position()
         enemy_position = state.get_agent_position(state.get_closest_enemy(state))
@@ -56,11 +64,11 @@ class FleeBehavior(Behavior):
         random.shuffle(legal_actions)
 
         for action in legal_actions:
-            diff = agent_map.action_to_pos[action]
-            new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
+            offset = agent_map.offsets[action]
+            new_position = (agent_position[0] + offset[0], agent_position[1] + offset[1])
             new_distance = state.calculate_distance(new_position, enemy_position)
 
-            if (best_action == None) or (agent_map._is_valid_position(new_position) and
+            if (best_action == None) or (agent_map.__is_valid_position__(new_position) and
                 new_distance > max_distance):
                 best_action = action
                 max_distance = new_distance
@@ -68,7 +76,7 @@ class FleeBehavior(Behavior):
         return best_action
 
 
-class SeekBehavior(Behavior):
+class SeekBehavior(BehaviorBase):
     def __call__(self, state, legal_actions):
         agent_position = state.get_position()
         enemy_position = state.get_agent_position(state.get_closest_enemy(state))
@@ -80,11 +88,11 @@ class SeekBehavior(Behavior):
         random.shuffle(legal_actions)
 
         for action in legal_actions:
-            diff = agent_map.action_to_pos[action]
-            new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
+            offset = agent_map.offsets[action]
+            new_position = (agent_position[0] + offset[0], agent_position[1] + offset[1])
             new_distance = state.calculate_distance(new_position, enemy_position)
 
-            if (best_action == None) or (agent_map._is_valid_position(new_position) and
+            if (best_action == None) or (agent_map.__is_valid_position__(new_position) and
                 new_distance < min_distance):
                 best_action = action
                 min_distance = new_distance
@@ -92,7 +100,7 @@ class SeekBehavior(Behavior):
         return best_action
 
 
-class PursueBehavior(Behavior):
+class PursueBehavior(BehaviorBase):
     def __init__(self, n=2):
         self.n = n
         self.enemy_previous_position = None
@@ -107,7 +115,7 @@ class PursueBehavior(Behavior):
         self.enemy_previous_position = enemy_position
         simulated_steps = 0
 
-        while agent_map._is_valid_position(enemy_position) and simulated_steps < self.n:
+        while agent_map.__is_valid_position__(enemy_position) and simulated_steps < self.n:
             enemy_position = (enemy_position[0] + enemy_diff[0], enemy_position[1] + enemy_diff[1])
             simulated_steps += 1
 
@@ -125,11 +133,11 @@ class PursueBehavior(Behavior):
         random.shuffle(legal_actions)
 
         for action in legal_actions:
-            diff = agent_map.action_to_pos[action]
+            diff = agent_map.offsets[action]
             new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
             new_distance = state.calculate_distance(new_position, enemy_position)
 
-            if (best_action == None) or (agent_map._is_valid_position(new_position) and
+            if (best_action == None) or (agent_map.__is_valid_position__(new_position) and
                 new_distance < min_distance):
                 best_action = action
                 min_distance = new_distance
