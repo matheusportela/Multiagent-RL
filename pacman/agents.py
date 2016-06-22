@@ -216,26 +216,30 @@ class RandomPacmanAgent(PacmanAgent):
             return random.choice(legal_actions)
   
   class RandomPacmanAgentTwo(PacmanAgent):
-	"""Agent that after choosing a direction it will follow that direction until it reaches a wall but if there are more 
-	   than 3 possible movements it will have 90'%' of probability to continue moving in a straight line and 10'%' of 
-	   probability to turn into one of the other directions"""
-	def choose_action(self, state, action, reward, legal_actions, explore):
-		if action not in legal_actions:
-			action = 'Stop'
-		if action == 'Stop':
-			if len(legal_actions) > 0:
-				new_action=random.choice(legal_actions)
-				while new_action=="Stop":
-					new_action=random.choice(legal_actions)
-				return new_action
-		else:
-			if random.random()<0.1 and len(legal_actions) > 3 :
-				new_action=random.choice(legal_actions)
-				while new_action=="Stop":
-					new_action=random.choice(legal_actions)
-				return new_action
-			else:
-				return action
+    """Agent that after choosing a random direction will follow that direction until it reaches a  wall or have more than
+    three possible moves. In these case, all the possible movements have the same chance of happening"""
+    def choose_action(self, state, action, reward, legal_actions, explore):
+
+        if action == 'Stop' or action not in legal_actions:
+            legal_actions.remove('Stop')
+            if len(legal_actions) > 0:
+                return random.choice(legal_actions)
+        else:
+            if len(legal_actions) > 3 :
+                if len(legal_actions)==4:
+                    number=random.choice([1,2,3,4])
+                else:
+                    number=random.choice([1,2,3,4,5])
+                aux=1
+                for possible_action in legal_actions:
+                    if number==aux:
+                        return possible_action
+                    else:
+                        aux+=1
+                else:
+                    return random.choice(legal_actions)
+            else:
+                return action
 
 class RandomGhostAgent(GhostAgent):
     """Agent that randomly selects an action."""
