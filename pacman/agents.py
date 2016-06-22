@@ -215,9 +215,10 @@ class RandomPacmanAgent(PacmanAgent):
         if len(legal_actions) > 0:
             return random.choice(legal_actions)
   
-  class RandomPacmanAgentTwo(PacmanAgent):
-    """Agent that after choosing a random direction will follow that direction until it reaches a  wall or have more than
-    three possible moves. In these case, all the possible movements have the same chance of happening"""
+ class RandomPacmanAgentTwo(PacmanAgent):
+    """Agent that after choosing a random direction will follow that direction until it reaches a wall or have more than
+       three possible moves. In these case, continue to follow the previous directions have twice the chance of 
+       heppening then the other possible movements"""
     def choose_action(self, state, action, reward, legal_actions, explore):
 
         if action == 'Stop' or action not in legal_actions:
@@ -230,14 +231,18 @@ class RandomPacmanAgent(PacmanAgent):
                     number=random.choice([1,2,3,4])
                 else:
                     number=random.choice([1,2,3,4,5])
-                aux=1
-                for possible_action in legal_actions:
-                    if number==aux:
-                        return possible_action
-                    else:
-                        aux+=1
+                if number==1 or number==2:
+                    return action
                 else:
-                    return random.choice(legal_actions)
+                    aux=3
+                    legal_actions.remove(action)
+                    for possible_action in legal_actions:
+                        if number==aux:
+                            return possible_action
+                        else:
+                            aux+=1
+                    else:
+                        return random.choice(legal_actions)
             else:
                 return action
 
