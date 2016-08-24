@@ -1,5 +1,5 @@
 #  -*- coding: utf-8 -*-
-##    @package cliparser.py
+#   @package cliparser.py
 #      @author Guilherme N. Ramos (gnramos@unb.br)
 #
 # Parses CLI arguments to provide Adapter and Controller instances.
@@ -88,7 +88,7 @@ def get_Controller():
                         help='TCP port to connect to adapter')
     args, unknown = parser.parse_known_args()
 
-    ## @todo setup an option for a "memory" server (direct communication with
+    # @todo setup an option for a "memory" server (direct communication with
     # Adapter) (zmq inproc?)
     server = TCPServer(port=args.port)
 
