@@ -1,11 +1,11 @@
 #  -*- coding: utf-8 -*-
-##    @package agents.py
+#    @package agents.py
 #      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
 #
 # Defines the agents.
 
 
-import math
+# import math
 import random
 
 from berkeley.game import Agent as BerkeleyGameAgent, Directions
@@ -14,14 +14,13 @@ import behaviors
 import features
 import learning
 
-from communication import (ZMQMessengerBase,
+from communication import (ZMQMessengerBase, RequestGameStartMessage,
                            # AckMessage, ActionMessage, BehaviorCountMessage,
-                           RequestInitializationMessage,
+                           # RequestInitializationMessage,
+                           # RequestRegisterMessage
                            # RequestBehaviorCountMessage, PolicyMessage,
-                           RequestGameStartMessage, RequestRegisterMessage,
                            # RequestPolicyMessage,
                            StateMessage)
-
 
 # Default settings
 DEFAULT_NOISE = 0
@@ -144,7 +143,7 @@ class PacmanAdapterAgent(AdapterAgent):
         super(PacmanAdapterAgent, self).__init__(agent_id=PACMAN_INDEX,
                                                  client=client)
 
-    ## @todo is this ever used?
+    # @todo is this ever used?
     # def act_when_invalid(self, state):
     #     return Directions.STOP
 
@@ -159,7 +158,7 @@ class GhostAdapterAgent(AdapterAgent):
         self.previous_action = Directions.NORTH
         # self.actions = GHOST_ACTIONS
 
-    ## @todo is this ever used?
+    # @todo is this ever used?
     # def act_when_invalid(self, state):
     #     return random.choice(state.getLegalActions(self.agent_id))
 
@@ -214,11 +213,13 @@ class RandomPacmanAgent(PacmanAgent):
     def choose_action(self, state, action, reward, legal_actions, explore):
         if len(legal_actions) > 0:
             return random.choice(legal_actions)
-  
- class RandomPacmanAgentTwo(PacmanAgent):
-    """Agent that after choosing a random direction will follow that direction until it reaches a wall or have more than
-       three possible moves. In these case, continue to follow the previous directions have twice the chance of 
-       heppening then the other possible movements"""
+
+
+class RandomPacmanAgentTwo(PacmanAgent):
+    """Agent that after choosing a random direction will follow that direction
+    until it reaches a wall or have more than three possible moves. In these
+    case, continue to follow the previous directions have twice the chance of
+    happening then the other possible movements"""
     def choose_action(self, state, action, reward, legal_actions, explore):
 
         if action == 'Stop' or action not in legal_actions:
@@ -226,25 +227,26 @@ class RandomPacmanAgent(PacmanAgent):
             if len(legal_actions) > 0:
                 return random.choice(legal_actions)
         else:
-            if len(legal_actions) > 3 :
-                if len(legal_actions)==4:
-                    number=random.choice([1,2,3,4])
+            if len(legal_actions) > 3:
+                if len(legal_actions) == 4:
+                    number = random.choice([1, 2, 3, 4])
                 else:
-                    number=random.choice([1,2,3,4,5])
-                if number==1 or number==2:
+                    number = random.choice([1, 2, 3, 4, 5])
+                if number == 1 or number == 2:
                     return action
                 else:
-                    aux=3
+                    aux = 3
                     legal_actions.remove(action)
                     for possible_action in legal_actions:
-                        if number==aux:
+                        if number == aux:
                             return possible_action
                         else:
-                            aux+=1
+                            aux += 1
                     else:
                         return random.choice(legal_actions)
             else:
                 return action
+
 
 class RandomGhostAgent(GhostAgent):
     """Agent that randomly selects an action."""

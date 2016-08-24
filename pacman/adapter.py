@@ -1,11 +1,11 @@
 #  -*- coding: utf-8 -*-
-##    @package adapter.py
+#    @package adapter.py
 #      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
 #
 # Adapts communication between controller and the Berkeley Pac-man simulator.
 
 import pickle
-import random
+# import random
 import os
 
 from berkeley.graphicsDisplay import PacmanGraphics as BerkeleyGraphics
@@ -37,10 +37,10 @@ def log(msg):
     print '[  Adapter ] {}'.format(msg)
 
 
-## @todo Parse arguments outside class, pass values as arguments for
+# @todo Parse arguments outside class, pass values as arguments for
 # constructor.
 class Adapter(object):
-    ## @todo define pacman-agent choices and ghost-agent choices from agents.py
+    # @todo define pacman-agent choices and ghost-agent choices from agents.py
     # file
     def __init__(self,
                  pacman_agent=DEFAULT_PACMAN_AGENT,
@@ -73,7 +73,8 @@ class Adapter(object):
         elif pacman_agent == 'eater':
             self.pacman_class = agents.EaterPacmanAgent
         else:
-            raise ValueError('Pac-Man agent must be ai, random, random2 or eater.')
+            raise ValueError
+            ('Pac-Man agent must be ai, random, random2 or eater.')
 
         self.pacman = agents.PacmanAdapterAgent(client=client)
         log('Created {} #{}.'.format(self.pacman_class.__name__,
@@ -181,12 +182,12 @@ class Adapter(object):
         for agent in self.all_agents:
             agent.update(simulated_game.state)
 
-        ## @todo this as one list, probably by checking if agent is
+        # @todo this as one list, probably by checking if agent is
         # instance of BehaviorLearningAgent (needs refactoring).
 
         # Log behavior count
         if self.pacman_class == agents.BehaviorLearningPacmanAgent:
-            self.__log_behavior_count__(pacman, results)
+            self.__log_behavior_count__(self.pacman, results)
 
         if self.ghost_class == agents.BehaviorLearningGhostAgent:
             for ghost in self.ghosts:
@@ -205,15 +206,14 @@ class Adapter(object):
 
     def __save_policies__(self, policies):
         if self.pacman_class == agents.BehaviorLearningPacmanAgent:
-            ## @todo keep policy in agent?
-            policies[pacman.agent_id] = self.__get_policy__(pacman)
+            # @todo keep policy in agent?
+            policies[self.pacman.agent_id] = self.__get_policy__(self.pacman)
 
         if self.ghost_class == agents.BehaviorLearningGhostAgent:
             for ghost in self.ghosts:
                 policies[ghost.agent_id] = self.__get_policy__(ghost)
 
         self.__write_to_file__(self.policy_file, policies)
-
 
     def __write_to_file__(self, filename, content):
         with open(filename, 'w') as f:
@@ -224,10 +224,10 @@ class Adapter(object):
 
         results = {'learn_scores': [], 'test_scores': [], 'behavior_count': {}}
 
-        ## @todo this as one list, probably by checking if agent is instance of
+        # @todo this as one list, probably by checking if agent is instance of
         # BehaviorLearningAgent (needs refactoring).
         if self.pacman_class == agents.BehaviorLearningPacmanAgent:
-            results['behavior_count'][pacman.agent_id] = {}
+            results['behavior_count'][self.pacman.agent_id] = {}
 
         if self.ghost_class == agents.BehaviorLearningGhostAgent:
             for ghost in self.ghosts:
