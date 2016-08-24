@@ -37,8 +37,7 @@ class EatBehavior(Behavior):
 
             for x in range(food_map.width):
                 for y in range(food_map.height):
-                    new_distance = state.calculate_distance(new_position,
-                                                            (y, x))
+                    new_distance = state.calculate_distance(new_position, (y, x))
 
                     if (best_action is None) or (food_map[y][x] > food_prob_threshold and new_distance < min_dist):
                         min_dist = new_distance
@@ -63,10 +62,10 @@ class FleeBehavior(Behavior):
             diff = agent_map.action_to_pos[action]
             new_position = (agent_position[0] + diff[0],
                             agent_position[1] + diff[1])
-            new_distance = state.calculate_distance(new_position,
-                                                    enemy_position)
+            new_distance = state.calculate_distance(new_position, enemy_position)
 
-            if (best_action is None) or (agent_map._is_valid_position(new_position) and new_distance > max_distance):
+            if (best_action is None) or (agent_map._is_valid_position(new_position) and
+                new_distance > max_distance):
                 best_action = action
                 max_distance = new_distance
 
@@ -91,7 +90,8 @@ class SeekBehavior(Behavior):
             new_distance = state.calculate_distance(new_position,
                                                     enemy_position)
 
-            if (best_action is None) or (agent_map._is_valid_position(new_position) and new_distance < min_distance):
+            if (best_action is None) or (agent_map._is_valid_position(new_position) and
+                new_distance < min_distance):
                 best_action = action
                 min_distance = new_distance
 
@@ -125,8 +125,7 @@ class PursueBehavior(Behavior):
         agent_map = state.get_map()
         agent_position = state.get_position()
         enemy_position = self._estimate_enemy_future_position(
-            state.get_agent_position(state.get_closest_enemy(state)),
-            agent_map)
+            state.get_agent_position(state.get_closest_enemy(state)), agent_map)
 
         best_action = None
         min_distance = None
@@ -140,7 +139,8 @@ class PursueBehavior(Behavior):
             new_distance = state.calculate_distance(new_position,
                                                     enemy_position)
 
-            if (best_action == None) or (agent_map._is_valid_position(new_position) and new_distance < min_distance):
+            if (best_action == None) or (agent_map._is_valid_position(new_position) and
+                new_distance < min_distance):
                 best_action = action
                 min_distance = new_distance
 
