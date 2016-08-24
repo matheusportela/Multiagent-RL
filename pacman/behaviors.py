@@ -51,7 +51,9 @@ class EatBehavior(Behavior):
 class FleeBehavior(Behavior):
     def __call__(self, state, legal_actions):
         agent_position = state.get_position()
-        enemy_position = state.get_agent_position(state.get_closest_enemy(state))
+        enemy_position = state.get_agent_position
+        (state.get_closest_enemy(state))
+
         agent_map = state.get_map()
 
         best_action = None
@@ -65,8 +67,9 @@ class FleeBehavior(Behavior):
                             agent_position[1] + diff[1])
             new_distance = state.calculate_distance(new_position, enemy_position)
 
-            if (best_action is None) or (agent_map._is_valid_position(new_position) and
-                new_distance > max_distance):
+            if (best_action is None) or (agent_map._is_valid_position
+                                         (new_position) and
+                                         new_distance > max_distance):
                 best_action = action
                 max_distance = new_distance
 
@@ -76,7 +79,9 @@ class FleeBehavior(Behavior):
 class SeekBehavior(Behavior):
     def __call__(self, state, legal_actions):
         agent_position = state.get_position()
-        enemy_position = state.get_agent_position(state.get_closest_enemy(state))
+        enemy_position = state.get_agent_position
+        (state.get_closest_enemy(state))
+
         agent_map = state.get_map()
 
         best_action = None
@@ -88,7 +93,8 @@ class SeekBehavior(Behavior):
             diff = agent_map.action_to_pos[action]
             new_position = (agent_position[0] + diff[0],
                             agent_position[1] + diff[1])
-            new_distance = state.calculate_distance(new_position, enemy_position)
+            new_distance = state.calculate_distance
+            (new_position, enemy_position)
 
             if (best_action is None) or (agent_map._is_valid_position
                                          (new_position) and
@@ -110,12 +116,16 @@ class PursueBehavior(Behavior):
         if not self.enemy_previous_position:
             enemy_diff = (0, 0)
         else:
-            enemy_diff = (enemy_position[0] - self.enemy_previous_position[0], enemy_position[1] - self.enemy_previous_position[1])
+            enemy_diff = (enemy_position[0] - self.enemy_previous_position[0],
+                          enemy_position[1] - self.enemy_previous_position[1])
         self.enemy_previous_position = enemy_position
         simulated_steps = 0
 
-        while agent_map._is_valid_position(enemy_position) and simulated_steps < self.n:
-            enemy_position = (enemy_position[0] + enemy_diff[0], enemy_position[1] + enemy_diff[1])
+        while agent_map._is_valid_position(
+             enemy_position) and simulated_steps < self.n:
+
+            enemy_position = (enemy_position[0] + enemy_diff[0],
+                              enemy_position[1] + enemy_diff[1])
             simulated_steps += 1
 
         return enemy_position
@@ -124,7 +134,8 @@ class PursueBehavior(Behavior):
         agent_map = state.get_map()
         agent_position = state.get_position()
         enemy_position = self._estimate_enemy_future_position(
-            state.get_agent_position(state.get_closest_enemy(state)), agent_map)
+            state.get_agent_position(state.get_closest_enemy(state)),
+            agent_map)
 
         best_action = None
         min_distance = None
@@ -133,8 +144,11 @@ class PursueBehavior(Behavior):
 
         for action in legal_actions:
             diff = agent_map.action_to_pos[action]
-            new_position = (agent_position[0] + diff[0], agent_position[1] + diff[1])
-            new_distance = state.calculate_distance(new_position, enemy_position)
+            new_position = (agent_position[0] + diff[0],
+                            agent_position[1] + diff[1])
+
+            new_distance = state.calculate_distance
+            (new_position, enemy_position)
 
             if (best_action is None) or (agent_map._is_valid_position
                                          (new_position) and
