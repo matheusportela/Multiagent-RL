@@ -22,7 +22,9 @@ class ProblemController(object):
         episodes_steps = []
 
         for _ in range(self.num_episodes):
-            cumulative_reward, steps = self.execute_episode(self.problem_adapter, self.agent)
+            cumulative_reward, steps = self.execute_episode
+            (self.problem_adapter, self.agent)
+
             episodes_rewards.append(cumulative_reward)
             episodes_steps.append(steps)
 
@@ -49,7 +51,6 @@ class ProblemController(object):
         return cumulative_reward, steps
 
 
-
 class Agent(object):
     """Agent capable of learning and exploring.
 
@@ -69,7 +70,9 @@ class Agent(object):
         exploration algorithms.
         """
         suggested_action = self.learning_element.act(state)
-        selected_action = self.exploration_element.select_action(suggested_action)
+        selected_action = self.exploration_element.select_action
+        (suggested_action)
+
         return selected_action
 
 
@@ -123,7 +126,8 @@ class Explorer(object):
     the optimal one, potentially increasing the rewards in the long run.
     """
     def select_action(self, suggested_action):
-        """Select an action given the one suggested by the learning algorithm."""
+        """Select an action given the one suggested by the learning
+        algorithm."""
         raise NotImplementedError
 
 
@@ -144,12 +148,12 @@ class QLearner(Learner):
     discount_factor -- Value in [0, 1) interval that determines the importance
         of future rewards. 0 makes the agent myopic and greedy, trying to
         achieve higher rewards in the next step. Closer to 1 makes the agent
-        maximize long-term rewards. Although values of 1 and higher are possible,
-        it may make the expected discounted reward infinite or divergent.
-    """
+        maximize long-term rewards. Although values of 1 and higher are
+        possible, it may make the expected discounted reward
+        infinite or divergent. """
 
     def __init__(self, initial_state=0, num_states=0, num_actions=0,
-        learning_rate=1, discount_factor=1):
+                 learning_rate=1, discount_factor=1):
         """Constructor.
 
         Parameters:
@@ -183,7 +187,11 @@ class QLearner(Learner):
         """
         old_value = self.q_values.get(self.current_state, action)
         next_expected_value = self.q_values.get_max_value(state)
-        new_value = old_value + self.learning_rate*(reward + self.discount_factor*next_expected_value - old_value)
+        new_value = old_value + self.learning_rate*(reward +
+                                                    self.discount_factor *
+                                                    next_expected_value -
+                                                    old_value)
+
         self.q_values.set(self.current_state, action, new_value)
 
         self.update_state(state)
@@ -212,7 +220,8 @@ class QValues(object):
     def __init__(self, num_states=0, num_actions=0):
         self.num_states = num_states
         self.num_actions = num_actions
-        self.q_values = [[0 for _ in xrange(num_actions)] for _ in xrange(num_states)]
+        self.q_values = [[0 for _ in xrange(num_actions)]
+                         for _ in xrange(num_states)]
 
     def get(self, state, action):
         """Get stored Q value for a (state, action) pair.
@@ -249,7 +258,9 @@ class QValues(object):
         state -- State from which to find the action.
         """
         max_value = self.get_max_value(state)
-        actions = [action for action, value in enumerate(self.q_values[state]) if value == max_value]
+        actions = [action for action, value in enumerate(self.q_values[state])
+                   if value == max_value]
+
         return random.choice(actions)
 
     def __str__(self):
@@ -322,7 +333,8 @@ class WindyWaterAdapter(ProblemAdapter):
         self.rows = 7
         self.cols = 10
         self.goal_coordinates = [1, 7]
-        self.water_coordinates = [[0, 3], [0, 4], [2, 3], [2, 4], [3, 3], [3, 4]]
+        self.water_coordinates = [[0, 3], [0, 4], [2, 3],
+                                  [2, 4], [3, 3], [3, 4]]
         self.wind_frequency = wind_frequency
 
         super(WindyWaterAdapter, self).__init__(
@@ -337,15 +349,18 @@ class WindyWaterAdapter(ProblemAdapter):
     def calculate_state(self, action):
         # wind
         if random.random() < self.wind_frequency:
-          wind_direction = random.randrange(0, self.num_actions)
-          wind_action = [self.actions[wind_direction][0], self.actions[wind_direction][1]]
+            wind_direction = random.randrange(0, self.num_actions)
+            wind_action = [self.actions[wind_direction][0],
+                           self.actions[wind_direction][1]]
         else:
-          wind_action = [0, 0]
+            wind_action = [0, 0]
 
         # state generation
         self.agent_coordinates = [
-            min(max(self.agent_coordinates[0] + self.actions[action][0] + wind_action[0], 0), self.rows - 1),
-            min(max(self.agent_coordinates[1] + self.actions[action][1] + wind_action[1], 0), self.cols - 1),
+            min(max(self.agent_coordinates[0] + self.actions[action][0] +
+                    wind_action[0], 0), self.rows - 1),
+            min(max(self.agent_coordinates[1] + self.actions[action][1] +
+                    wind_action[1], 0), self.cols - 1),
         ]
         state = self.coordinates_to_state(self.agent_coordinates)
 
@@ -353,11 +368,11 @@ class WindyWaterAdapter(ProblemAdapter):
 
     def calculate_reward(self, state):
         if (self.agent_coordinates in self.water_coordinates):
-          reward = -100
+            reward = -100
         elif (self.agent_coordinates == self.goal_coordinates):
-          reward = 100
+            reward = 100
         else:
-          reward = -1
+            reward = -1
 
         return reward
 
@@ -371,13 +386,13 @@ class WindyWaterAdapter(ProblemAdapter):
         print
         for i in xrange(self.rows):
             for j in xrange(self.cols):
-                if [i,j] == self.agent_coordinates:
+                if [i, j] == self.agent_coordinates:
                     print "A",
-                elif [i,j] == self.initial_coordinates:
+                elif [i, j] == self.initial_coordinates:
                     print "S",
-                elif [i,j] == self.goal_coordinates:
+                elif [i, j] == self.goal_coordinates:
                     print "G",
-                elif [i,j] in self.water_coordinates:
+                elif [i, j] in self.water_coordinates:
                     print "W",
                 else:
                     print "*",

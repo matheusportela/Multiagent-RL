@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
+
 class Feature(object):
     def __call__(self, state, action):
-        raise NotImplementedError, 'Feature must implement __call__'
+        raise NotImplementedError('Feature must implement __call__')
 
 
 class EnemyDistanceFeature(Feature):
