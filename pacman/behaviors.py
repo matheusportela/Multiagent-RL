@@ -66,8 +66,8 @@ class FleeBehavior(Behavior):
             diff = agent_map.action_to_pos[action]
             new_position = (agent_position[0] + diff[0],
                             agent_position[1] + diff[1])
-            new_distance = state.calculate_distance(new_position,
-                                                    enemy_position)
+            new_distance = state.calculate_distance
+            (new_position, enemy_position)
 
             if (best_action is None) or (agent_map._is_valid_position
                                          (new_position) and
