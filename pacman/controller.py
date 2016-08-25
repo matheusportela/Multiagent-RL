@@ -1,12 +1,12 @@
 #  -*- coding: utf-8 -*-
-##    @package controller.py
+#    @package controller.py
 #      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
 #
 # Routes messages between server and agents.
 
 from __future__ import division
 
-import agents
+# import agents
 import cliparser
 import communication as comm
 from state import GameState

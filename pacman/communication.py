@@ -1,5 +1,5 @@
 #  -*- coding: utf-8 -*-
-##    @package controller.py
+#     @package controller.py
 #      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
 #
 # Code for communication between controller and simulator.
