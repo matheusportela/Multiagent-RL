@@ -157,7 +157,7 @@ class TestQLearn(unittest.TestCase):
         action = 3
         reward = 10
         ql = learn.QLearner(initial_state=current_state, num_states=5,
-            num_actions=4)
+                            num_actions=4)
 
         ql.learn(next_state, action, reward)
         q_value = ql.q_values.get(current_state, action)
@@ -214,7 +214,7 @@ class TestQLearn(unittest.TestCase):
 
     def test_select_action_after_several_learning_steps(self):
         ql = learn.QLearner(num_states=2, num_actions=2, learning_rate=0.5,
-            discount_factor=0.5)
+                            discount_factor=0.5)
         steps = [(1, 1, 10),
                  (0, 0, 100),
                  (1, 1, 5)]
@@ -251,7 +251,8 @@ class TestPacmanMeasurements(unittest.TestCase):
         )
 
         self.assertEqual(measurements.pacman_position, (10, 10))
-        self.assertEqual(measurements.ghosts_positions, [(0, 0), (0, 1), (2, 5)])
+        self.assertEqual(measurements.ghosts_positions, [(0, 0), (0, 1),
+                                                         (2, 5)])
         self.assertEqual(measurements.reward, 5)
 
 
