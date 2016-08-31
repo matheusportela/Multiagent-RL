@@ -1,7 +1,7 @@
 #  -*- coding: utf-8 -*-
 ##    @package adapter.py
 #      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
-#
+#       classe reandom
 # Adapts communication between controller and the Berkeley Pac-man simulator.
 
 import pickle
