@@ -124,7 +124,7 @@ class PursueBehavior(Behavior):
         simulated_steps = 0
 
         while agent_map._is_valid_position(
-             enemy_position) and simulated_steps < self.n:
+                enemy_position) and simulated_steps < self.n:
 
             enemy_position = (enemy_position[0] + enemy_diff[0],
                               enemy_position[1] + enemy_diff[1])

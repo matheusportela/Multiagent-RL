@@ -28,8 +28,8 @@ class ProblemController(object):
             episodes_rewards.append(cumulative_reward)
             episodes_steps.append(steps)
 
-        avg_reward = sum(episodes_rewards)/self.num_episodes
-        avg_steps = sum(episodes_steps)/self.num_episodes
+        avg_reward = sum(episodes_rewards) / self.num_episodes
+        avg_steps = sum(episodes_steps) / self.num_episodes
 
         return avg_reward, avg_steps
 
@@ -187,10 +187,10 @@ class QLearner(Learner):
         """
         old_value = self.q_values.get(self.current_state, action)
         next_expected_value = self.q_values.get_max_value(state)
-        new_value = old_value + self.learning_rate*(reward +
-                                                    self.discount_factor *
-                                                    next_expected_value -
-                                                    old_value)
+        new_value = old_value + self.learning_rate * (reward +
+                                                      self.discount_factor *
+                                                      next_expected_value -
+                                                      old_value)
 
         self.q_values.set(self.current_state, action, new_value)
 
@@ -340,7 +340,7 @@ class WindyWaterAdapter(ProblemAdapter):
         super(WindyWaterAdapter, self).__init__(
             initial_state=self.coordinates_to_state(self.initial_coordinates),
             num_actions=len(self.actions),
-            num_states=self.rows*self.cols,
+            num_states=self.rows * self.cols,
         )
 
     def prepate_new_episode(self):
@@ -380,7 +380,7 @@ class WindyWaterAdapter(ProblemAdapter):
         return (self.agent_coordinates == self.goal_coordinates)
 
     def coordinates_to_state(self, coordinates):
-        return coordinates[0]*self.cols + coordinates[1]
+        return coordinates[0] * self.cols + coordinates[1]
 
     def print_map(self):
         print

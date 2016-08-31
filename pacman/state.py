@@ -50,7 +50,7 @@ class Map(object):
     def __str__(self):
         string = []
 
-        for y in range(self.height-1, -1, -1):
+        for y in range(self.height - 1, -1, -1):
             for x in range(self.width):
                 if self._is_wall((y, x)):
                     string.append('.....')
@@ -140,7 +140,6 @@ class Map(object):
                     if self._is_valid_position((next_y, next_x)):
                         action_probability = action_prob_dist_fn(
                             action, possible_action, *params)
-
                         new_probability = action_probability * old_probability
                         cells[next_y][next_x] += new_probability
 
@@ -191,7 +190,7 @@ class Map(object):
                 pos = (y, x)
                 if self._is_valid_position(pos):
                     paths[pos] = self._calculate_paths(
-                         pos, max_distance=max_distance)
+                        pos, max_distance=max_distance)
 
         Map.paths = paths
 
@@ -327,13 +326,12 @@ class GameState(object):
     def _predict_food_positions(self, agent_id):
         for x in range(self.width):
             for y in range(self.height):
-                self.food_map[y][x] = self.food_map[y][x] * (1 -
-                                                             self.agent_maps
-                                                             [agent_id][y][x])
+                self.food_map[y][x] = self.food_map[y][x] * (
+                    1 - self.agent_maps[agent_id][y][x])
 
     def calculate_distance(self, point1, point2):
-        return self.agent_maps[self.agent_id].calculate_distance
-        (point1, point2)
+        return self.agent_maps[self.agent_id].calculate_distance(
+            point1, point2)
 
     def get_food_distance(self):
         position = self.get_agent_position(self.agent_id)

@@ -1,5 +1,5 @@
 #  -*- coding: utf-8 -*-
-#    @package agents.py
+##    @package agents.py
 #      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
 #
 # Defines the agents.
@@ -143,7 +143,7 @@ class PacmanAdapterAgent(AdapterAgent):
         super(PacmanAdapterAgent, self).__init__(agent_id=PACMAN_INDEX,
                                                  client=client)
 
-    # @todo is this ever used?
+    ## @todo is this ever used?
     # def act_when_invalid(self, state):
     #     return Directions.STOP
 
@@ -158,7 +158,7 @@ class GhostAdapterAgent(AdapterAgent):
         self.previous_action = Directions.NORTH
         # self.actions = GHOST_ACTIONS
 
-    # @todo is this ever used?
+    ## @todo is this ever used?
     # def act_when_invalid(self, state):
     #     return random.choice(state.getLegalActions(self.agent_id))
 
@@ -317,7 +317,7 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
             self.enable_learn_mode()
 
         if not self.test_mode:
-            self.learning.learning_rate = self.K/(self.K + state.iteration)
+            self.learning.learning_rate = self.K / (self.K + state.iteration)
             self.learning.learn(state, self.previous_behavior, reward)
 
         behavior = self.learning.act(state)
@@ -386,7 +386,7 @@ class BehaviorLearningGhostAgent(GhostAgent):
             self.enable_learn_mode()
 
         if not self.test_mode:
-            self.learning.learning_rate = self.K/(self.K + state.iteration)
+            self.learning.learning_rate = self.K / (self.K + state.iteration)
             self.learning.learn(state, self.previous_behavior, reward)
 
         behavior = self.learning.act(state)

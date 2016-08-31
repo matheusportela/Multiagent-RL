@@ -18,7 +18,7 @@ class EnemyDistanceFeature(Feature):
         if distance == 0.0:
             distance = 1.0
 
-        return (1.0/distance)
+        return (1.0 / distance)
 
 
 class FoodDistanceFeature(Feature):
@@ -28,7 +28,7 @@ class FoodDistanceFeature(Feature):
         if distance == 0.0:
             distance = 1.0
 
-        return (1.0/distance)
+        return (1.0 / distance)
 
 
 class FragileAgentFeature(Feature):

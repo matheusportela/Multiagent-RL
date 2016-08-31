@@ -1,5 +1,5 @@
 #  -*- coding: utf-8 -*-
-#     @package controller.py
+##     @package controller.py
 #      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
 #
 # Code for communication between controller and simulator.
@@ -140,8 +140,8 @@ class RequestMessage(BaseMessage):
 class RequestInitializationMessage(RequestMessage):
     """Requests that the identified agent be REQUEST_INITialized."""
     def __init__(self, agent_id=None):
-        super(RequestInitializationMessage, self).__init__(
-                                                     msg_type=REQUEST_INIT_MSG)
+        super(RequestInitializationMessage,
+              self).__init__(msg_type=REQUEST_INIT_MSG)
 
         self.agent_id = agent_id
 
@@ -149,8 +149,8 @@ class RequestInitializationMessage(RequestMessage):
 class RequestBehaviorCountMessage(RequestMessage):
     """Requests the identified agent's RequestMessage count information."""
     def __init__(self, agent_id=None):
-        super(RequestBehaviorCountMessage, self).__init__(
-                                           msg_type=REQUEST_BEHAVIOR_COUNT_MSG)
+        super(RequestBehaviorCountMessage,
+              self).__init__(msg_type=REQUEST_BEHAVIOR_COUNT_MSG)
 
         self.agent_id = agent_id
 
@@ -158,8 +158,8 @@ class RequestBehaviorCountMessage(RequestMessage):
 class RequestGameStartMessage(RequestMessage):
     """Requests that a game be started for the identified agent."""
     def __init__(self, agent_id=None, map_width=None, map_height=None):
-        super(RequestGameStartMessage, self).__init__(
-                                               msg_type=REQUEST_GAME_START_MSG)
+        super(RequestGameStartMessage,
+              self).__init__(msg_type=REQUEST_GAME_START_MSG)
 
         self.agent_id = agent_id
         self.map_width = map_width
@@ -170,8 +170,8 @@ class RequestRegisterMessage(RequestMessage):
     """Requests that the identified agent (and associated information) be
     registered."""
     def __init__(self, agent_id=None, agent_team=None, agent_class=None):
-        super(RequestRegisterMessage, self).__init__(
-                                                 msg_type=REQUEST_REGISTER_MSG)
+        super(RequestRegisterMessage,
+              self).__init__(msg_type=REQUEST_REGISTER_MSG)
 
         self.agent_id = agent_id
         self.agent_team = agent_team

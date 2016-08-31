@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# @author Guilherme N. Ramos (gnramos@unb.br)
+## @author Guilherme N. Ramos (gnramos@unb.br)
 #
 # Runs tests. There are 2 options:
 #

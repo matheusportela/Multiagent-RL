@@ -166,10 +166,10 @@ class QLearning(LearningAlgorithm):
         """
         old_value = self.get_q_value(self.previous_state, action)
         next_expected_value = self.get_max_q_value(state)
-        new_value = (old_value + self.learning_rate*(reward +
-                                                     self.discount_factor *
-                                                     next_expected_value -
-                                                     old_value))
+        new_value = (old_value + self.learning_rate * (reward +
+                                                       self.discount_factor *
+                                                       next_expected_value -
+                                                       old_value))
         self.set_q_value(self.previous_state, action, new_value)
         self.update_state(state)
 
@@ -212,7 +212,7 @@ class QLearningWithApproximation(LearningAlgorithm):
         q_value = 0
 
         for weight, feature in zip(self.weights[str(action)], self.features):
-            q_value += weight*feature(state, action)
+            q_value += weight * feature(state, action)
 
         return q_value
 
@@ -239,7 +239,7 @@ class QLearningWithApproximation(LearningAlgorithm):
         return self.get_q_value(state, action)
 
     def _update_weights(self, action, delta):
-        self.weights[str(action)] = [weight + self.learning_rate*delta *
+        self.weights[str(action)] = [weight + self.learning_rate * delta *
                                      feature(self.previous_state, action)
                                      for weight, feature in
                                      zip(self.weights[str(action)],

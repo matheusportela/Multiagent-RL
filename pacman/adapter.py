@@ -1,5 +1,5 @@
 #  -*- coding: utf-8 -*-
-#    @package adapter.py
+##    @package adapter.py
 #      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
 #
 # Adapts communication between controller and the Berkeley Pac-man simulator.
@@ -37,10 +37,10 @@ def log(msg):
     print '[  Adapter ] {}'.format(msg)
 
 
-# @todo Parse arguments outside class, pass values as arguments for
+## @todo Parse arguments outside class, pass values as arguments for
 # constructor.
 class Adapter(object):
-    # @todo define pacman-agent choices and ghost-agent choices from agents.py
+    ## @todo define pacman-agent choices and ghost-agent choices from agents.py
     # file
     def __init__(self,
                  pacman_agent=DEFAULT_PACMAN_AGENT,
@@ -96,7 +96,7 @@ class Adapter(object):
         ghost_name = self.ghost_class.__name__
         self.ghosts = []
         for x in xrange(num_ghosts):
-            ghost = agents.GhostAdapterAgent(x+1, client=client)
+            ghost = agents.GhostAdapterAgent(x + 1, client=client)
             log('Created {} #{}.'.format(ghost_name, ghost.agent_id))
             self.__register_agent__(ghost, 'ghost', self.ghost_class)
             self.ghosts.append(ghost)
@@ -182,7 +182,7 @@ class Adapter(object):
         for agent in self.all_agents:
             agent.update(simulated_game.state)
 
-        # @todo this as one list, probably by checking if agent is
+        ## @todo this as one list, probably by checking if agent is
         # instance of BehaviorLearningAgent (needs refactoring).
 
         # Log behavior count
@@ -206,7 +206,7 @@ class Adapter(object):
 
     def __save_policies__(self, policies):
         if self.pacman_class == agents.BehaviorLearningPacmanAgent:
-            # @todo keep policy in agent?
+            ## @todo keep policy in agent?
             policies[self.pacman.agent_id] = self.__get_policy__(self.pacman)
 
         if self.ghost_class == agents.BehaviorLearningGhostAgent:
@@ -224,7 +224,7 @@ class Adapter(object):
 
         results = {'learn_scores': [], 'test_scores': [], 'behavior_count': {}}
 
-        # @todo this as one list, probably by checking if agent is instance of
+        ## @todo this as one list, probably by checking if agent is instance of
         # BehaviorLearningAgent (needs refactoring).
         if self.pacman_class == agents.BehaviorLearningPacmanAgent:
             results['behavior_count'][self.pacman.agent_id] = {}
@@ -241,7 +241,7 @@ class Adapter(object):
             self.__initialize__(agent)
 
         for x in xrange(self.learn_runs):
-            log('LEARN game {} (of {})'.format(x+1, self.learn_runs))
+            log('LEARN game {} (of {})'.format(x + 1, self.learn_runs))
 
             score = self.__process_game__(policies, results)
             results['learn_scores'].append(score)
@@ -250,7 +250,7 @@ class Adapter(object):
             agent.enable_test_mode()
 
         for x in xrange(self.test_runs):
-            log('TEST game {} (of {})'.format(x+1, self.test_runs))
+            log('TEST game {} (of {})'.format(x + 1, self.test_runs))
 
             score = self.__process_game__(policies, results)
             results['test_scores'].append(score)
