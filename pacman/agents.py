@@ -1,11 +1,10 @@
+#!/usr/bin/env python
 #  -*- coding: utf-8 -*-
-##    @package agents.py
-#      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
-#
-# Defines the agents.
 
+"""Define the agents.
 
-# import math
+"""
+
 import random
 
 from berkeley.game import Agent as BerkeleyGameAgent, Directions
@@ -15,12 +14,13 @@ import features
 import learning
 
 from communication import (ZMQMessengerBase, RequestGameStartMessage,
-                           # AckMessage, ActionMessage, BehaviorCountMessage,
-                           # RequestInitializationMessage,
-                           # RequestRegisterMessage
-                           # RequestBehaviorCountMessage, PolicyMessage,
-                           # RequestPolicyMessage,
                            StateMessage)
+
+__author__ = "Matheus Portela and Guilherme N. Ramos"
+__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
+               "Pedro Saman"]
+__maintainer__ = "Guilherme N. Ramos"
+__email__ = "gnramos@unb.br"
 
 # Default settings
 DEFAULT_NOISE = 0
@@ -143,7 +143,7 @@ class PacmanAdapterAgent(AdapterAgent):
         super(PacmanAdapterAgent, self).__init__(agent_id=PACMAN_INDEX,
                                                  client=client)
 
-    ## @todo is this ever used?
+    # @todo is this ever used?
     # def act_when_invalid(self, state):
     #     return Directions.STOP
 
@@ -158,7 +158,7 @@ class GhostAdapterAgent(AdapterAgent):
         self.previous_action = Directions.NORTH
         # self.actions = GHOST_ACTIONS
 
-    ## @todo is this ever used?
+    # @todo is this ever used?
     # def act_when_invalid(self, state):
     #     return random.choice(state.getLegalActions(self.agent_id))
 

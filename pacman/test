@@ -1,14 +1,21 @@
 #!/bin/bash
-#
-## @author Guilherme N. Ramos (gnramos@unb.br)
-#
-# Runs tests. There are 2 options:
-#
-# ./test     - which runs a simple test with a medium layout and 2 ghosts
-# ./test all - which runs all possible configurations of layouts and ghosts
-#              (may take a while....)
 
-# Test configurations
+
+"""Test configurations
+Run tests. There are 2 options:
+
+./test     - which runs a simple test with a medium layout and 2 ghosts
+./test all - which runs all possible configurations of layouts and ghosts
+(may take a while....)
+"""
+
+__author__ = "Matheus Portela and Guilherme N. Ramos"
+__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
+               "Pedro Saman"]
+__maintainer__ = "Guilherme N. Ramos"
+__email__ = "gnramos@unb.br"
+
+
 ADAPTER="adapter.py"
 CONTROLLER="controller.py"
 

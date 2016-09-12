@@ -1,8 +1,9 @@
+#!/usr/bin/env python
 #  -*- coding: utf-8 -*-
-##    @package controller.py
-#      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
-#
-# Routes messages between server and agents.
+
+"""Routes messages between server and agents.
+
+"""
 
 from __future__ import division
 
@@ -10,6 +11,12 @@ from __future__ import division
 import cliparser
 import communication as comm
 from state import GameState
+
+__author__ = "Matheus Portela and Guilherme N. Ramos"
+__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
+               "Pedro Saman"]
+__maintainer__ = "Guilherme N. Ramos"
+__email__ = "gnramos@unb.br"
 
 
 def log(msg):

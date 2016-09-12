@@ -1,15 +1,21 @@
+#!/usr/bin/env python
 #  -*- coding: utf-8 -*-
-##     @package controller.py
-#      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
-#
-# Code for communication between controller and simulator.
 
+"""Code for communication between controller and simulator.
+
+    Hm...
+"""
 
 import pickle
 import zmq
 
+__author__ = "Matheus Portela and Guilherme N. Ramos"
+__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
+               "Pedro Saman"]
+__maintainer__ = "Guilherme N. Ramos"
+__email__ = "gnramos@unb.br"
 
-# Default settings
+""" Default settings """
 DEFAULT_CLIENT_ADDRESS = 'localhost'
 DEFAULT_TCP_PORT = 5555
 

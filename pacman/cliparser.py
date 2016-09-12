@@ -1,8 +1,10 @@
+#!/usr/bin/env python
 #  -*- coding: utf-8 -*-
-##   @package cliparser.py
-#      @author Guilherme N. Ramos (gnramos@unb.br)
-#
-# Parses CLI arguments to provide Adapter and Controller instances.
+
+"""Parses CLI arguments to provide Adapter and Controller instances.
+
+"""
+
 
 from argparse import ArgumentParser
 
@@ -14,6 +16,12 @@ from agents import DEFAULT_NOISE
 from controller import Controller
 from communication import (TCPClient, TCPServer, DEFAULT_CLIENT_ADDRESS,
                            DEFAULT_TCP_PORT)
+
+__author__ = "Matheus Portela and Guilherme N. Ramos"
+__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
+               "Pedro Saman"]
+__maintainer__ = "Guilherme N. Ramos"
+__email__ = "gnramos@unb.br"
 
 
 def get_Adapter():
@@ -88,7 +96,7 @@ def get_Controller():
                         help='TCP port to connect to adapter')
     args, unknown = parser.parse_known_args()
 
-    ## @todo setup an option for a "memory" server (direct communication with
+    # @todo setup an option for a "memory" server (direct communication with
     # Adapter) (zmq inproc?)
     server = TCPServer(port=args.port)
 
