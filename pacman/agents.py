@@ -223,15 +223,16 @@ class RandomPacmanAgentTwo(PacmanAgent):
     def choose_action(self, state, action, reward, legal_actions, explore):
 
         if action == 'Stop' or action not in legal_actions:
-            legal_actions.remove('Stop')
+            if 'Stop' in legal_actions:
+                legal_actions.remove('Stop')
             if len(legal_actions) > 0:
                 return random.choice(legal_actions)
         else:
             if len(legal_actions) > 3:
                 if len(legal_actions) == 4:
-                    number = random.choice([1, 2, 3, 4])
-                else:
                     number = random.choice([1, 2, 3, 4, 5])
+                else:
+                    number = random.choice([1, 2, 3, 4, 5, 6])
                 if number == 1 or number == 2:
                     return action
                 else:
