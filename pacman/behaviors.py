@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 
+"""Define the behaviors an agents choose."""
+
 import random
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"

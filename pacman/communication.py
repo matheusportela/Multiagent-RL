@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 
-"""Code for communication between controller and simulator.
-
-    Hm...
-"""
+"""Code for communication between controller and simulator."""
 
 import pickle
 import zmq

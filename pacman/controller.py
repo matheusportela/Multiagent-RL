@@ -1,13 +1,10 @@
 #!/usr/bin/env python
-#  -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-"""Routes messages between server and agents.
-
-"""
+"""Routes messages between server and agents."""
 
 from __future__ import division
 
-# import agents
 import cliparser
 import communication as comm
 from state import GameState
@@ -39,14 +36,14 @@ class Controller(object):
         log('Ready')
 
     def __choose_action__(self, state):
-        # Update agent state
+        """Update agent state."""
         for id_, pos in state.agent_positions.items():
             self.game_states[state.agent_id].observe_agent(id_, pos)
 
         for id_, status in state.fragile_agents.items():
             self.game_states[state.agent_id].observe_fragile_agent(id_, status)
 
-        # Choose action
+        """Choose action"""
         agent_state = self.game_states[state.agent_id]
         choose_action = self.agents[state.agent_id].choose_action
         agent_action = choose_action(agent_state, state.executed_action,

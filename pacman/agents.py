@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 
-"""Define the agents.
-
-"""
+"""Define the agents."""
 
 import random
 

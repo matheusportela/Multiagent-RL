@@ -2,8 +2,6 @@
 #  -*- coding: utf-8 -*-
 """
 Adapts communication between controller and the Berkeley Pac-man simulator.
-
-
 """
 
 import pickle

@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 
-"""Collection of reinforcement learning algorithms
-
-"""
+"""Collection of reinforcement learning algorithms"""
 
 from __future__ import division
 import random

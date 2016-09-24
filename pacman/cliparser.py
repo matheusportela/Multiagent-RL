@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 
-"""Parses CLI arguments to provide Adapter and Controller instances.
-
-"""
+"""Parses CLI arguments to provide Adapter and Controller instances."""
 
 
 from argparse import ArgumentParser
