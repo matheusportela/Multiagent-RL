@@ -1,10 +1,18 @@
-"""Collection of reinforcement learning algorithms"""
+"""Collection of reinforcement learning algorithms.
+
+This module contains classes implementing multiple reinforcement learning
+algorithms. These classes are agnostic to their usage, containing no
+information specific to environments where they will be applied to.
+
+In order to achieve that, all classes must inheric from BaseLearningAlgorithm
+and implement its virtual methods.
+"""
 
 from __future__ import division
 import random
 
 
-class LearningAlgorithm(object):
+class BaseLearningAlgorithm(object):
     def learn(self, state, action, reward):
         """Learn from experience.
 
@@ -32,7 +40,7 @@ class LearningAlgorithm(object):
                                   % str(type(self)))
 
 
-class QLearning(LearningAlgorithm):
+class QLearning(BaseLearningAlgorithm):
     """Q-learning algorithm implementation.
 
     Q-learning is a model free reinforcement learning algorithm that tries and
@@ -183,7 +191,7 @@ class QLearning(LearningAlgorithm):
         return self._get_max_action_from_list(state, legal_actions)
 
 
-class QLearningWithApproximation(LearningAlgorithm):
+class QLearningWithApproximation(BaseLearningAlgorithm):
     def __init__(self, actions=None, features=None, learning_rate=1,
                  discount_factor=1, exploration_rate=0):
         super(QLearningWithApproximation, self).__init__()
