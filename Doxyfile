@@ -17,3 +17,5 @@ INPUT                  = .
 FILE_PATTERNS          = *.py
 RECURSIVE              = YES
 GENERATE_LATEX         = NO
+GENERATE_TODOLIST      = YES
+OPTIMIZE_OUTPUT_JAVA   = YES
