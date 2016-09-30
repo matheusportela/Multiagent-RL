@@ -42,7 +42,7 @@ XCode shall be downloaded from the provided link or in your App Store. Then you 
 ```bash
 ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 brew install python --with-tcl-tk --enable-threads --with-x11
-pip install matplotlib bumpy pyzmq
+pip install matplotlib numpy pyzmq
 ```
 
 ## Documentation
