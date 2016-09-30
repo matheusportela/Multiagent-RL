@@ -5,3 +5,7 @@
 *.pol
 
 wiki/*
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
