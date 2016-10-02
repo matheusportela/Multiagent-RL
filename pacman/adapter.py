@@ -62,7 +62,7 @@ class Adapter(object):
         # Layout ##############################################################
         LAYOUT_PATH = 'pacman/layouts'
         file_name = str(num_ghosts) + 'Ghosts'
-        layout_file = '/'.join([LAYOUT_PATH, layout_map, file_name])
+        layout_file = '/'.join([LAYOUT_PATH, layout_map + file_name])
         self.layout = get_berkeley_layout(layout_file)
         if not self.layout:
             raise ValueError('Layout {} missing.'.format(layout_file))

@@ -12,7 +12,7 @@ __maintainer__ = "Guilherme N. Ramos"
 __email__ = "gnramos@unb.br"
 
 
-class Behavior(object):
+class BehaviorBase(object):
     def __str__(self):
         return self.__class__.__name__
 

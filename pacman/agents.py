@@ -10,9 +10,11 @@ from berkeley.game import Agent as BerkeleyGameAgent, Directions
 import behaviors
 import features
 import learning
+from messages import RequestGameStartMessage, StateMessage
 
-from communication import (ZMQMessengerBase, RequestGameStartMessage,
-                           StateMessage)
+import sys
+sys.path.insert(1, '..')
+from communication import ZMQMessengerBase
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",

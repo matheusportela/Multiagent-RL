@@ -10,6 +10,10 @@ import cliparser
 import messages
 from state import GameState
 
+import sys
+sys.path.insert(1, '..')
+from communication import ZMQServer
+
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
                "Pedro Saman"]

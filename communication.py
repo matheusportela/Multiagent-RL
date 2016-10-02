@@ -31,8 +31,6 @@ class ZMQMessengerBase(object):
 class ZMQServer(ZMQMessengerBase):
     """Inter-process communication server."""
     def __init__(self, context, binding):
-        super(ZMQServer, self).__init__(context, socket_type=zmq.REP)
-        self.socket.bind(binding)
         # The REP socket reads and saves all identity frames up to and
         # including the empty delimiter, then passes the following frame or
         # frames to the caller. REP sockets are synchronous and talk to one
@@ -40,19 +38,21 @@ class ZMQServer(ZMQMessengerBase):
         # requests are read from peers in fair fashion, and replies are always
         # sent to the same peer that made the last request.
         # (http://zguide.zeromq.org/page:all#advanced-request-reply)
+        super(ZMQServer, self).__init__(context, socket_type=zmq.REP)
+        self.socket.bind(binding)
 
 
 class ZMQClient(ZMQMessengerBase):
     """Inter-process communication server."""
     def __init__(self, context, connection):
-        super(ZMQClient, self).__init__(context, socket_type=zmq.REQ)
-        self.socket.connect(connection)
         # The REQ socket sends, to the network, an empty delimiter frame in
         # front of the message data. REQ sockets are synchronous. REQ sockets
         # always send one request and then wait for one reply. REQ sockets talk
         # to one peer at a time. If you connect a REQ socket to multiple peers,
         # requests are distributed to and replies expected from each peer one
         # turn at a time.
+        super(ZMQClient, self).__init__(context, socket_type=zmq.REQ)
+        self.socket.connect(connection)
 
 
 class InprocServer(ZMQServer):
