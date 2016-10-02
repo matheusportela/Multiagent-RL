@@ -1,3 +1,10 @@
-from cliparser import get_Controller, get_Adapter
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-__all__ = ["get_Controller", "get_Adapter"]
+"""This is test."""
+
+__author__ = "Matheus Portela and Guilherme N. Ramos"
+__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
+               "Pedro Saman"]
+__maintainer__ = "Guilherme N. Ramos"
+__email__ = "gnramos@unb.br"

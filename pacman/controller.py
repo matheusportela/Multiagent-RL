@@ -1,23 +1,22 @@
-#  -*- coding: utf-8 -*-
-##    @package controller.py
-#      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
-#
-# Routes messages between server and agents.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Routes messages between server and agents."""
 
 
 from __future__ import division
 
-from berkeley.game import Directions
-
-import agents
 import cliparser
 import messages
 from state import GameState
 
-## @todo properly include communication module from parent folder
-import sys
-sys.path.insert(0, '..')
-from communication import ZMQServer
+__author__ = "Matheus Portela and Guilherme N. Ramos"
+__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
+               "Pedro Saman"]
+__maintainer__ = "Guilherme N. Ramos"
+__email__ = "gnramos@unb.br"
+
+
 def log(msg):
     print '[Controller] {}'.format(msg)
 
@@ -36,14 +35,14 @@ class Controller(ZMQServer):
         log('Ready!')
 
     def __choose_action__(self, state):
-        # Update agent state
+        """Update agent state."""
         for id_, pos in state.agent_positions.items():
             self.game_states[state.agent_id].observe_agent(id_, pos)
 
         for id_, status in state.fragile_agents.items():
             self.game_states[state.agent_id].observe_fragile_agent(id_, status)
 
-        # Choose action
+        """Choose action"""
         agent_state = self.game_states[state.agent_id]
         choose_action = self.agents[state.agent_id].choose_action
         agent_action = choose_action(agent_state, state.executed_action,
@@ -117,7 +116,7 @@ class Controller(ZMQServer):
 
     def __send_agent_action__(self, msg):
         game_state = self.game_states[msg.agent_id]
-        ## @todo is it necessary to set walls every time?
+        # @todo is it necessary to set walls every time?
         game_state.set_walls(msg.wall_positions)
         game_state.set_food_positions(msg.food_positions)
 

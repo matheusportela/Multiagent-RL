@@ -1,9 +1,7 @@
+#!/usr/bin/env python
 #  -*- coding: utf-8 -*-
-##    @package agents.py
-#      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
-#
-# Defines the agents.
 
+"""Define the agents."""
 
 import random
 
@@ -12,12 +10,15 @@ from berkeley.game import Agent as BerkeleyGameAgent, Directions
 import behaviors
 import features
 import learning
-from messages import (PolicyMessage, RequestBehaviorCountMessage,
-                      RequestInitializationMessage,
-                      RequestGameStartMessage,
-                      RequestPolicyMessage, RequestRegisterMessage,
-                      StateMessage)
 
+from communication import (ZMQMessengerBase, RequestGameStartMessage,
+                           StateMessage)
+
+__author__ = "Matheus Portela and Guilherme N. Ramos"
+__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
+               "Pedro Saman"]
+__maintainer__ = "Guilherme N. Ramos"
+__email__ = "gnramos@unb.br"
 
 # Default settings
 DEFAULT_NOISE = 0
@@ -34,7 +35,7 @@ PACMAN_INDEX = 0
 #                                AdapterAgents                                #
 ###############################################################################
 
-## @todo properly include communication module from parent folder
+# @todo properly include communication module from parent folder
 import sys
 sys.path.insert(0, '..')
 from communication import ZMQClient
@@ -89,7 +90,7 @@ class ClientAgent(ZMQClient, BerkeleyGameAgent):
         raise NotImplementedError('Agent must define an initial action')
 
     def __noise_error__(self):
-        ## @todo Put this in the right place (when perceiving the environment)
+        # @todo Put this in the right place (when perceiving the environment)
         return random.randrange(-NOISE, NOISE + 1)
 
     def calculate_reward(self, current_score):
@@ -166,7 +167,8 @@ class ClientAgent(ZMQClient, BerkeleyGameAgent):
         return self.communicate(msg)
 
     def register(self, agent_team, agent_class):
-        self.log('requested register {}/{}'.format(agent_team, agent_class.__name__))
+        self.log('requested register {}/{}'.format(agent_team,
+                                                   agent_class.__name__))
         msg = RequestRegisterMessage(self.agent_id, agent_team, agent_class)
         return self.communicate(msg)
 
@@ -186,10 +188,12 @@ class ClientAgent(ZMQClient, BerkeleyGameAgent):
 
 class PacmanAdapterAgent(ClientAgent):
     def __init__(self, context, connection):
-        super(PacmanAdapterAgent, self).__init__(PACMAN_INDEX, context, connection)
+        super(PacmanAdapterAgent, self).__init__(PACMAN_INDEX, context,
+                                                 connection)
 
-    def __first_action__(self):
-        self.previous_action = Directions.STOP
+    # @todo is this ever used?
+    # def act_when_invalid(self, state):
+    #     return Directions.STOP
 
     def calculate_reward(self, current_score):
         return current_score - self.previous_score
@@ -201,6 +205,11 @@ class GhostAdapterAgent(ClientAgent):
 
     def __first_action__(self):
         self.previous_action = Directions.NORTH
+        # self.actions = GHOST_ACTIONS
+
+    # @todo is this ever used?
+    # def act_when_invalid(self, state):
+    #     return random.choice(state.getLegalActions(self.agent_id))
 
     def calculate_reward(self, current_score):
         return self.previous_score - current_score
@@ -253,7 +262,41 @@ class RandomPacman(PacmanAgent):
             return random.choice(legal_actions)
 
 
-class RandomGhost(GhostAgent):
+class RandomPacmanAgentTwo(PacmanAgent):
+    """Agent that after choosing a random direction will follow that direction
+    until it reaches a wall or have more than three possible moves. In these
+    case, continue to follow the previous directions have twice the chance of
+    happening then the other possible movements"""
+    def choose_action(self, state, action, reward, legal_actions, explore):
+
+        if action == 'Stop' or action not in legal_actions:
+            if 'Stop' in legal_actions:
+                legal_actions.remove('Stop')
+            if len(legal_actions) > 0:
+                return random.choice(legal_actions)
+        else:
+            if len(legal_actions) > 3:
+                if len(legal_actions) == 4:
+                    number = random.choice([1, 2, 3, 4, 5])
+                else:
+                    number = random.choice([1, 2, 3, 4, 5, 6])
+                if number == 1 or number == 2:
+                    return action
+                else:
+                    aux = 3
+                    legal_actions.remove(action)
+                    for possible_action in legal_actions:
+                        if number == aux:
+                            return possible_action
+                        else:
+                            aux += 1
+                    else:
+                        return random.choice(legal_actions)
+            else:
+                return action
+
+
+class RandomGhostAgent(GhostAgent):
     """Agent that randomly selects an action."""
     def __init__(self, agent_id, ally_ids, enemy_ids):
         super(RandomGhost, self).__init__(agent_id)
@@ -324,7 +367,7 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
             self.enable_learn_mode()
 
         if not self.test_mode:
-            self.learning.learning_rate = self.K/(self.K + state.iteration)
+            self.learning.learning_rate = self.K / (self.K + state.iteration)
             self.learning.learn(state, self.previous_behavior, reward)
 
         behavior = self.learning.act(state)
@@ -392,7 +435,7 @@ class BehaviorLearningGhostAgent(GhostAgent):
             self.enable_learn_mode()
 
         if not self.test_mode:
-            self.learning.learning_rate = self.K/(self.K + state.iteration)
+            self.learning.learning_rate = self.K / (self.K + state.iteration)
             self.learning.learn(state, self.previous_behavior, reward)
 
         behavior = self.learning.act(state)

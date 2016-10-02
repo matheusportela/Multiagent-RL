@@ -1,11 +1,21 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+""" """
+
 import math
+
+__author__ = "Matheus Portela and Guilherme N. Ramos"
+__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
+               "Pedro Saman"]
+__maintainer__ = "Guilherme N. Ramos"
+__email__ = "gnramos@unb.br"
 
 
 class Map(object):
     """Probabilistic map.
 
-    Every cell contains a value in the interval [0, 1] indicating a probability.
-    The entire map sums up to 1.
+    Every cell contains a value in the interval [0, 1] indicating a
+    probability. The entire map sums up to 1.
     """
     paths = None
 
@@ -31,7 +41,7 @@ class Map(object):
     def walls(self, walls):
         self._walls = walls
 
-        if Map.paths == None:
+        if Map.paths is None:
             self._calculate_all_paths()
 
     def __getitem__(self, i):
@@ -50,7 +60,7 @@ class Map(object):
     def __str__(self):
         string = []
 
-        for y in range(self.height-1, -1, -1):
+        for y in range(self.height - 1, -1, -1):
             for x in range(self.width):
                 if self._is_wall((y, x)):
                     string.append('.....')
@@ -95,11 +105,12 @@ class Map(object):
                     prob = self[y][x] / prob_sum
                     self[y][x] = prob
                 else:
-                    self[y][x] = 1.0 / ((self.width * self.height) - len(self.walls))
+                    self[y][x] = 1.0 / ((self.width * self.height) -
+                                        len(self.walls))
 
     def generate_cells(self):
         cells = [[0 for _ in range(self.width)]
-                    for _ in range(self.height)]
+                 for _ in range(self.height)]
         return cells
 
     def get_maximum_position(self):
@@ -118,7 +129,9 @@ class Map(object):
         for x in range(self.width):
             for y in range(self.height):
                 old_probability = self[y][x]
-                new_probability = measurement_prob_dist_fn((y, x), pos, *params) * old_probability
+                new_probability = measurement_prob_dist_fn(
+                    (y, x), pos, *params) * old_probability
+
                 self[y][x] = new_probability
 
         self.normalize()
@@ -135,7 +148,8 @@ class Map(object):
                     next_x = x + self.action_to_pos[possible_action][1]
 
                     if self._is_valid_position((next_y, next_x)):
-                        action_probability = action_prob_dist_fn(action, possible_action, *params)
+                        action_probability = action_prob_dist_fn(
+                            action, possible_action, *params)
                         new_probability = action_probability * old_probability
                         cells[next_y][next_x] += new_probability
 
@@ -185,12 +199,13 @@ class Map(object):
             for x in range(self.width):
                 pos = (y, x)
                 if self._is_valid_position(pos):
-                    paths[pos] = self._calculate_paths(pos, max_distance=max_distance)
+                    paths[pos] = self._calculate_paths(
+                        pos, max_distance=max_distance)
 
         Map.paths = paths
 
     def calculate_distance(self, pos1, pos2):
-        if Map.paths == None:
+        if Map.paths is None:
             self._calculate_all_paths()
 
         if self._is_valid_position(pos1) and self._is_valid_position(pos2):
@@ -208,11 +223,13 @@ def deterministic_distribution(action1, action2):
     else:
         return 0.0
 
+
 def semi_deterministic_distribution(action1, action2):
     if action1 == action2:
         return 0.99
     else:
         return 0.01
+
 
 def gaussian_distribution(pos1, pos2, sd):
     diff_y = pos2[0] - pos1[0]
@@ -222,7 +239,7 @@ def gaussian_distribution(pos1, pos2, sd):
 
 class GameState(object):
     def __init__(self, width, height, walls, agent_id=None, ally_ids=[],
-        enemy_ids=[], eater=True, iteration=0):
+                 enemy_ids=[], eater=True, iteration=0):
         self.width = width
         self.height = height
         self.walls = walls
@@ -254,7 +271,7 @@ class GameState(object):
         return '\n'.join(string)
 
     def set_food_positions(self, food_positions):
-        if self.food_map == None:
+        if self.food_map is None:
             self.food_map = Map(self.width, self.height, self.walls)
 
             for x in range(self.width):
@@ -280,8 +297,9 @@ class GameState(object):
         return (agent_id in self.enemy_ids)
 
     def _is_eater_agent(self, agent_id):
-        return ((self.eater and (self._is_this_agent(agent_id) or self._is_ally_agent(agent_id)))
-            or (not self.eater and self._is_enemy_agent(agent_id)))
+        return ((self.eater and (self._is_this_agent(agent_id) or
+                                 self._is_ally_agent(agent_id))) or
+                (not self.eater and self._is_enemy_agent(agent_id)))
 
     def observe_agent(self, agent_id, pos):
         self.agent_maps[agent_id].observe(pos, gaussian_distribution, self.sd)
@@ -308,7 +326,8 @@ class GameState(object):
         return self.fragile_agents[agent_id]
 
     def predict_agent(self, agent_id, action):
-        self.agent_maps[agent_id].predict(action, semi_deterministic_distribution)
+        self.agent_maps[agent_id].predict(action,
+                                          semi_deterministic_distribution)
 
         # Either the agent and its allies eat or its enemies
         if self._is_eater_agent(agent_id):
@@ -317,10 +336,12 @@ class GameState(object):
     def _predict_food_positions(self, agent_id):
         for x in range(self.width):
             for y in range(self.height):
-                self.food_map[y][x] = self.food_map[y][x] * (1 - self.agent_maps[agent_id][y][x])
+                self.food_map[y][x] = self.food_map[y][x] * (
+                    1 - self.agent_maps[agent_id][y][x])
 
     def calculate_distance(self, point1, point2):
-        return self.agent_maps[self.agent_id].calculate_distance(point1, point2)
+        return self.agent_maps[self.agent_id].calculate_distance(
+            point1, point2)
 
     def get_food_distance(self):
         position = self.get_agent_position(self.agent_id)
@@ -390,7 +411,8 @@ if __name__ == '__main__':
     final_pos = (1, 2)
 
     print game_map
-    positions = [(y, x) for y in range(game_map.height) for x in range(game_map.width)]
+    positions = [(y, x) for y in range(game_map.height)
+                 for x in range(game_map.width)]
     for pos1 in positions:
         for pos2 in positions:
             print pos1, '->', pos2, game_map.calculate_distance(pos1, pos2)
