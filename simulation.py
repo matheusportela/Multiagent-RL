@@ -23,7 +23,7 @@ def get_module_name():
     """Gets the module name for the problem form the CLI arguments."""
     parser = ArgumentParser(description='Run Multiagent-RL.', add_help=False,
                             usage=SUPPRESS)
-    parser.add_argument('module', type=str, default='pacman',
+    parser.add_argument('-m', '--module', type=str, default='pacman',
                         choices=['pacman'],
                         help='name of the module to run the simulation')
     args, unknown = parser.parse_known_args()
