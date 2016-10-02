@@ -107,7 +107,6 @@ def get_Controller(context=None, endpoint=None):
 
     # @todo setup an option for a "memory" server (direct communication with
     # Adapter) (zmq inproc?)
-    server = TCPServer(port=args.port)
 
     if context and endpoint:
         binding = 'inproc://{}'.format(endpoint)

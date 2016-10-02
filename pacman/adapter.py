@@ -102,10 +102,10 @@ class Adapter(object):
 
         ghost_name = self.ghost_class.__name__
         self.ghosts = []
-        for x in xrange(num_ghosts):
-            ghost = agents.GhostAdapterAgent(x + 1, client=client)
+        for i in xrange(num_ghosts):
+            ghost = agents.GhostAdapterAgent(i + 1, context, connection)
             log('Created {} #{}.'.format(ghost_name, ghost.agent_id))
-            self.__register_agent__(ghost, 'ghost', self.ghost_class)
+            ghost.register('ghost_{}'.format(i), self.pacman_class)
             self.ghosts.append(ghost)
 
         self.all_agents = [self.pacman] + self.ghosts

@@ -10,7 +10,7 @@ from berkeley.game import Agent as BerkeleyGameAgent, Directions
 import behaviors
 import features
 import learning
-from messages import RequestGameStartMessage, StateMessage
+import messages
 
 import sys
 sys.path.insert(1, '..')
@@ -52,7 +52,7 @@ class ClientAgent(ZMQClient, BerkeleyGameAgent):
         super(ClientAgent, self).__init__(context, connection)
         BerkeleyGameAgent.__init__(self, agent_id)
 
-        self.previous_action = self.__first_action__()
+        self.previous_action = self._first_action()
         self.test_mode = False
 
         self.log('instantiated')
@@ -88,10 +88,10 @@ class ClientAgent(ZMQClient, BerkeleyGameAgent):
 
     # Other stuff #############################################################
 
-    def __first_action__(self):
+    def _first_action(self):
         raise NotImplementedError('Agent must define an initial action')
 
-    def __noise_error__(self):
+    def _noise_error(self):
         # @todo Put this in the right place (when perceiving the environment)
         return random.randrange(-NOISE, NOISE + 1)
 
@@ -104,8 +104,8 @@ class ClientAgent(ZMQClient, BerkeleyGameAgent):
         agent_positions[PACMAN_INDEX] = state.getPacmanPosition()[::-1]
 
         for id_, pos in enumerate(state.getGhostPositions()):
-            pos_y = pos[::-1][0] + self.__noise_error__()
-            pos_x = pos[::-1][1] + self.__noise_error__()
+            pos_y = pos[::-1][0] + self._noise_error()
+            pos_x = pos[::-1][1] + self._noise_error()
             agent_positions[id_ + 1] = (pos_y, pos_x)
 
         food_positions = []
@@ -127,15 +127,16 @@ class ClientAgent(ZMQClient, BerkeleyGameAgent):
         reward = self.calculate_reward(state.getScore())
         self.previous_score = state.getScore()
 
-        msg = StateMessage(agent_id=self.agent_id,
-                           agent_positions=agent_positions,
-                           food_positions=food_positions,
-                           fragile_agents=fragile_agents,
-                           wall_positions=wall_positions,
-                           legal_actions=state.getLegalActions(self.agent_id),
-                           reward=reward,
-                           executed_action=self.previous_action,
-                           test_mode=self.test_mode)
+        msg = messages.StateMessage(
+            agent_id=self.agent_id,
+            agent_positions=agent_positions,
+            food_positions=food_positions,
+            fragile_agents=fragile_agents,
+            wall_positions=wall_positions,
+            legal_actions=state.getLegalActions(self.agent_id),
+            reward=reward,
+            executed_action=self.previous_action,
+            test_mode=self.test_mode)
 
         return msg
 
@@ -147,40 +148,42 @@ class ClientAgent(ZMQClient, BerkeleyGameAgent):
 
     # Messaging ###############################################################
     def get_behavior_count(self):
-        msg = RequestBehaviorCountMessage(self.agent_id)
+        msg = messages.RequestBehaviorCountMessage(self.agent_id)
         reply_msg = self.communicate(msg)
         self.log(' got behavior count: {}'.format(reply_msg.count))
         return reply_msg.count
 
     def get_policy(self):
-        msg = RequestPolicyMessage(self.agent_id)
+        msg = messages.RequestPolicyMessage(self.agent_id)
         reply_msg = self.communicate(msg)
         self.log(' got policy')
         return reply_msg.policy
 
     def initialize(self):
         self.log('requested initialization')
-        msg = RequestInitializationMessage(self.agent_id)
+        msg = messages.RequestInitializationMessage(self.agent_id)
         return self.communicate(msg)
 
     def load_policy(self, policy):
         self.log('sent policy')
-        msg = PolicyMessage(policy)
+        msg = messages.PolicyMessage(policy)
         return self.communicate(msg)
 
     def register(self, agent_team, agent_class):
         self.log('requested register {}/{}'.format(agent_team,
                                                    agent_class.__name__))
-        msg = RequestRegisterMessage(self.agent_id, agent_team, agent_class)
+        msg = messages.RequestRegisterMessage(
+            self.agent_id, agent_team, agent_class)
         return self.communicate(msg)
 
     def start_game(self, layout):
         self.log('requested game start')
         self.previous_score = 0
-        self.previous_action = self.__first_action__()
-        msg = RequestGameStartMessage(agent_id=self.agent_id,
-                                      map_width=layout.width,
-                                      map_height=layout.height)
+        self.previous_action = self._first_action()
+        msg = messages.RequestGameStartMessage(
+            agent_id=self.agent_id,
+            map_width=layout.width,
+            map_height=layout.height)
         return self.communicate(msg)
 
     def update(self, state):
@@ -192,6 +195,9 @@ class PacmanAdapterAgent(ClientAgent):
     def __init__(self, context, connection):
         super(PacmanAdapterAgent, self).__init__(PACMAN_INDEX, context,
                                                  connection)
+
+    def _first_action(self):
+        self.previous_action = Directions.NORTH
 
     # @todo is this ever used?
     # def act_when_invalid(self, state):
@@ -205,7 +211,7 @@ class GhostAdapterAgent(ClientAgent):
     def __init__(self, agent_id, context, connection):
         super(GhostAdapterAgent, self).__init__(agent_id, context, connection)
 
-    def __first_action__(self):
+    def _first_action(self):
         self.previous_action = Directions.NORTH
         # self.actions = GHOST_ACTIONS
 
@@ -254,10 +260,10 @@ class GhostAgent(ControllerAgent):
         super(GhostAgent, self).__init__(agent_id)
 
 
-class RandomPacman(PacmanAgent):
+class RandomPacmanAgent(PacmanAgent):
     """Agent that randomly selects an action."""
     def __init__(self, agent_id, ally_ids, enemy_ids):
-        super(RandomPacman, self).__init__(agent_id)
+        super(RandomPacmanAgent, self).__init__(agent_id)
 
     def choose_action(self, state, action, reward, legal_actions, explore):
         if legal_actions:
