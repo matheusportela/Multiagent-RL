@@ -9,3 +9,6 @@ wiki/*
 # Sublime Text
 *.sublime-project
 *.sublime-workspace
+
+# Mac OS X
+.DS_Store
