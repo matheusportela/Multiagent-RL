@@ -1,8 +1,12 @@
+#!/usr/bin/env python
 #  -*- coding: utf-8 -*-
-##    @package features.py
-#      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
-#
-#
+"""Define features used by behavior learning agents"""
+
+__author__ = "Matheus Portela and Guilherme N. Ramos"
+__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
+               "Pedro Saman"]
+__maintainer__ = "Guilherme N. Ramos"
+__email__ = "gnramos@unb.br"
 
 
 class Feature(object):
@@ -13,13 +17,13 @@ class Feature(object):
         raise NotImplementedError('Feature must implement __call__')
 
 
-# O Q-learning com aproximação de funções requer que características sejam
-# extraídas a partir do estado estimado do sistema. Portanto, duas
-# características foram implementadas no sistema:
-# - Distância para cada agente, utilizando grafo de acessibilidade para lidar
-# com obstáculos no ambiente;
-# - Indicador se Pac-Man capturou a cápsula e, portanto, é capaz de capturar o
-# fantasma.
+# Q-learning with function approximation requires features to be extracted from
+# an estimated state of the system. Therefore, two features were implemented
+# here:
+# - Distance from each agent, using accessibility graph to deal with obstacles
+# in the environment;
+# - Indicator whether Pac-Man captured a capsule, hence, being able to capture
+# the ghost.
 
 class EnemyDistanceFeature(Feature):
     """Defines the distance to an enemy."""
@@ -31,14 +35,20 @@ class EnemyDistanceFeature(Feature):
         enemy_position = state.get_agent_position(self.enemy_id)
         distance = state.calculate_distance(my_position, enemy_position)
 
-        return 1.0 if distance == 0.0 else 1.0/distance
+        if distance == 0.0:
+            distance = 1.0
+
+        return (1.0 / distance)
 
 
 class FoodDistanceFeature(Feature):
     def __call__(self, state, action):
         distance = state.get_food_distance()
 
-        return 1.0 if distance == 0.0 else 1.0/distance
+        if distance == 0.0:
+            distance = 1.0
+
+        return (1.0 / distance)
 
 
 class FragileAgentFeature(Feature):

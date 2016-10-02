@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+#  -*- coding: utf-8 -*-
+
 """Collection of reinforcement learning algorithms.
 
 This module contains classes implementing multiple reinforcement learning
@@ -10,6 +13,12 @@ and implement its virtual methods.
 
 from __future__ import division
 import random
+
+__author__ = "Matheus Portela and Guilherme N. Ramos"
+__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
+               "Pedro Saman"]
+__maintainer__ = "Guilherme N. Ramos"
+__email__ = "gnramos@unb.br"
 
 
 class BaseLearningAlgorithm(object):
@@ -174,10 +183,10 @@ class QLearning(BaseLearningAlgorithm):
         """
         old_value = self.get_q_value(self.previous_state, action)
         next_expected_value = self.get_max_q_value(state)
-        new_value = (old_value +
-                     self.learning_rate*(
-                        reward + self.discount_factor*next_expected_value -
-                        old_value))
+        new_value = (old_value + self.learning_rate * (reward +
+                                                       self.discount_factor *
+                                                       next_expected_value -
+                                                       old_value))
         self.set_q_value(self.previous_state, action, new_value)
         self.update_state(state)
 
@@ -207,8 +216,8 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
 
     def _init_weights(self):
         for action in self.actions:
-            weights = [random.random() for _ in range(len(self.features))]
-            self.weights[str(action)] = weights
+            self.weights[str(action)] = [random.random()
+                                         for _ in range(len(self.features))]
 
     def get_weights(self):
         return self.weights
@@ -220,7 +229,7 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
         q_value = 0
 
         for weight, feature in zip(self.weights[str(action)], self.features):
-            q_value += weight*feature(state, action)
+            q_value += weight * feature(state, action)
 
         return q_value
 
@@ -247,19 +256,18 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
         return self.get_q_value(state, action)
 
     def _update_weights(self, action, delta):
-        weights = [weight +
-                   self.learning_rate *
-                   delta *
-                   feature(self.previous_state, action)
-                   for weight, feature
-                   in zip(self.weights[str(action)], self.features)]
-        self.weights[str(action)] = weights
+        self.weights[str(action)] = [weight + self.learning_rate * delta *
+                                     feature(self.previous_state, action)
+                                     for weight, feature in
+                                     zip(self.weights[str(action)],
+                                         self.features)]
 
     def learn(self, state, action, reward):
         if self.previous_state:
-            delta = (reward +
-                     self.discount_factor*self.get_max_q_value(state) -
+            delta = (reward + self.discount_factor *
+                     self.get_max_q_value(state) -
                      self.get_q_value(self.previous_state, action))
+
             self._update_weights(action, delta)
 
         self.previous_state = state
