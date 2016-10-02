@@ -1,9 +1,83 @@
+#!/usr/bin/env python
 #  -*- coding: utf-8 -*-
-##    @package controller.py
-#      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
-#
-# Messages to be exchanged between Server/Clients.
 
+"""Code for communication between controller and simulator."""
+
+import pickle
+import zmq
+
+__author__ = "Matheus Portela and Guilherme N. Ramos"
+__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
+               "Pedro Saman"]
+__maintainer__ = "Guilherme N. Ramos"
+__email__ = "gnramos@unb.br"
+
+""" Default settings """
+DEFAULT_CLIENT_ADDRESS = 'localhost'
+DEFAULT_TCP_PORT = 5555
+
+
+###############################################################################
+#                                Messengers                                   #
+###############################################################################
+class ZMQMessengerBase(object):
+    """Base class for simple communicating messages through zmq."""
+    def __init__(self, context, socket_type):
+        self.socket = context.socket(socket_type)
+
+    def receive(self):
+        """Requests a message and returns it."""
+        return pickle.loads(self.socket.recv())
+
+    def send(self, msg):
+        """Sends the given message."""
+        self.socket.send(pickle.dumps(msg))
+
+
+class ZMQServer(ZMQMessengerBase):
+    """Inter-process communication server."""
+    def __init__(self, context, binding):
+        super(ZMQServer, self).__init__(context, socket_type=zmq.REP)
+        self.socket.bind(binding)
+        # http://zguide.zeromq.org/page:all#advanced-request-reply
+        # The REP socket reads and saves all identity frames up to and
+        # including the empty delimiter, then passes the following frame or
+        # frames to the caller. REP sockets are synchronous and talk to one
+        # peer at a time. If you connect a REP socket to multiple peers,
+        # requests are read from peers in fair fashion, and replies are always
+        # sent to the same peer that made the last request.
+
+
+class ZMQClient(ZMQMessengerBase):
+    """Inter-process communication server."""
+    def __init__(self, context, connection):
+        super(ZMQClient, self).__init__(context, socket_type=zmq.REQ)
+        self.socket.connect(connection)
+        # The REQ socket sends, to the network, an empty delimiter frame in
+        # front of the message data. REQ sockets are synchronous. REQ sockets
+        # always send one request and then wait for one reply. REQ sockets talk
+        # to one peer at a time. If you connect a REQ socket to multiple peers,
+        # requests are distributed to and replies expected from each peer one
+        # turn at a time.
+
+
+class TCPServer(ZMQServer):
+    """Inter-process communication client."""
+    def __init__(self, address=DEFAULT_CLIENT_ADDRESS, port=DEFAULT_TCP_PORT):
+        binding = 'tcp://*:{}'.format(port)
+        super(TCPServer, self).__init__(zmq.Context(), binding)
+
+
+class TCPClient(ZMQClient):
+    """Inter-process communication client."""
+    def __init__(self, address=DEFAULT_CLIENT_ADDRESS, port=DEFAULT_TCP_PORT):
+        connection = 'tcp://{}:{}'.format(address, port)
+        super(TCPClient, self).__init__(zmq.Context(), connection)
+
+
+###############################################################################
+#                                  Messages                                   #
+###############################################################################
 
 # Message types
 ACK_MSG = 'Acknowledgment'
@@ -69,8 +143,8 @@ class RequestMessage(BaseMessage):
 class RequestInitializationMessage(RequestMessage):
     """Requests that the identified agent be REQUEST_INITialized."""
     def __init__(self, agent_id=None):
-        super(RequestInitializationMessage, self).__init__(
-                                                     msg_type=REQUEST_INIT_MSG)
+        super(RequestInitializationMessage,
+              self).__init__(msg_type=REQUEST_INIT_MSG)
 
         self.agent_id = agent_id
 
@@ -78,8 +152,8 @@ class RequestInitializationMessage(RequestMessage):
 class RequestBehaviorCountMessage(RequestMessage):
     """Requests the identified agent's RequestMessage count information."""
     def __init__(self, agent_id=None):
-        super(RequestBehaviorCountMessage, self).__init__(
-                                           msg_type=REQUEST_BEHAVIOR_COUNT_MSG)
+        super(RequestBehaviorCountMessage,
+              self).__init__(msg_type=REQUEST_BEHAVIOR_COUNT_MSG)
 
         self.agent_id = agent_id
 
@@ -87,8 +161,8 @@ class RequestBehaviorCountMessage(RequestMessage):
 class RequestGameStartMessage(RequestMessage):
     """Requests that a game be started for the identified agent."""
     def __init__(self, agent_id=None, map_width=None, map_height=None):
-        super(RequestGameStartMessage, self).__init__(
-                                               msg_type=REQUEST_GAME_START_MSG)
+        super(RequestGameStartMessage,
+              self).__init__(msg_type=REQUEST_GAME_START_MSG)
 
         self.agent_id = agent_id
         self.map_width = map_width
@@ -99,8 +173,8 @@ class RequestRegisterMessage(RequestMessage):
     """Requests that the identified agent (and associated information) be
     registered."""
     def __init__(self, agent_id=None, agent_team=None, agent_class=None):
-        super(RequestRegisterMessage, self).__init__(
-                                                 msg_type=REQUEST_REGISTER_MSG)
+        super(RequestRegisterMessage,
+              self).__init__(msg_type=REQUEST_REGISTER_MSG)
 
         self.agent_id = agent_id
         self.agent_team = agent_team

@@ -1,7 +1,16 @@
+#!/usr/bin/env python
+#  -*- coding: utf-8 -*-
+
 """Collection of reinforcement learning algorithms"""
 
 from __future__ import division
 import random
+
+__author__ = "Matheus Portela and Guilherme N. Ramos"
+__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
+               "Pedro Saman"]
+__maintainer__ = "Guilherme N. Ramos"
+__email__ = "gnramos@unb.br"
 
 
 class LearningAlgorithm(object):
@@ -17,19 +26,19 @@ class LearningAlgorithm(object):
         reward -- Reward received after executing the action.
         """
         raise (NotImplementedError,
-            '%s does not implement "learn" method' % str(type(self)))
+               '%s does not implement "learn" method' % str(type(self)))
 
     def act(self, state):
         """Select an action for the given state.
 
-        By exploiting learned model, the algorithm selects the best action to be
-        executed by the agent.
+        By exploiting learned model, the algorithm selects the best action to
+        be executed by the agent.
 
         Parameters:
         state -- Agent state to select an action.
         """
         raise (NotImplementedError,
-            '%s does not implement "act" method' % str(type(self)))
+               '%s does not implement "act" method' % str(type(self)))
 
 
 class QLearning(LearningAlgorithm):
@@ -49,12 +58,13 @@ class QLearning(LearningAlgorithm):
     discount_factor -- Value in [0, 1) interval that determines the importance
         of future rewards. 0 makes the agent myopic and greedy, trying to
         achieve higher rewards in the next step. Closer to 1 makes the agent
-        maximize long-term rewards. Although values of 1 and higher are possible,
-        it may make the expected discounted reward infinite or divergent.
+        maximize long-term rewards. Although values of 1 and higher
+        are possible, it may make the expected discounted reward
+        infinite or divergent.
     """
 
     def __init__(self, initial_state=0, learning_rate=1, discount_factor=1,
-        actions=None):
+                 actions=None):
         """Constructor.
 
         Parameters:
@@ -134,8 +144,8 @@ class QLearning(LearningAlgorithm):
         actions = filter(lambda a: a in action_list, self.q_values[state])
         values = [self.q_values[state][action] for action in actions]
         max_value = max(values)
-        max_actions = [action
-            for action in actions if self.q_values[state][action] == max_value]
+        max_actions = [action for action in actions
+                       if self.q_values[state][action] == max_value]
 
         return random.choice(max_actions)
 
@@ -165,7 +175,10 @@ class QLearning(LearningAlgorithm):
         """
         old_value = self.get_q_value(self.previous_state, action)
         next_expected_value = self.get_max_q_value(state)
-        new_value = (old_value + self.learning_rate*(reward + self.discount_factor*next_expected_value - old_value))
+        new_value = (old_value + self.learning_rate * (reward +
+                                                       self.discount_factor *
+                                                       next_expected_value -
+                                                       old_value))
         self.set_q_value(self.previous_state, action, new_value)
         self.update_state(state)
 
@@ -181,7 +194,7 @@ class QLearning(LearningAlgorithm):
 
 class QLearningWithApproximation(LearningAlgorithm):
     def __init__(self, actions=None, features=None, learning_rate=1,
-        discount_factor=1, exploration_rate=0):
+                 discount_factor=1, exploration_rate=0):
         super(QLearningWithApproximation, self).__init__()
         self.actions = actions
         self.features = features
@@ -195,7 +208,8 @@ class QLearningWithApproximation(LearningAlgorithm):
 
     def _init_weights(self):
         for action in self.actions:
-            self.weights[str(action)] = [random.random() for _ in range(len(self.features))]
+            self.weights[str(action)] = [random.random()
+                                         for _ in range(len(self.features))]
 
     def get_weights(self):
         return self.weights
@@ -207,7 +221,7 @@ class QLearningWithApproximation(LearningAlgorithm):
         q_value = 0
 
         for weight, feature in zip(self.weights[str(action)], self.features):
-            q_value += weight*feature(state, action)
+            q_value += weight * feature(state, action)
 
         return q_value
 
@@ -221,8 +235,8 @@ class QLearningWithApproximation(LearningAlgorithm):
         actions = filter(lambda a: a in action_list, self.actions)
         values = [self.get_q_value(state, action) for action in actions]
         max_value = max(values)
-        max_actions = [action
-            for action in actions if self.get_q_value(state, action) == max_value]
+        max_actions = [action for action in actions
+                       if self.get_q_value(state, action) == max_value]
 
         return random.choice(max_actions)
 
@@ -234,13 +248,18 @@ class QLearningWithApproximation(LearningAlgorithm):
         return self.get_q_value(state, action)
 
     def _update_weights(self, action, delta):
-        self.weights[str(action)] = [weight + self.learning_rate*delta*feature(self.previous_state, action) for weight, feature in zip(self.weights[str(action)], self.features)]
-
+        self.weights[str(action)] = [weight + self.learning_rate * delta *
+                                     feature(self.previous_state, action)
+                                     for weight, feature in
+                                     zip(self.weights[str(action)],
+                                         self.features)]
 
     def learn(self, state, action, reward):
         if self.previous_state:
-            delta = (reward + self.discount_factor*self.get_max_q_value(state)
-                - self.get_q_value(self.previous_state, action))
+            delta = (reward + self.discount_factor *
+                     self.get_max_q_value(state) -
+                     self.get_q_value(self.previous_state, action))
+
             self._update_weights(action, delta)
 
         self.previous_state = state

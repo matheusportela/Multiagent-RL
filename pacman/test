@@ -2,7 +2,7 @@
 #
 # @author Guilherme N. Ramos (gnramos@unb.br)
 #
-# Runs tests. There are 3 options:
+# Runs tests. There are 4 options:
 #
 # ./test             - runs a simple test with a medium layout and 2 ghosts
 # ./test classic     - runs a simple test with the classic layout and 4 ghosts
@@ -11,7 +11,7 @@
 # ./test all         - runs all possible configurations of layouts and ghosts
 #                      (may take a while....)
 
-# Test configurations
+
 ADAPTER="adapter.py"
 CONTROLLER="controller.py"
 

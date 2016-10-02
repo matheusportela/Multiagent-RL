@@ -1,8 +1,8 @@
+#!/usr/bin/env python
 #  -*- coding: utf-8 -*-
-##    @package cliparser.py
-#      @author Guilherme N. Ramos (gnramos@unb.br)
-#
-# Parses CLI arguments to provide Adapter and Controller instances.
+
+"""Parses CLI arguments to provide Adapter and Controller instances."""
+
 
 from argparse import ArgumentParser
 from zmq import Context as zmq_Context
@@ -13,11 +13,17 @@ from adapter import (Adapter, DEFAULT_GHOST_AGENT, DEFAULT_LAYOUT,
 from agents import DEFAULT_NOISE
 from controller import Controller
 
-## @todo properly include communication module from parent folder
+# @todo properly include communication module from parent folder
 import sys
 sys.path.insert(0, '..')
 from communication import (InprocServer, TCPServer, DEFAULT_CLIENT_ADDRESS,
                            DEFAULT_TCP_PORT)
+
+__author__ = "Matheus Portela and Guilherme N. Ramos"
+__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
+               "Pedro Saman"]
+__maintainer__ = "Guilherme N. Ramos"
+__email__ = "gnramos@unb.br"
 
 
 def get_Adapter(context=None, endpoint=None):
@@ -47,7 +53,7 @@ def get_Adapter(context=None, endpoint=None):
                        default=DEFAULT_NUMBER_OF_GHOSTS,
                        help='number of ghosts in game')
     group.add_argument('--pacman-agent', dest='pacman_agent', type=str,
-                       choices=['random', 'ai', 'eater'],
+                       choices=['random', 'random2', 'ai', 'eater'],
                        default=DEFAULT_PACMAN_AGENT,
                        help='select Pac-Man agent')
     group.add_argument('--policy-file', dest='policy_file',
@@ -99,6 +105,9 @@ def get_Controller(context=None, endpoint=None):
                         help='TCP port to connect to adapter')
     args, unknown = parser.parse_known_args()
 
+    # @todo setup an option for a "memory" server (direct communication with
+    # Adapter) (zmq inproc?)
+    server = TCPServer(port=args.port)
 
     if context and endpoint:
         binding = 'inproc://{}'.format(endpoint)
