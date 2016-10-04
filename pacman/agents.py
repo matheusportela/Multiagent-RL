@@ -12,9 +12,10 @@ import features
 import learning
 import messages
 
+# @todo properly include communication module from parent folder
 import sys
-sys.path.insert(1, '..')
-from communication import ZMQMessengerBase
+sys.path.insert(0, '..')
+from communication import ZMQClient
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
@@ -38,11 +39,6 @@ PACMAN_INDEX = 0
 ###############################################################################
 #                                AdapterAgents                                #
 ###############################################################################
-
-# @todo properly include communication module from parent folder
-import sys
-sys.path.insert(0, '..')
-from communication import ZMQClient
 
 
 def log(msg):
