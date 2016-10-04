@@ -35,17 +35,20 @@ if __name__ == '__main__':
 
     context = zmq.Context()
 
-    # @todo spawn one client per thread
+    # @todo spawn one agent per thread
 
-    parser_module = import_module(module_name + '.cliparser')
-    get_Controller = getattr(parser_module, 'get_Controller')
-    controller = get_Controller(context, module_name)
+    controller_module = import_module(module_name + '.controller')
+    build_controller = getattr(controller_module, 'build_controller')
+    controller = build_controller(context, module_name)
     controller_thread = threading.Thread(target=controller.run)
     controller_thread.daemon = True
     controller_thread.start()
 
-    get_Adapter = getattr(parser_module, 'get_Adapter')
-    adapter = get_Adapter(context, module_name)
+    adapter_module = import_module(module_name + '.adapter')
+    build_adapter = getattr(adapter_module, 'build_adapter')
+    adapter = build_adapter(context, module_name)
     adapter_thread = threading.Thread(target=adapter.run)
     adapter_thread.start()
-    adapter_thread.join()  # block until adapter process terminates
+
+    # block until adapter process terminates
+    adapter_thread.join()
