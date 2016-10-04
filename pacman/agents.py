@@ -22,15 +22,17 @@ __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
 __maintainer__ = "Guilherme N. Ramos"
 __email__ = "gnramos@unb.br"
 
-# Default settings
-DEFAULT_NOISE = 0
-
-# Global variable
+# Default noise configuration
+# @todo Receive noise via constructor
 NOISE = 0
 
+# Actions
 GHOST_ACTIONS = [Directions.NORTH, Directions.SOUTH, Directions.EAST,
                  Directions.WEST]
 PACMAN_ACTIONS = GHOST_ACTIONS + [Directions.STOP]
+FIRST_ACTION = Directions.STOP
+
+# Indices
 PACMAN_INDEX = 0
 
 ###############################################################################

@@ -37,6 +37,7 @@ DEFAULT_NUMBER_OF_GHOSTS = 3
 DEFAULT_NUMBER_OF_LEARNING_RUNS = 100
 DEFAULT_NUMBER_OF_TEST_RUNS = 15
 DEFAULT_PACMAN_AGENT = 'random'
+DEFAULT_NOISE = 0
 
 # Pac-Man game configuration
 NUMBER_OF_BERKELEY_GAMES = 1
@@ -56,7 +57,7 @@ class Adapter(object):
                  pacman_agent=DEFAULT_PACMAN_AGENT,
                  ghost_agent=DEFAULT_GHOST_AGENT,
                  num_ghosts=DEFAULT_NUMBER_OF_GHOSTS,
-                 noise=agents.DEFAULT_NOISE,
+                 noise=DEFAULT_NOISE,
                  policy_file=None,
                  layout_map=DEFAULT_LAYOUT,
                  learn_runs=DEFAULT_NUMBER_OF_LEARNING_RUNS,
@@ -294,7 +295,7 @@ if __name__ == '__main__':
                        default=DEFAULT_LAYOUT, choices=['classic', 'medium'],
                        help='Game layout')
     group.add_argument('--noise', dest='noise', type=int,
-                       default=agents.DEFAULT_NOISE,
+                       default=DEFAULT_NOISE,
                        help='introduce noise in position measurements')
     group.add_argument('--num-ghosts', dest='num_ghosts',
                        type=int, choices=range(1, 5),

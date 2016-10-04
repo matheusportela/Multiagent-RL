@@ -10,8 +10,7 @@ import argparse
 
 import zmq
 
-from berkeley.game import Directions
-
+import agents
 import messages
 from state import GameState
 
@@ -173,7 +172,7 @@ class Controller(communication.ZMQServer):
     def run(self):
         log('Now running')
 
-        self.last_action = Directions.STOP
+        self.last_action = agents.FIRST_ACTION
 
         while True:
             msg = self.receive()
