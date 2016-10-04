@@ -306,9 +306,11 @@ def build_adapter(context=None, endpoint=None):
 
     if context and endpoint:
         connection = 'inproc://{}'.format(endpoint)
+        log('Connecting with inproc communication')
     else:
         context = zmq.Context()
         connection = 'tcp://{}:{}'.format(args.address, args.port)
+        log('Connecting with TCP communication')
 
     adapter = Adapter(pacman_agent=args.pacman_agent,
                       ghost_agent=args.ghost_agent,

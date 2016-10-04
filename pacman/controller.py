@@ -196,9 +196,11 @@ def build_controller(context=None, endpoint=None):
 
     if context and endpoint:
         binding = 'inproc://{}'.format(endpoint)
+        log('Connecting with inproc communication')
     else:
         context = zmq.Context()
         binding = 'tcp://*:{}'.format(args.port)
+        log('Connecting with TCP communication')
 
     return Controller(context, binding)
 
