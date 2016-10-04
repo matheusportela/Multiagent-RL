@@ -256,16 +256,34 @@ class Adapter(object):
         self.__write_to_file__(self.output_file, results)
 
 
-def build_adapter(context=None, endpoint=None):
+def build_adapter(context=None, endpoint=None,
+                  address=communication.DEFAULT_CLIENT_ADDRESS,
+                  port=communication.DEFAULT_TCP_PORT,
+                  **kwargs):
     """Parses arguments and returns an Adapter."""
-    parser = argparse.ArgumentParser(description='Run Pac-Man adapter system.')
+    if context and endpoint:
+        connection = 'inproc://{}'.format(endpoint)
+        log('Connecting with inproc communication')
+    else:
+        context = zmq.Context()
+        connection = 'tcp://{}:{}'.format(address, port)
+        log('Connecting with TCP communication (address {}, port {})'.format(
+            address, port))
+
+    adapter = Adapter(context=context, connection=connection, **kwargs)
+
+    return adapter
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='Run Pac-Man simulator adapter system.')
     parser.add_argument('-g', '--graphics', dest='graphics', default=False,
                         action='store_true',
                         help='display graphical user interface')
     parser.add_argument('-o', '--output', dest='output_file', type=str,
                         help='results output file')
 
-    group = parser.add_argument_group('Experimental Setup')
+    group = parser.add_argument_group('Experiment Setup')
     group.add_argument('--ghost-agent', dest='ghost_agent', type=str,
                        choices=['random', 'ai'], default=DEFAULT_GHOST_AGENT,
                        help='select ghost agent')
@@ -304,31 +322,21 @@ def build_adapter(context=None, endpoint=None):
 
     args, unknown = parser.parse_known_args()
 
-    if context and endpoint:
-        connection = 'inproc://{}'.format(endpoint)
-        log('Connecting with inproc communication')
-    else:
-        context = zmq.Context()
-        connection = 'tcp://{}:{}'.format(args.address, args.port)
-        log('Connecting with TCP communication')
+    adapter = build_adapter(
+        address=communication.DEFAULT_CLIENT_ADDRESS,
+        port=communication.DEFAULT_TCP_PORT,
+        pacman_agent=args.pacman_agent,
+        ghost_agent=args.ghost_agent,
+        num_ghosts=args.num_ghosts,
+        noise=args.noise,
+        policy_file=args.policy_file,
+        layout_map=args.layout,
+        learn_runs=args.learn_runs,
+        test_runs=args.test_runs,
+        output_file=args.output_file,
+        graphics=args.graphics)
 
-    adapter = Adapter(pacman_agent=args.pacman_agent,
-                      ghost_agent=args.ghost_agent,
-                      num_ghosts=args.num_ghosts,
-                      noise=args.noise,
-                      policy_file=args.policy_file,
-                      layout_map=args.layout,
-                      learn_runs=args.learn_runs,
-                      test_runs=args.test_runs,
-                      output_file=args.output_file,
-                      graphics=args.graphics,
-                      context=context, connection=connection)
-
-    return adapter
-
-if __name__ == '__main__':
     try:
-        adapter = build_adapter()
         adapter.run()
     except KeyboardInterrupt:
         print '\n\nInterrupted execution\n'

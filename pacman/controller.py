@@ -180,10 +180,22 @@ class Controller(communication.ZMQServer):
             self.__reply__(msg)
 
 
-def build_controller(context=None, endpoint=None):
+def build_controller(context=None, endpoint=None,
+                     port=communication.DEFAULT_TCP_PORT):
     """Parses arguments and returns a Controller.
 
     If no server is given, instantiates a TCPServer."""
+    if context and endpoint:
+        binding = 'inproc://{}'.format(endpoint)
+        log('Connecting with inproc communication')
+    else:
+        context = zmq.Context()
+        binding = 'tcp://*:{}'.format(port)
+        log('Connecting with TCP communication (port {})'.format(port))
+
+    return Controller(context, binding)
+
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Run Pac-Man controller system.')
     parser.add_argument('--port', dest='port', type=int,
@@ -191,22 +203,9 @@ def build_controller(context=None, endpoint=None):
                         help='TCP port to connect to adapter')
     args, unknown = parser.parse_known_args()
 
-    # @todo setup an option for a "memory" server (direct communication with
-    # Adapter) (zmq inproc?)
+    controller = build_controller(port=args.port)
 
-    if context and endpoint:
-        binding = 'inproc://{}'.format(endpoint)
-        log('Connecting with inproc communication')
-    else:
-        context = zmq.Context()
-        binding = 'tcp://*:{}'.format(args.port)
-        log('Connecting with TCP communication')
-
-    return Controller(context, binding)
-
-if __name__ == '__main__':
     try:
-        controller = build_controller()
         controller.run()
     except KeyboardInterrupt:
         print '\n\nInterrupted execution\n'
