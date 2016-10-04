@@ -34,7 +34,8 @@ if __name__ == '__main__':
     module_name = get_module_name()
 
     context = zmq_Context()
-    # @todo one client per thread
+
+    # @todo spawn one client per thread
 
     parser_module = import_module(module_name + '.cliparser')
     get_Controller = getattr(parser_module, 'get_Controller')

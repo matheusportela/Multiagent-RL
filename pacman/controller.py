@@ -12,7 +12,6 @@ import zmq
 
 from berkeley.game import Directions
 
-import cliparser
 import messages
 from state import GameState
 
