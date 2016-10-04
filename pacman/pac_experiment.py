@@ -1,6 +1,6 @@
-#  -*- coding: utf-8 -*-
-##    @package pac_experiment.py
-#      @author Guilherme N. Ramos (gnramos@unb.br)
+# -*- coding: utf-8 -*-
+# @package pac_experiment.py
+# @author Guilherme N. Ramos (gnramos@unb.br)
 #
 # Implements experiments with the Berkeley Pac-Man Game.
 

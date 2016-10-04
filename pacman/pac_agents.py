@@ -1,6 +1,6 @@
-#  -*- coding: utf-8 -*-
-##    @package pac_agents.py
-#      @author Guilherme N. Ramos (gnramos@unb.br)
+# -*- coding: utf-8 -*-
+# @package pac_agents.py
+# @author Guilherme N. Ramos (gnramos@unb.br)
 #
 # Implements the agent classes for simulations with the Berkeley Pac-Man Game.
 
