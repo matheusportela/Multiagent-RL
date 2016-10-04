@@ -1,6 +1,6 @@
 #  -*- coding: utf-8 -*-
-##    @package controller.py
-#      @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
+#  @package controller.py
+#  @author Matheus Portela & Guilherme N. Ramos (gnramos@unb.br)
 #
 # Code for communication between controller and simulator.
 
@@ -65,12 +65,12 @@ class InprocServer(ZMQServer):
 class InprocClient(ZMQClient):
     """Inter-process communication client."""
     def __init__(self, context, endpoint):
+        # If you're using inproc, both client and server must use the same
+        # context instance, otherwise the connecting side will fail. Also, bind
+        # first, connect later.
+        # Reference: http://zguide.zeromq.org/php:chapter2
         connection = 'inproc://{}'.format(endpoint)
         super(InprocClient, self).__init__(context, connection)
-        # If you're using inproc, make sure both sockets are in the same
-        # context. Otherwise the connecting side will in fact fail. Also, bind
-        # first, then connect. inproc is not a disconnected transport like tcp.
-        # (http://zguide.zeromq.org/php:chapter2)
 
 
 class TCPServer(ZMQServer):
@@ -85,5 +85,3 @@ class TCPClient(ZMQClient):
     def __init__(self, address=DEFAULT_CLIENT_ADDRESS, port=DEFAULT_TCP_PORT):
         connection = 'tcp://{}:{}'.format(address, port)
         super(TCPClient, self).__init__(zmq.Context(), connection)
-        # tcp transport doesn't require that the endpoint exists before you
-        # connect to it.

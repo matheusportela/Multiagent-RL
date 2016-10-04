@@ -6,15 +6,18 @@
 
 from __future__ import division
 
-import cliparser
+import argparse
+
+import zmq
+
+import agents
 import messages
 from state import GameState
 
+# @todo properly include communication module from parent folder
 import sys
-sys.path.insert(1, '..')
-from communication import ZMQServer
-
-from berkeley.game import Directions
+sys.path.insert(0, '..')
+import communication
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
@@ -27,7 +30,7 @@ def log(msg):
     print '[Controller] {}'.format(msg)
 
 
-class Controller(ZMQServer):
+class Controller(communication.ZMQServer):
     """Keeps the agent states and controls messages to clients."""
     def __init__(self, context, binding):
         super(Controller, self).__init__(context, binding)
@@ -40,7 +43,7 @@ class Controller(ZMQServer):
 
         log('Ready!')
 
-    def __choose_action__(self, state):
+    def _choose_action(self, state):
         """Update agent state."""
         for id_, pos in state.agent_positions.items():
             self.game_states[state.agent_id].observe_agent(id_, pos)
@@ -60,20 +63,20 @@ class Controller(ZMQServer):
 
         return agent_action
 
-    def __get_allies__(self, agent_id):
+    def _get_allies(self, agent_id):
         return [id_ for id_ in self.agent_teams
                 if self.agent_teams[id_] == self.agent_teams[agent_id] and
                 id_ != agent_id]
 
-    def __get_enemies__(self, agent_id):
+    def _get_enemies(self, agent_id):
         return [id_ for id_ in self.agent_teams
                 if self.agent_teams[id_] != self.agent_teams[agent_id] and
                 id_ != agent_id]
 
-    def __initialize_agent__(self, msg):
+    def _initialize_agent(self, msg):
         agent_id = msg.agent_id
-        ally_ids = self.__get_allies__(agent_id)
-        enemy_ids = self.__get_enemies__(agent_id)
+        ally_ids = self._get_allies(agent_id)
+        enemy_ids = self._get_enemies(agent_id)
 
         if agent_id in self.agents:
             del self.agents[agent_id]
@@ -87,7 +90,7 @@ class Controller(ZMQServer):
         reply_msg = messages.AckMessage()
         self.send(reply_msg)
 
-    def __register_agent__(self, msg):
+    def _register_agent(self, msg):
         self.agent_classes[msg.agent_id] = msg.agent_class
         self.agent_teams[msg.agent_id] = msg.agent_team
 
@@ -96,55 +99,55 @@ class Controller(ZMQServer):
         reply_msg = messages.AckMessage()
         self.send(reply_msg)
 
-    def __reply__(self, msg):
+    def _reply(self, msg):
         if msg.type == messages.STATE_MSG:
-            self.last_action = self.__send_agent_action__(msg)
+            self.last_action = self._send_agent_action(msg)
         elif msg.type == messages.REQUEST_INIT_MSG:
-            self.__initialize_agent__(msg)
+            self._initialize_agent(msg)
         elif msg.type == messages.REQUEST_GAME_START_MSG:
-            self.__start_game_for_agent__(msg)
+            self._start_game_for_agent(msg)
             self.game_number[msg.agent_id] += 1
         elif msg.type == messages.REQUEST_REGISTER_MSG:
-            self.__register_agent__(msg)
+            self._register_agent(msg)
         elif msg.type == messages.REQUEST_BEHAVIOR_COUNT_MSG:
-            self.__request_behavior_count__(msg.agent_id)
+            self._request_behavior_count(msg.agent_id)
         elif msg.type == messages.REQUEST_POLICY_MSG:
-            self.__send_policy_request__(msg)
+            self._send_policy_request(msg)
         elif msg.type == messages.POLICY_MSG:
-            self.__set_agent_policy__(msg)
+            self._set_agent_policy(msg)
 
-    def __request_behavior_count__(self, agent_id):
+    def _request_behavior_count(self, agent_id):
         count = self.agents[agent_id].behavior_count
         reply_msg = messages.BehaviorCountMessage(count)
         self.send(reply_msg)
 
         self.agents[agent_id].reset_behavior_count()
 
-    def __send_agent_action__(self, msg):
+    def _send_agent_action(self, msg):
         game_state = self.game_states[msg.agent_id]
         # @todo is it necessary to set walls every time?
         game_state.set_walls(msg.wall_positions)
         game_state.set_food_positions(msg.food_positions)
 
-        agent_action = self.__choose_action__(msg)
+        agent_action = self._choose_action(msg)
         reply_msg = messages.ActionMessage(msg.agent_id, agent_action)
         self.send(reply_msg)
 
         return agent_action
 
-    def __send_policy_request__(self, msg):
+    def _send_policy_request(self, msg):
         policy = self.agents[msg.agent_id].get_policy()
         reply_message = messages.PolicyMessage(msg.agent_id, policy)
         self.send(reply_message)
 
-    def __set_agent_policy__(self, msg):
+    def _set_agent_policy(self, msg):
         if msg.policy:
             self.agents[msg.agent_id].set_policy(msg.policy)
         self.send(messages.AckMessage())
 
-    def __start_game_for_agent__(self, msg):
-        ally_ids = self.__get_allies__(msg.agent_id)
-        enemy_ids = self.__get_enemies__(msg.agent_id)
+    def _start_game_for_agent(self, msg):
+        ally_ids = self._get_allies(msg.agent_id)
+        enemy_ids = self._get_enemies(msg.agent_id)
 
         eater = (self.agent_teams[msg.agent_id] == 'pacman')
 
@@ -169,15 +172,36 @@ class Controller(ZMQServer):
     def run(self):
         log('Now running')
 
-        self.last_action = Directions.STOP
+        self.last_action = agents.FIRST_ACTION
 
         while True:
             msg = self.receive()
-            self.__reply__(msg)
+            self._reply(msg)
+
+
+def build_controller(context=None, endpoint=None,
+                     port=communication.DEFAULT_TCP_PORT):
+    if context and endpoint:
+        binding = 'inproc://{}'.format(endpoint)
+        log('Connecting with inproc communication')
+    else:
+        context = zmq.Context()
+        binding = 'tcp://*:{}'.format(port)
+        log('Connecting with TCP communication (port {})'.format(port))
+
+    return Controller(context, binding)
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='Run Pac-Man controller system.')
+    parser.add_argument('--port', dest='port', type=int,
+                        default=communication.DEFAULT_TCP_PORT,
+                        help='TCP port to connect to adapter')
+    args, unknown = parser.parse_known_args()
+
+    controller = build_controller(port=args.port)
+
     try:
-        controller = cliparser.get_Controller()
         controller.run()
     except KeyboardInterrupt:
         print '\n\nInterrupted execution\n'

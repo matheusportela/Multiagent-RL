@@ -12,9 +12,10 @@ import features
 import learning
 import messages
 
+# @todo properly include communication module from parent folder
 import sys
-sys.path.insert(1, '..')
-from communication import ZMQMessengerBase
+sys.path.insert(0, '..')
+from communication import ZMQClient
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
@@ -22,25 +23,22 @@ __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
 __maintainer__ = "Guilherme N. Ramos"
 __email__ = "gnramos@unb.br"
 
-# Default settings
-DEFAULT_NOISE = 0
-
-# Global variable
+# Default noise configuration
+# @todo Receive noise via constructor
 NOISE = 0
 
+# Actions
 GHOST_ACTIONS = [Directions.NORTH, Directions.SOUTH, Directions.EAST,
                  Directions.WEST]
 PACMAN_ACTIONS = GHOST_ACTIONS + [Directions.STOP]
+FIRST_ACTION = Directions.STOP
+
+# Indices
 PACMAN_INDEX = 0
 
 ###############################################################################
 #                                AdapterAgents                                #
 ###############################################################################
-
-# @todo properly include communication module from parent folder
-import sys
-sys.path.insert(0, '..')
-from communication import ZMQClient
 
 
 def log(msg):

@@ -5,9 +5,11 @@ Adapts communication between controller and the Berkeley Pac-man simulator.
 """
 
 
+import argparse
 import pickle
 import os
-from zmq import Context as zmq_context
+
+import zmq
 
 from berkeley.graphicsDisplay import PacmanGraphics as BerkeleyGraphics
 from berkeley.layout import getLayout as get_berkeley_layout
@@ -15,7 +17,11 @@ from berkeley.pacman import runGames as run_berkeley_games
 from berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics
 
 import agents
-import cliparser
+
+# @todo properly include communication module from parent folder
+import sys
+sys.path.insert(0, '..')
+import communication
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
@@ -31,6 +37,7 @@ DEFAULT_NUMBER_OF_GHOSTS = 3
 DEFAULT_NUMBER_OF_LEARNING_RUNS = 100
 DEFAULT_NUMBER_OF_TEST_RUNS = 15
 DEFAULT_PACMAN_AGENT = 'random'
+DEFAULT_NOISE = 0
 
 # Pac-Man game configuration
 NUMBER_OF_BERKELEY_GAMES = 1
@@ -50,7 +57,7 @@ class Adapter(object):
                  pacman_agent=DEFAULT_PACMAN_AGENT,
                  ghost_agent=DEFAULT_GHOST_AGENT,
                  num_ghosts=DEFAULT_NUMBER_OF_GHOSTS,
-                 noise=agents.DEFAULT_NOISE,
+                 noise=DEFAULT_NOISE,
                  policy_file=None,
                  layout_map=DEFAULT_LAYOUT,
                  learn_runs=DEFAULT_NUMBER_OF_LEARNING_RUNS,
@@ -82,7 +89,7 @@ class Adapter(object):
             ('Pac-Man agent must be ai, random, random2 or eater.')
 
         if not (context and connection):
-            context = zmq_context()
+            context = zmq.Context()()
             connection = 'tcp://{}:{}'.format(address, port)
 
         self.pacman = agents.PacmanAdapterAgent(context, connection)
@@ -137,7 +144,7 @@ class Adapter(object):
 
         log('Ready!')
 
-    def __load_policies_from_file__(self, filename):
+    def _load_policies_from_file(self, filename):
         policies = {}
         if filename and os.path.isfile(filename):
             log('Loading policies from {}.'.format(filename))
@@ -145,7 +152,7 @@ class Adapter(object):
                 policies = pickle.loads(f.read())
         return policies
 
-    def __log_behavior_count__(self, agent, results):
+    def _log_behavior_count(self, agent, results):
         behavior_count = agent.get_behavior_count()
 
         for behavior, count in behavior_count.items():
@@ -153,7 +160,7 @@ class Adapter(object):
                 results['behavior_count'][agent.agent_id][behavior] = []
             results['behavior_count'][agent.agent_id][behavior].append(count)
 
-    def __process_game__(self, policies, results):
+    def _run_game(self, policies, results):
         # Start new game
         for agent in self.all_agents:
             agent.start_game(self.layout)
@@ -179,16 +186,16 @@ class Adapter(object):
 
         # Log behavior count
         if self.pacman_class == agents.BehaviorLearningPacmanAgent:
-            self.__log_behavior_count__(self.pacman, results)
+            self._log_behavior_count(self.pacman, results)
 
         if self.ghost_class == agents.BehaviorLearningGhostAgent:
             for ghost in self.ghosts:
-                self.__log_behavior_count__(ghost, results)
+                self._log_behavior_count(ghost, results)
 
         # Log score
         return simulated_game.state.getScore()
 
-    def __save_policies__(self, policies):
+    def _save_policies(self, policies):
         if self.pacman_class == agents.BehaviorLearningPacmanAgent:
             # @todo keep policy in agent?
             policies[self.pacman.agent_id] = self.__get_policy__(self.pacman)
@@ -197,9 +204,9 @@ class Adapter(object):
             for ghost in self.ghosts:
                 policies[ghost.agent_id] = ghost.get_policy()
 
-        self.__write_to_file__(self.policy_file, policies)
+        self._write_to_file(self.policy_file, policies)
 
-    def __write_to_file__(self, filename, content):
+    def _write_to_file(self, filename, content):
         log('Saving results to {}'.format(filename))
         with open(filename, 'w') as f:
             f.write(pickle.dumps(content))
@@ -219,7 +226,7 @@ class Adapter(object):
                 results['behavior_count'][ghost.agent_id] = {}
 
         # Load policies from file
-        policies = self.__load_policies_from_file__(self.policy_file)
+        policies = self._load_policies_from_file(self.policy_file)
 
         # Initialize agents
         for agent in self.all_agents:
@@ -229,7 +236,7 @@ class Adapter(object):
         for x in xrange(self.learn_runs):
             log('LEARN game {} (of {})'.format(x + 1, self.learn_runs))
 
-            score = self.__process_game__(policies, results)
+            score = self._run_game(policies, results)
             results['learn_scores'].append(score)
 
         for agent in self.all_agents:
@@ -238,20 +245,98 @@ class Adapter(object):
         for x in xrange(self.test_runs):
             log('TEST game {} (of {})'.format(x + 1, self.test_runs))
 
-            score = self.__process_game__(policies, results)
+            score = self._run_game(policies, results)
             results['test_scores'].append(score)
 
         if self.policy_file:
-            self.__save_policies__(policies)
+            self._save_policies(policies)
 
         log('Learn scores: {}'.format(results['learn_scores']))
         log('Test scores: {}'.format(results['test_scores']))
 
-        self.__write_to_file__(self.output_file, results)
+        self._write_to_file(self.output_file, results)
+
+
+def build_adapter(context=None, endpoint=None,
+                  address=communication.DEFAULT_CLIENT_ADDRESS,
+                  port=communication.DEFAULT_TCP_PORT,
+                  **kwargs):
+    if context and endpoint:
+        connection = 'inproc://{}'.format(endpoint)
+        log('Connecting with inproc communication')
+    else:
+        context = zmq.Context()
+        connection = 'tcp://{}:{}'.format(address, port)
+        log('Connecting with TCP communication (address {}, port {})'.format(
+            address, port))
+
+    adapter = Adapter(context=context, connection=connection, **kwargs)
+
+    return adapter
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='Run Pac-Man simulator adapter system.')
+    parser.add_argument('-g', '--graphics', dest='graphics', default=False,
+                        action='store_true',
+                        help='display graphical user interface')
+    parser.add_argument('-o', '--output', dest='output_file', type=str,
+                        help='results output file')
+
+    group = parser.add_argument_group('Experiment Setup')
+    group.add_argument('--ghost-agent', dest='ghost_agent', type=str,
+                       choices=['random', 'ai'], default=DEFAULT_GHOST_AGENT,
+                       help='select ghost agent')
+    group.add_argument('-l', '--learn-num', dest='learn_runs', type=int,
+                       default=DEFAULT_NUMBER_OF_LEARNING_RUNS,
+                       help='number of games to learn from')
+    group.add_argument('--layout', dest='layout', type=str,
+                       default=DEFAULT_LAYOUT, choices=['classic', 'medium'],
+                       help='Game layout')
+    group.add_argument('--noise', dest='noise', type=int,
+                       default=DEFAULT_NOISE,
+                       help='introduce noise in position measurements')
+    group.add_argument('--num-ghosts', dest='num_ghosts',
+                       type=int, choices=range(1, 5),
+                       default=DEFAULT_NUMBER_OF_GHOSTS,
+                       help='number of ghosts in game')
+    group.add_argument('--pacman-agent', dest='pacman_agent', type=str,
+                       choices=['random', 'random2', 'ai', 'eater'],
+                       default=DEFAULT_PACMAN_AGENT,
+                       help='select Pac-Man agent')
+    group.add_argument('--policy-file', dest='policy_file',
+                       type=lambda s: unicode(s, 'utf8'),
+                       help='load and save Pac-Man policy from the given file')
+    group.add_argument('-t', '--test-num', dest='test_runs', type=int,
+                       default=DEFAULT_NUMBER_OF_TEST_RUNS,
+                       help='number of games to test learned policy')
+
+    group = parser.add_argument_group('Communication')
+    group.add_argument('--addr', dest='address', type=str,
+                       default=communication.DEFAULT_CLIENT_ADDRESS,
+                       help='Client address to connect to adapter (TCP '
+                            'connection)')
+    group.add_argument('--port', dest='port', type=int,
+                       default=communication.DEFAULT_TCP_PORT,
+                       help='Port to connect to controller (TCP connection)')
+
+    args, unknown = parser.parse_known_args()
+
+    adapter = build_adapter(
+        address=communication.DEFAULT_CLIENT_ADDRESS,
+        port=communication.DEFAULT_TCP_PORT,
+        pacman_agent=args.pacman_agent,
+        ghost_agent=args.ghost_agent,
+        num_ghosts=args.num_ghosts,
+        noise=args.noise,
+        policy_file=args.policy_file,
+        layout_map=args.layout,
+        learn_runs=args.learn_runs,
+        test_runs=args.test_runs,
+        output_file=args.output_file,
+        graphics=args.graphics)
+
     try:
-        adapter = cliparser.get_Adapter()
         adapter.run()
     except KeyboardInterrupt:
         print '\n\nInterrupted execution\n'

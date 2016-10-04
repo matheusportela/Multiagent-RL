@@ -11,18 +11,22 @@
 # The simulation is run in different threads for speed.
 
 
-from argparse import ArgumentParser, SUPPRESS
+import argparse
 from importlib import import_module
-import threading  ## @todo Use multiprocessing instead?
-from zmq import Context as zmq_Context
+import threading  # @todo Use multiprocessing instead?
 
-from communication import InprocServer, InprocClient
+import zmq
+
+
+def log(msg):
+    print '[Simulation] {}'.format(msg)
 
 
 def get_module_name():
     """Gets the module name for the problem form the CLI arguments."""
-    parser = ArgumentParser(description='Run Multiagent-RL.', add_help=False,
-                            usage=SUPPRESS)
+    parser = argparse.ArgumentParser(
+        description='Run Multiagent-RL.', add_help=False,
+        usage=argparse.SUPPRESS)
     parser.add_argument('-m', '--module', type=str, default='pacman',
                         choices=['pacman'],
                         help='name of the module to run the simulation')
@@ -33,18 +37,30 @@ def get_module_name():
 if __name__ == '__main__':
     module_name = get_module_name()
 
-    context = zmq_Context()
-    ## @todo one client per thread
+    log('Starting "{}" simulation'.format(module_name))
 
-    parser_module = import_module(module_name + '.cliparser')
-    get_Controller = getattr(parser_module, 'get_Controller')
-    controller = get_Controller(context, module_name)
+    context = zmq.Context()
+
+    # @todo spawn one agent per thread
+
+    controller_module = import_module(module_name + '.controller')
+    build_controller = getattr(controller_module, 'build_controller')
+    controller = build_controller(context, module_name)
     controller_thread = threading.Thread(target=controller.run)
     controller_thread.daemon = True
     controller_thread.start()
 
-    get_Adapter = getattr(parser_module, 'get_Adapter')
-    adapter = get_Adapter(context, module_name)
+    adapter_module = import_module(module_name + '.adapter')
+    build_adapter = getattr(adapter_module, 'build_adapter')
+    adapter = build_adapter(context, module_name)
     adapter_thread = threading.Thread(target=adapter.run)
+    adapter_thread.daemon = True
     adapter_thread.start()
-    adapter_thread.join()  # block until adapter process terminates
+
+    try:
+        # Wait adapter process terminate
+        while adapter_thread.isAlive():
+            # Non-blocking join allows to catch keyboard interrupt
+            adapter_thread.join(1)
+    except KeyboardInterrupt:
+        log('Interrupted')
