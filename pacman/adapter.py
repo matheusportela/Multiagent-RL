@@ -261,7 +261,6 @@ def build_adapter(context=None, endpoint=None,
                   address=communication.DEFAULT_CLIENT_ADDRESS,
                   port=communication.DEFAULT_TCP_PORT,
                   **kwargs):
-    """Parses arguments and returns an Adapter."""
     if context and endpoint:
         connection = 'inproc://{}'.format(endpoint)
         log('Connecting with inproc communication')

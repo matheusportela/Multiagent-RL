@@ -181,9 +181,6 @@ class Controller(communication.ZMQServer):
 
 def build_controller(context=None, endpoint=None,
                      port=communication.DEFAULT_TCP_PORT):
-    """Parses arguments and returns a Controller.
-
-    If no server is given, instantiates a TCPServer."""
     if context and endpoint:
         binding = 'inproc://{}'.format(endpoint)
         log('Connecting with inproc communication')
