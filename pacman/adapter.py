@@ -143,7 +143,7 @@ class Adapter(object):
 
         log('Ready!')
 
-    def __load_policies_from_file__(self, filename):
+    def _load_policies_from_file(self, filename):
         policies = {}
         if filename and os.path.isfile(filename):
             log('Loading policies from {}.'.format(filename))
@@ -151,7 +151,7 @@ class Adapter(object):
                 policies = pickle.loads(f.read())
         return policies
 
-    def __log_behavior_count__(self, agent, results):
+    def _log_behavior_count(self, agent, results):
         behavior_count = agent.get_behavior_count()
 
         for behavior, count in behavior_count.items():
@@ -159,7 +159,7 @@ class Adapter(object):
                 results['behavior_count'][agent.agent_id][behavior] = []
             results['behavior_count'][agent.agent_id][behavior].append(count)
 
-    def __process_game__(self, policies, results):
+    def _run_game(self, policies, results):
         # Start new game
         for agent in self.all_agents:
             agent.start_game(self.layout)
@@ -185,16 +185,16 @@ class Adapter(object):
 
         # Log behavior count
         if self.pacman_class == agents.BehaviorLearningPacmanAgent:
-            self.__log_behavior_count__(self.pacman, results)
+            self._log_behavior_count(self.pacman, results)
 
         if self.ghost_class == agents.BehaviorLearningGhostAgent:
             for ghost in self.ghosts:
-                self.__log_behavior_count__(ghost, results)
+                self._log_behavior_count(ghost, results)
 
         # Log score
         return simulated_game.state.getScore()
 
-    def __save_policies__(self, policies):
+    def _save_policies(self, policies):
         if self.pacman_class == agents.BehaviorLearningPacmanAgent:
             # @todo keep policy in agent?
             policies[self.pacman.agent_id] = self.__get_policy__(self.pacman)
@@ -203,9 +203,9 @@ class Adapter(object):
             for ghost in self.ghosts:
                 policies[ghost.agent_id] = ghost.get_policy()
 
-        self.__write_to_file__(self.policy_file, policies)
+        self._write_to_file(self.policy_file, policies)
 
-    def __write_to_file__(self, filename, content):
+    def _write_to_file(self, filename, content):
         log('Saving results to {}'.format(filename))
         with open(filename, 'w') as f:
             f.write(pickle.dumps(content))
@@ -225,7 +225,7 @@ class Adapter(object):
                 results['behavior_count'][ghost.agent_id] = {}
 
         # Load policies from file
-        policies = self.__load_policies_from_file__(self.policy_file)
+        policies = self._load_policies_from_file(self.policy_file)
 
         # Initialize agents
         for agent in self.all_agents:
@@ -235,7 +235,7 @@ class Adapter(object):
         for x in xrange(self.learn_runs):
             log('LEARN game {} (of {})'.format(x + 1, self.learn_runs))
 
-            score = self.__process_game__(policies, results)
+            score = self._run_game(policies, results)
             results['learn_scores'].append(score)
 
         for agent in self.all_agents:
@@ -244,16 +244,16 @@ class Adapter(object):
         for x in xrange(self.test_runs):
             log('TEST game {} (of {})'.format(x + 1, self.test_runs))
 
-            score = self.__process_game__(policies, results)
+            score = self._run_game(policies, results)
             results['test_scores'].append(score)
 
         if self.policy_file:
-            self.__save_policies__(policies)
+            self._save_policies(policies)
 
         log('Learn scores: {}'.format(results['learn_scores']))
         log('Test scores: {}'.format(results['test_scores']))
 
-        self.__write_to_file__(self.output_file, results)
+        self._write_to_file(self.output_file, results)
 
 
 def build_adapter(context=None, endpoint=None,
