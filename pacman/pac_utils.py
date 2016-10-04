@@ -1,5 +1,5 @@
 #  -*- coding: utf-8 -*-
-##    @package pac_utils.py
+#    @package pac_utils.py
 #      @author Guilherme N. Ramos (gnramos@unb.br)
 #
 #

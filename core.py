@@ -1,3 +1,8 @@
+import random
+
+import numpy as np
+
+
 class Agent(object):
     def __init__(self, action_space, state_space):
         self.action_space = action_space
@@ -24,15 +29,9 @@ class Environment(object):
         raise NotImplementedError
 
 
-
 class Space(object):
     def sample(self, seed=0):
         raise NotImplementedError
-
-
-import random
-
-import numpy as np
 
 
 class DiscreteSpace(Space):
@@ -81,20 +80,26 @@ class QLearningAgent(Agent):
 
     def get_q_value(self, state, action):
         if state not in self.q:
-            self.q[state] = {action: 0 for action in range(self.action_space.n)}
+            self.q[state] = {action: 0
+                             for action in range(self.action_space.n)}
 
         return self.q[state][action]
 
     def get_max_q_value(self, state):
         if state not in self.q:
-            self.q[state] = {action: 0 for action in range(self.action_space.n)}
+            self.q[state] = {action: 0
+                             for action in range(self.action_space.n)}
 
         return max(self.q[state].values())
 
     def learn(self, state, reward):
-        previous_q_value = self.get_q_value(self.previous_state, self.previous_action)
+        previous_q_value = self.get_q_value(self.previous_state,
+                                            self.previous_action)
         expected_q_value = self.get_max_q_value(state)
-        updated_q_value = previous_q_value + self.learning_rate*(reward + self.discount_factor*expected_q_value - previous_q_value)
+        updated_q_value = (previous_q_value +
+                           self.learning_rate*(
+                               reward + self.discount_factor*expected_q_value -
+                               previous_q_value))
         self.q[self.previous_state][self.previous_action] = updated_q_value
 
     def act(self, state):
@@ -113,12 +118,14 @@ class QLearningAgent(Agent):
     def exploit(self, state):
         if state in self.q:
             max_value = self.get_max_q_value(state)
-            best_actions = [action for action, value in self.q[state].items() if value == max_value]
+            best_actions = [action for action, value in self.q[state].items()
+                            if value == max_value]
             action = random.choice(best_actions)
         else:
             action = self.action_space.sample()
 
         return action
+
 
 class WindyEnvironment(Environment):
     def __init__(self):
@@ -130,7 +137,8 @@ class WindyEnvironment(Environment):
         self.cols = 10
         self.state_space = DiscreteSpace(self.rows * self.cols)
         self.goal_coordinates = [1, 7]
-        self.water_coordinates = [[0, 3], [0, 4], [2, 3], [2, 4], [3, 3], [3, 4]]
+        self.water_coordinates = [[0, 3], [0, 4], [2, 3], [2, 4], [3, 3],
+                                  [3, 4]]
         self.wind_frequency = 0.75
         self.num_actions = len(self.actions)
         self.num_states = self.rows*self.cols
@@ -140,11 +148,11 @@ class WindyEnvironment(Environment):
 
     def get_reward(self):
         if self.agent_coordinates in self.water_coordinates:
-          reward = -100
+            reward = -100
         elif self.agent_coordinates == self.goal_coordinates:
-          reward = 100
+            reward = 100
         else:
-          reward = -1
+            reward = -1
 
         return reward
 
@@ -165,16 +173,21 @@ class WindyEnvironment(Environment):
     def step(self, action):
         # wind
         if np.random.random() < self.wind_frequency:
-          wind_direction = np.random.randint(self.num_actions)
-          wind_action = [self.actions[wind_direction][0], self.actions[wind_direction][1]]
+            wind_direction = np.random.randint(self.num_actions)
+            wind_action = [
+                self.actions[wind_direction][0],
+                self.actions[wind_direction][1]
+            ]
         else:
-          wind_action = [0, 0]
+            wind_action = [0, 0]
 
         # update coordinates
         action_coordinates = self.index_to_action(action)
         self.agent_coordinates = [
-            min(max(self.agent_coordinates[0] + action_coordinates[0] + wind_action[0], 0), self.rows - 1),
-            min(max(self.agent_coordinates[1] + action_coordinates[1] + wind_action[1], 0), self.cols - 1),
+            min(max(self.agent_coordinates[0] +
+                    action_coordinates[0] + wind_action[0], 0), self.rows - 1),
+            min(max(self.agent_coordinates[1] +
+                    action_coordinates[1] + wind_action[1], 0), self.cols - 1),
         ]
 
         state = self.state_to_index(self.agent_coordinates)
@@ -188,13 +201,13 @@ class WindyEnvironment(Environment):
         print
         for i in xrange(self.rows):
             for j in xrange(self.cols):
-                if [i,j] == self.agent_coordinates:
+                if [i, j] == self.agent_coordinates:
                     print "A",
-                elif [i,j] == self.initial_coordinates:
+                elif [i, j] == self.initial_coordinates:
                     print "S",
-                elif [i,j] == self.goal_coordinates:
+                elif [i, j] == self.goal_coordinates:
                     print "G",
-                elif [i,j] in self.water_coordinates:
+                elif [i, j] in self.water_coordinates:
                     print "W",
                 else:
                     print "*",
