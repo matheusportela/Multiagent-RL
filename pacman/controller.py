@@ -6,15 +6,20 @@
 
 from __future__ import division
 
+import argparse
+
+import zmq
+
+from berkeley.game import Directions
+
 import cliparser
 import messages
 from state import GameState
 
+# @todo properly include communication module from parent folder
 import sys
-sys.path.insert(1, '..')
-from communication import ZMQServer
-
-from berkeley.game import Directions
+sys.path.insert(0, '..')
+import communication
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
@@ -27,7 +32,7 @@ def log(msg):
     print '[Controller] {}'.format(msg)
 
 
-class Controller(ZMQServer):
+class Controller(communication.ZMQServer):
     """Keeps the agent states and controls messages to clients."""
     def __init__(self, context, binding):
         super(Controller, self).__init__(context, binding)
@@ -175,9 +180,32 @@ class Controller(ZMQServer):
             msg = self.receive()
             self.__reply__(msg)
 
+
+def build_controller(context=None, endpoint=None):
+    """Parses arguments and returns a Controller.
+
+    If no server is given, instantiates a TCPServer."""
+    parser = argparse.ArgumentParser(
+        description='Run Pac-Man controller system.')
+    parser.add_argument('--port', dest='port', type=int,
+                        default=communication.DEFAULT_TCP_PORT,
+                        help='TCP port to connect to adapter')
+    args, unknown = parser.parse_known_args()
+
+    # @todo setup an option for a "memory" server (direct communication with
+    # Adapter) (zmq inproc?)
+
+    if context and endpoint:
+        binding = 'inproc://{}'.format(endpoint)
+    else:
+        context = zmq.Context()
+        binding = 'tcp://*:{}'.format(args.port)
+
+    return Controller(context, binding)
+
 if __name__ == '__main__':
     try:
-        controller = cliparser.get_Controller()
+        controller = build_controller()
         controller.run()
     except KeyboardInterrupt:
         print '\n\nInterrupted execution\n'

@@ -257,7 +257,7 @@ class Adapter(object):
         self.__write_to_file__(self.output_file, results)
 
 
-def execute_adapter(context=None, endpoint=None):
+def build_adapter(context=None, endpoint=None):
     """Parses arguments and returns an Adapter."""
     parser = argparse.ArgumentParser(description='Run Pac-Man adapter system.')
     parser.add_argument('-g', '--graphics', dest='graphics', default=False,
@@ -327,7 +327,7 @@ def execute_adapter(context=None, endpoint=None):
 
 if __name__ == '__main__':
     try:
-        adapter = execute_adapter()
+        adapter = build_adapter()
         adapter.run()
     except KeyboardInterrupt:
         print '\n\nInterrupted execution\n'
