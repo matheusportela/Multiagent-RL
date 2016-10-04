@@ -1,6 +1,66 @@
 import communication
 
 
+class BaseAgent(object):
+    def __init__(self, client=None):
+        super(BaseAgent, self).__init__()
+
+        if client:
+            self.client = client
+        else:
+            self.client = communication.TCPClient()
+
+    def receive(self):
+        return self.client.receive()
+
+    def send(self, message):
+        self.client.send(message)
+
+    def communicate(self, message):
+        self.send(message)
+        return self.receive()
+
+    def start_game(self):
+        raise NotImplementedError
+
+    def finish_game(self):
+        raise NotImplementedError
+
+    def learn(self):
+        raise NotImplementedError
+
+    def act(self):
+        raise NotImplementedError
+
+
+class BaseAgent(object):
+    def __init__(self, client=communication.TCPClient()):
+        super(BaseAgent, self).__init__()
+        self.client = client
+
+    def receive(self):
+        return self.client.receive()
+
+    def send(self, message):
+        self.client.send(message)
+
+    def communicate(self, message):
+        self.send(message)
+        return self.receive()
+
+    def start_game(self):
+        raise NotImplementedError
+
+    def finish_game(self):
+        raise NotImplementedError
+
+    def learn(self):
+        raise NotImplementedError
+
+    def act(self):
+        raise NotImplementedError
+
+
 class BaseController(object):
     def __init__(self, server=None):
         super(BaseController, self).__init__()

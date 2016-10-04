@@ -64,7 +64,10 @@ class Adapter(object):
                  test_runs=DEFAULT_NUMBER_OF_TEST_RUNS,
                  output_file=None,
                  graphics=False,
-                 context=None, connection=None):
+                 context=None,
+                 endpoint=None,
+                 address=None,
+                 port=None):
 
         # Layout ##############################################################
         LAYOUT_PATH = 'pacman/layouts'
@@ -88,11 +91,12 @@ class Adapter(object):
             raise ValueError
             ('Pac-Man agent must be ai, random, random2 or eater.')
 
-        if not (context and connection):
-            context = zmq.Context()()
-            connection = 'tcp://{}:{}'.format(address, port)
+        if context and endpoint:
+            client = communication.InprocClient(context, endpoint)
+        else:
+            client = communication.TCPClient(address, port)
 
-        self.pacman = agents.PacmanAdapterAgent(context, connection)
+        self.pacman = agents.PacmanAdapterAgent(client=client)
         self.pacman.register('pacman', self.pacman_class)
 
         # Ghosts ##############################################################
@@ -110,7 +114,12 @@ class Adapter(object):
         ghost_name = self.ghost_class.__name__
         self.ghosts = []
         for i in xrange(num_ghosts):
-            ghost = agents.GhostAdapterAgent(i + 1, context, connection)
+            if context and endpoint:
+                client = communication.InprocClient(context, endpoint)
+            else:
+                client = communication.TCPClient(address, port)
+
+            ghost = agents.GhostAdapterAgent(i + 1, client=client)
             log('Created {} #{}.'.format(ghost_name, ghost.agent_id))
             ghost.register('ghost', self.ghost_class)
             self.ghosts.append(ghost)
@@ -262,15 +271,12 @@ def build_adapter(context=None, endpoint=None,
                   port=communication.DEFAULT_TCP_PORT,
                   **kwargs):
     if context and endpoint:
-        connection = 'inproc://{}'.format(endpoint)
         log('Connecting with inproc communication')
+        adapter = Adapter(context=context, endpoint=endpoint, **kwargs)
     else:
-        context = zmq.Context()
-        connection = 'tcp://{}:{}'.format(address, port)
         log('Connecting with TCP communication (address {}, port {})'.format(
             address, port))
-
-    adapter = Adapter(context=context, connection=connection, **kwargs)
+        adapter = Adapter(address=address, port=port, **kwargs)
 
     return adapter
 
