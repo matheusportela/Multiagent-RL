@@ -18,6 +18,9 @@ import threading  # @todo Use multiprocessing instead?
 import zmq
 
 
+def log(msg):
+    print '[Simulation] {}'.format(msg)
+
 def get_module_name():
     """Gets the module name for the problem form the CLI arguments."""
     parser = argparse.ArgumentParser(
@@ -32,6 +35,8 @@ def get_module_name():
 
 if __name__ == '__main__':
     module_name = get_module_name()
+
+    log('Starting "{}" simulation'.format(module_name))
 
     context = zmq.Context()
 
@@ -48,7 +53,13 @@ if __name__ == '__main__':
     build_adapter = getattr(adapter_module, 'build_adapter')
     adapter = build_adapter(context, module_name)
     adapter_thread = threading.Thread(target=adapter.run)
+    adapter_thread.daemon = True
     adapter_thread.start()
 
-    # block until adapter process terminates
-    adapter_thread.join()
+    try:
+        # Wait adapter process terminate
+        while adapter_thread.isAlive():
+            # Non-blocking join allows to catch keyboard interrupt
+            adapter_thread.join(1)
+    except KeyboardInterrupt:
+        log('Interrupted')
