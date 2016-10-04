@@ -21,6 +21,7 @@ import zmq
 def log(msg):
     print '[Simulation] {}'.format(msg)
 
+
 def get_module_name():
     """Gets the module name for the problem form the CLI arguments."""
     parser = argparse.ArgumentParser(
