@@ -11,18 +11,18 @@
 # The simulation is run in different threads for speed.
 
 
-from argparse import ArgumentParser, SUPPRESS
+import argparse
 from importlib import import_module
 import threading  # @todo Use multiprocessing instead?
-from zmq import Context as zmq_Context
 
-from communication import InprocServer, InprocClient
+import zmq
 
 
 def get_module_name():
     """Gets the module name for the problem form the CLI arguments."""
-    parser = ArgumentParser(description='Run Multiagent-RL.', add_help=False,
-                            usage=SUPPRESS)
+    parser = argparse.ArgumentParser(
+        description='Run Multiagent-RL.', add_help=False,
+        usage=argparse.SUPPRESS)
     parser.add_argument('-m', '--module', type=str, default='pacman',
                         choices=['pacman'],
                         help='name of the module to run the simulation')
@@ -33,7 +33,7 @@ def get_module_name():
 if __name__ == '__main__':
     module_name = get_module_name()
 
-    context = zmq_Context()
+    context = zmq.Context()
 
     # @todo spawn one client per thread
 
