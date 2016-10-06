@@ -12,10 +12,10 @@ import features
 import learning
 import messages
 
-# @todo properly include communication module from parent folder
+# @todo properly include core module from parent folder
 import sys
 sys.path.insert(0, '..')
-from communication import ZMQClient
+import core
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
@@ -45,31 +45,13 @@ def log(msg):
     print '[  Client  ] {}'.format(msg)
 
 
-class ClientAgent(ZMQClient, BerkeleyGameAgent):
-    def __init__(self, agent_id, context, connection):
-        super(ClientAgent, self).__init__(context, connection)
+class BerkeleyAdapterAgent(core.BaseAgent, BerkeleyGameAgent):
+    def __init__(self, agent_id, *args, **kwargs):
+        core.BaseAgent.__init__(self, *args, **kwargs)
         BerkeleyGameAgent.__init__(self, agent_id)
-
-        self.previous_action = self._first_action()
         self.test_mode = False
-
-        self.log('instantiated')
-
-    # Communication stuff #####################################################
-
-    def log(self, msg):
-        log('{} #{} {}.'.format(self.__class__.__name__, self.agent_id, msg))
-
-    def receive(self):
-        raise AttributeError('ClientAgent cannot receive messages.')
-
-    def send(self, msg):
-        raise AttributeError('ClientAgent cannot send messages.')
-
-    def communicate(self, msg):
-        """Synchronous communication."""
-        ZMQClient.send(self, msg)
-        return ZMQClient.receive(self)
+        self.previous_action = self._first_action()
+        log('Created')
 
     # BerkeleyGameAgent stuff #################################################
 
@@ -148,34 +130,34 @@ class ClientAgent(ZMQClient, BerkeleyGameAgent):
     def get_behavior_count(self):
         msg = messages.RequestBehaviorCountMessage(self.agent_id)
         reply_msg = self.communicate(msg)
-        self.log(' got behavior count: {}'.format(reply_msg.count))
+        log('Received behavior count: {}'.format(reply_msg.count))
         return reply_msg.count
 
     def get_policy(self):
         msg = messages.RequestPolicyMessage(self.agent_id)
         reply_msg = self.communicate(msg)
-        self.log(' got policy')
+        log('Received policy')
         return reply_msg.policy
 
     def initialize(self):
-        self.log('requested initialization')
+        log('Requested initialization')
         msg = messages.RequestInitializationMessage(self.agent_id)
         return self.communicate(msg)
 
     def load_policy(self, policy):
-        self.log('sent policy')
+        log('Sent policy')
         msg = messages.PolicyMessage(policy)
         return self.communicate(msg)
 
     def register(self, agent_team, agent_class):
-        self.log('requested register {}/{}'.format(agent_team,
+        log('Requested register {}/{}'.format(agent_team,
                                                    agent_class.__name__))
         msg = messages.RequestRegisterMessage(
             self.agent_id, agent_team, agent_class)
         return self.communicate(msg)
 
     def start_game(self, layout):
-        self.log('requested game start')
+        log('Requested game start')
         self.previous_score = 0
         self.previous_action = self._first_action()
         msg = messages.RequestGameStartMessage(
@@ -189,33 +171,23 @@ class ClientAgent(ZMQClient, BerkeleyGameAgent):
         return self.communicate(msg)
 
 
-class PacmanAdapterAgent(ClientAgent):
-    def __init__(self, context, connection):
-        super(PacmanAdapterAgent, self).__init__(PACMAN_INDEX, context,
-                                                 connection)
+class PacmanAdapterAgent(BerkeleyAdapterAgent):
+    def __init__(self, *args, **kwargs):
+        super(PacmanAdapterAgent, self).__init__(0, *args, **kwargs)
 
     def _first_action(self):
         self.previous_action = Directions.NORTH
-
-    # @todo is this ever used?
-    # def act_when_invalid(self, state):
-    #     return Directions.STOP
 
     def calculate_reward(self, current_score):
         return current_score - self.previous_score
 
 
-class GhostAdapterAgent(ClientAgent):
-    def __init__(self, agent_id, context, connection):
-        super(GhostAdapterAgent, self).__init__(agent_id, context, connection)
+class GhostAdapterAgent(BerkeleyAdapterAgent):
+    def __init__(self, *args, **kwargs):
+        super(GhostAdapterAgent, self).__init__(*args, **kwargs)
 
     def _first_action(self):
         self.previous_action = Directions.NORTH
-        # self.actions = GHOST_ACTIONS
-
-    # @todo is this ever used?
-    # def act_when_invalid(self, state):
-    #     return random.choice(state.getLegalActions(self.agent_id))
 
     def calculate_reward(self, current_score):
         return self.previous_score - current_score

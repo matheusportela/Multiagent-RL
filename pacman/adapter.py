@@ -9,8 +9,6 @@ import argparse
 import pickle
 import os
 
-import zmq
-
 from berkeley.graphicsDisplay import PacmanGraphics as BerkeleyGraphics
 from berkeley.layout import getLayout as get_berkeley_layout
 from berkeley.pacman import runGames as run_berkeley_games
@@ -22,6 +20,7 @@ import agents
 import sys
 sys.path.insert(0, '..')
 import communication
+import core
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
@@ -50,7 +49,7 @@ def log(msg):
 
 # @todo Parse arguments outside class, pass values as arguments for
 # constructor.
-class Adapter(object):
+class Adapter(core.BaseExperiment):
     # @todo define pacman-agent choices and ghost-agent choices from agents.py
     # file
     def __init__(self,
@@ -64,7 +63,10 @@ class Adapter(object):
                  test_runs=DEFAULT_NUMBER_OF_TEST_RUNS,
                  output_file=None,
                  graphics=False,
-                 context=None, connection=None):
+                 context=None,
+                 endpoint=None,
+                 address=None,
+                 port=None):
 
         # Layout ##############################################################
         LAYOUT_PATH = 'pacman/layouts'
@@ -88,11 +90,12 @@ class Adapter(object):
             raise ValueError
             ('Pac-Man agent must be ai, random, random2 or eater.')
 
-        if not (context and connection):
-            context = zmq.Context()()
-            connection = 'tcp://{}:{}'.format(address, port)
+        if context and endpoint:
+            client = communication.InprocClient(context, endpoint)
+        else:
+            client = communication.TCPClient(address, port)
 
-        self.pacman = agents.PacmanAdapterAgent(context, connection)
+        self.pacman = agents.PacmanAdapterAgent(client=client)
         self.pacman.register('pacman', self.pacman_class)
 
         # Ghosts ##############################################################
@@ -110,7 +113,12 @@ class Adapter(object):
         ghost_name = self.ghost_class.__name__
         self.ghosts = []
         for i in xrange(num_ghosts):
-            ghost = agents.GhostAdapterAgent(i + 1, context, connection)
+            if context and endpoint:
+                client = communication.InprocClient(context, endpoint)
+            else:
+                client = communication.TCPClient(address, port)
+
+            ghost = agents.GhostAdapterAgent(i + 1, client=client)
             log('Created {} #{}.'.format(ghost_name, ghost.agent_id))
             ghost.register('ghost', self.ghost_class)
             self.ghosts.append(ghost)
@@ -145,22 +153,23 @@ class Adapter(object):
         log('Ready!')
 
     def _load_policies_from_file(self, filename):
-        policies = {}
+        self.policies = {}
+
         if filename and os.path.isfile(filename):
             log('Loading policies from {}.'.format(filename))
             with open(filename) as f:
-                policies = pickle.loads(f.read())
-        return policies
+                self.policies = pickle.loads(f.read())
 
-    def _log_behavior_count(self, agent, results):
+    def _log_behavior_count(self, agent):
         behavior_count = agent.get_behavior_count()
 
         for behavior, count in behavior_count.items():
-            if behavior not in results['behavior_count'][agent.agent_id]:
-                results['behavior_count'][agent.agent_id][behavior] = []
-            results['behavior_count'][agent.agent_id][behavior].append(count)
+            if behavior not in self.results['behavior_count'][agent.agent_id]:
+                self.results['behavior_count'][agent.agent_id][behavior] = []
+            self.results['behavior_count'][agent.agent_id][behavior].append(
+                count)
 
-    def _run_game(self, policies, results):
+    def _run_game(self):
         # Start new game
         for agent in self.all_agents:
             agent.start_game(self.layout)
@@ -168,8 +177,8 @@ class Adapter(object):
         # Load policies to agents
         if self.policy_file:
             for agent in self.all_agents:
-                if agent.agent_id in policies:
-                    agent.load_policy(policies[agent.agent_id])
+                if agent.agent_id in self.policies:
+                    agent.load_policy(self.policies[agent.agent_id])
 
         log('Simulating game...')
         simulated_game = run_berkeley_games(self.layout, self.pacman,
@@ -186,58 +195,63 @@ class Adapter(object):
 
         # Log behavior count
         if self.pacman_class == agents.BehaviorLearningPacmanAgent:
-            self._log_behavior_count(self.pacman, results)
+            self._log_behavior_count(self.pacman)
 
         if self.ghost_class == agents.BehaviorLearningGhostAgent:
             for ghost in self.ghosts:
-                self._log_behavior_count(ghost, results)
+                self._log_behavior_count(ghost)
 
         # Log score
         return simulated_game.state.getScore()
 
-    def _save_policies(self, policies):
+    def _save_policies(self):
         if self.pacman_class == agents.BehaviorLearningPacmanAgent:
             # @todo keep policy in agent?
-            policies[self.pacman.agent_id] = self.__get_policy__(self.pacman)
+            self.policies[self.pacman.agent_id] = self.__get_policy__(
+                self.pacman)
 
         if self.ghost_class == agents.BehaviorLearningGhostAgent:
             for ghost in self.ghosts:
-                policies[ghost.agent_id] = ghost.get_policy()
+                self.policies[ghost.agent_id] = ghost.get_policy()
 
-        self._write_to_file(self.policy_file, policies)
+        self._write_to_file(self.policy_file, self.policies)
 
     def _write_to_file(self, filename, content):
         log('Saving results to {}'.format(filename))
         with open(filename, 'w') as f:
             f.write(pickle.dumps(content))
 
-    def run(self):
+    def start(self):
         log('Now running')
 
-        results = {'learn_scores': [], 'test_scores': [], 'behavior_count': {}}
+        self.results = {
+            'learn_scores': [],
+            'test_scores': [],
+            'behavior_count': {},
+        }
 
         # @todo this as one list, probably by checking if agent is instance of
         # BehaviorLearningAgent (needs refactoring).
         if self.pacman_class == agents.BehaviorLearningPacmanAgent:
-            results['behavior_count'][self.pacman.agent_id] = {}
+            self.results['behavior_count'][self.pacman.agent_id] = {}
 
         if self.ghost_class == agents.BehaviorLearningGhostAgent:
             for ghost in self.ghosts:
-                results['behavior_count'][ghost.agent_id] = {}
+                self.results['behavior_count'][ghost.agent_id] = {}
 
         # Load policies from file
-        policies = self._load_policies_from_file(self.policy_file)
+        self._load_policies_from_file(self.policy_file)
 
         # Initialize agents
         for agent in self.all_agents:
             agent.initialize()
-            # self.__initialize__(agent)
 
+    def execute(self):
         for x in xrange(self.learn_runs):
             log('LEARN game {} (of {})'.format(x + 1, self.learn_runs))
 
-            score = self._run_game(policies, results)
-            results['learn_scores'].append(score)
+            score = self._run_game()
+            self.results['learn_scores'].append(score)
 
         for agent in self.all_agents:
             agent.enable_test_mode()
@@ -245,16 +259,17 @@ class Adapter(object):
         for x in xrange(self.test_runs):
             log('TEST game {} (of {})'.format(x + 1, self.test_runs))
 
-            score = self._run_game(policies, results)
-            results['test_scores'].append(score)
+            score = self._run_game()
+            self.results['test_scores'].append(score)
 
+    def stop(self):
         if self.policy_file:
-            self._save_policies(policies)
+            self._save_policies()
 
-        log('Learn scores: {}'.format(results['learn_scores']))
-        log('Test scores: {}'.format(results['test_scores']))
+        log('Learn scores: {}'.format(self.results['learn_scores']))
+        log('Test scores: {}'.format(self.results['test_scores']))
 
-        self._write_to_file(self.output_file, results)
+        self._write_to_file(self.output_file, self.results)
 
 
 def build_adapter(context=None, endpoint=None,
@@ -262,15 +277,12 @@ def build_adapter(context=None, endpoint=None,
                   port=communication.DEFAULT_TCP_PORT,
                   **kwargs):
     if context and endpoint:
-        connection = 'inproc://{}'.format(endpoint)
         log('Connecting with inproc communication')
+        adapter = Adapter(context=context, endpoint=endpoint, **kwargs)
     else:
-        context = zmq.Context()
-        connection = 'tcp://{}:{}'.format(address, port)
         log('Connecting with TCP communication (address {}, port {})'.format(
             address, port))
-
-    adapter = Adapter(context=context, connection=connection, **kwargs)
+        adapter = Adapter(address=address, port=port, **kwargs)
 
     return adapter
 
