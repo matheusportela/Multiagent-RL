@@ -2,9 +2,13 @@ import communication
 
 
 class BaseAgent(object):
-    def __init__(self, client=communication.TCPClient()):
+    def __init__(self, client=None):
         super(BaseAgent, self).__init__()
-        self.client = client
+
+        if client:
+            self.client = client
+        else:
+            self.client = communication.TCPClient()
 
     def receive(self):
         return self.client.receive()
@@ -64,4 +68,20 @@ class BaseController(object):
         while not self.is_finished():
             self.communicate()
             self.step()
+        self.stop()
+
+
+class BaseExperiment(object):
+    def start(self):
+        raise NotImplementedError
+
+    def execute(self):
+        raise NotImplementedError
+
+    def stop(self):
+        raise NotImplementedError
+
+    def run(self):
+        self.start()
+        self.execute()
         self.stop()

@@ -8,9 +8,6 @@ from __future__ import division
 
 import argparse
 
-import zmq
-
-import agents
 import messages
 from state import GameState
 
