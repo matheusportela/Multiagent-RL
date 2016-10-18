@@ -1,46 +1,62 @@
 import communication
 
 
-class BaseAgent(object):
+class BaseAdapterAgent(object):
     def __init__(self, client=None):
-        super(BaseAgent, self).__init__()
-
+        # Communication between adapter and controller
         if client:
             self.client = client
         else:
             self.client = communication.TCPClient()
 
     def receive(self):
+        """Receive message from controller."""
         return self.client.receive()
 
     def send(self, message):
+        """Send message to controller."""
         self.client.send(message)
 
     def communicate(self, message):
+        """Send message to controller and wait for its reply."""
         self.send(message)
         return self.receive()
 
     def start_game(self):
+        """Execute before starting a game episode."""
         raise NotImplementedError
 
     def finish_game(self):
+        """Execute after finishing a game episode."""
         raise NotImplementedError
 
-    def learn(self):
+    def register(self):
+        """Register agent at controller."""
         raise NotImplementedError
 
-    def act(self):
+    def receive_action(self):
+        """Receive selected action from controller."""
+        raise NotImplementedError
+
+    def send_state(self):
+        """Send state message from adapter to controller."""
+        raise NotImplementedError
+
+    def send_reward(self):
+        """Send reward message from adapter to controller."""
         raise NotImplementedError
 
 
 class BaseController(object):
     def __init__(self, server=None):
-        super(BaseController, self).__init__()
-
+        # Communication between controller and adapter
         if server:
             self.server = server
         else:
             self.server = communication.TCPServer()
+
+    def log(self, msg):
+        print '[Controller] {}'.format(msg)
 
     def receive(self):
         return self.server.receive()

@@ -45,7 +45,7 @@ def log(msg):
     print '[  Client  ] {}'.format(msg)
 
 
-class BerkeleyAdapterAgent(core.BaseAgent, BerkeleyGameAgent):
+class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
     def __init__(self, agent_id, *args, **kwargs):
         core.BaseAgent.__init__(self, *args, **kwargs)
         BerkeleyGameAgent.__init__(self, agent_id)
@@ -151,7 +151,7 @@ class BerkeleyAdapterAgent(core.BaseAgent, BerkeleyGameAgent):
 
     def register(self, agent_team, agent_class):
         log('Requested register {}/{}'.format(agent_team,
-                                                   agent_class.__name__))
+                                              agent_class.__name__))
         msg = messages.RequestRegisterMessage(
             self.agent_id, agent_team, agent_class)
         return self.communicate(msg)
