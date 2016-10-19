@@ -200,7 +200,7 @@ class BerkeleyAdapter(core.BaseExperiment):
                 agent.finish_game()
 
         for agent in self.agents:
-            agent.enable_test_mode()
+            agent.set_explore(False)
 
         for x in xrange(self.test_runs):
             log('TEST game {} (of {})'.format(x + 1, self.test_runs))
@@ -245,7 +245,6 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.agent_class = None
         self.policy = None
         self.game_state = None
-        self.is_test_mode = False
         self.layout = None
         self.results = {
             'scores': [],
@@ -404,7 +403,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
             legal_actions=self.game_state.getLegalActions(self.agent_id),
             reward=reward,
             executed_action=self.previous_action,
-            test_mode=self.is_test_mode)
+            test_mode=(not self.is_exploring))
 
         return self.communicate(message)
 
@@ -423,10 +422,6 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
 
     def _calculate_reward(self, current_score):
         return current_score - self.previous_score
-
-    def enable_test_mode(self):
-        log('#{} Enable test mode'.format(self.agent_id))
-        self.is_test_mode = True
 
 
 def build_adapter(context=None, endpoint=None,

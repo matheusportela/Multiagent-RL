@@ -9,6 +9,10 @@ class BaseAdapterAgent(object):
         else:
             self.client = communication.TCPClient()
 
+        # Whether the agent must can explore the action space or must only
+        # exploit the best actions so far
+        self.is_exploring = True
+
     def receive(self):
         """Receive message from controller."""
         return self.client.receive()
@@ -21,6 +25,10 @@ class BaseAdapterAgent(object):
         """Send message to controller and wait for its reply."""
         self.send(message)
         return self.receive()
+
+    def set_explore(self, is_exploring):
+        """Set whether the agent can explore the action space."""
+        self.is_exploring = is_exploring
 
     def start_experiment(self):
         """Execute before starting an experiment."""
