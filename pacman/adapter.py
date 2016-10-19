@@ -81,34 +81,21 @@ class BerkeleyAdapter(core.BaseExperiment):
         log('Loaded {}.'.format(layout_file))
 
         # Pac-Man #############################################################
-        self.pacman = BerkeleyAdapterAgent(agent_type=pacman_agent)
+        self.pacman = BerkeleyAdapterAgent(agent_id=0, agent_type='pacman',
+                                           agent_algorithm=pacman_agent)
 
         # Ghosts ##############################################################
         self.num_ghosts = int(num_ghosts)
         if not (1 <= self.num_ghosts <= 4):
             raise ValueError('Must 1-4 ghost(s).')
 
-        if ghost_agent == 'random':
-            self.ghost_class = agents.RandomGhost
-        elif ghost_agent == 'ai':
-            self.ghost_class = agents.BehaviorLearningGhostAgent
-        else:
-            raise ValueError('Ghost agent must be ai or random.')
-
-        ghost_name = self.ghost_class.__name__
         self.ghosts = []
         for i in xrange(num_ghosts):
-            if context and endpoint:
-                client = communication.InprocClient(context, endpoint)
-            else:
-                client = communication.TCPClient(address, port)
+            self.ghosts.append(BerkeleyAdapterAgent(
+                                   agent_id=i+1, agent_type='ghost',
+                                   agent_algorithm=ghost_agent))
 
-            ghost = agents.GhostAdapterAgent(i + 1, client=client)
-            log('Created {} #{}.'.format(ghost_name, ghost.agent_id))
-            ghost.register('ghost', self.ghost_class)
-            self.ghosts.append(ghost)
-
-        self.all_agents = self.ghosts
+        self.agents = [self.pacman] + self.ghosts
 
         # Policies ############################################################
         self.policy_file = str(policy_file) if policy_file else None
@@ -155,16 +142,6 @@ class BerkeleyAdapter(core.BaseExperiment):
                 count)
 
     def _run_game(self):
-        # Start new game
-        for agent in self.all_agents:
-            agent.start_game(self.layout)
-
-        # Load policies to agents
-        if self.policy_file:
-            for agent in self.all_agents:
-                if agent.agent_id in self.policies:
-                    agent.load_policy(self.policies[agent.agent_id])
-
         log('Simulating game...')
         simulated_game = run_berkeley_games(self.layout, self.pacman,
                                             self.ghosts, self.display,
@@ -172,25 +149,16 @@ class BerkeleyAdapter(core.BaseExperiment):
                                             RECORD_BERKELEY_GAMES)[0]
 
         # Do this so as agents can receive the last reward
-        self.pacman.getAction(simulated_game.state)
-        for agent in self.all_agents:
-            agent.update(simulated_game.state)
+        for agent in self.agents:
+            agent.getAction(simulated_game.state)
 
-        # Log behavior count
-        if self.ghost_class == agents.BehaviorLearningGhostAgent:
-            for ghost in self.ghosts:
-                self._log_behavior_count(ghost)
-
-        # Log score
+        # Return game final score
         return simulated_game.state.getScore()
 
     def _save_policies(self):
-        if self.pacman_class == agents.BehaviorLearningPacmanAgent:
-            self.policies[self.pacman.agent_id] = self.pacman.policy
-
-        if self.ghost_class == agents.BehaviorLearningGhostAgent:
-            for ghost in self.ghosts:
-                self.policies[ghost.agent_id] = ghost.get_policy()
+        for agent in self.agents:
+            if agent.policy:
+                self.policies[agent.agent_id] = agent.policy
 
         self._write_to_file(self.policy_file, self.policies)
 
@@ -208,50 +176,48 @@ class BerkeleyAdapter(core.BaseExperiment):
             'behavior_count': {},
         }
 
-        if self.ghost_class == agents.BehaviorLearningGhostAgent:
-            for ghost in self.ghosts:
-                self.results['behavior_count'][ghost.agent_id] = {}
-
         # Load policies from file
         self._load_policies_from_file(self.policy_file)
 
         # Initialize agents
-        for agent in self.all_agents:
-            agent.initialize()
-
-        self.pacman.policy = self.policies.get(self.pacman.agent_id, None)
-        self.pacman.layout = self.layout
-        self.pacman.start_experiment()
+        for agent in self.agents:
+            agent.policy = self.policies.get(agent.agent_id, None)
+            agent.layout = self.layout
+            agent.start_experiment()
 
     def execute(self):
         for x in xrange(self.learn_runs):
             log('LEARN game {} (of {})'.format(x + 1, self.learn_runs))
 
-            self.pacman.start_game()
+            for agent in self.agents:
+                agent.start_game()
 
             score = self._run_game()
             self.results['learn_scores'].append(score)
 
-            self.pacman.results['scores'].append(score)
-            self.pacman.finish_game()
+            for agent in self.agents:
+                agent.results['scores'].append(score)
+                agent.finish_game()
 
-        self.pacman.enable_test_mode()
-        for agent in self.all_agents:
+        for agent in self.agents:
             agent.enable_test_mode()
 
         for x in xrange(self.test_runs):
             log('TEST game {} (of {})'.format(x + 1, self.test_runs))
 
-            self.pacman.start_game()
+            for agent in self.agents:
+                agent.start_game()
 
             score = self._run_game()
             self.results['test_scores'].append(score)
 
-            self.pacman.results['scores'].append(score)
-            self.pacman.finish_game()
+            for agent in self.agents:
+                agent.results['scores'].append(score)
+                agent.finish_game()
 
     def stop(self):
-        self.pacman.finish_experiment()
+        for agent in self.agents:
+            agent.finish_experiment()
 
         if self.policy_file:
             self._save_policies()
@@ -263,13 +229,19 @@ class BerkeleyAdapter(core.BaseExperiment):
 
 
 class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
-    pacman_index = 0
+    pacman_index = None
     noise = 0
 
-    def __init__(self, agent_type='random', *args, **kwargs):
+    def __init__(self, agent_id, agent_type, agent_algorithm='random', *args,
+                 **kwargs):
         core.BaseAdapterAgent.__init__(self, *args, **kwargs)
-        BerkeleyGameAgent.__init__(self, 0)
+        BerkeleyGameAgent.__init__(self, agent_id)
+
         self.agent_type = agent_type
+        if self.agent_type == 'pacman':
+            BerkeleyAdapterAgent.pacman_index = agent_id
+
+        self.agent_algorithm = agent_algorithm
         self.agent_class = None
         self.policy = None
         self.game_state = None
@@ -296,48 +268,64 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
     # BaseAdapterAgent required methods
 
     def start_experiment(self):
-        log('[BerkeleyAdapterAgent] Start experiment')
+        log('#{} Start experiment'.format(self.agent_id))
         self._load_policy()
         self._register()
         self._initialize()
 
     def _load_policy(self):
-        log('[BerkeleyAdapterAgent] Loading policies')
+        log('#{} Loading policies'.format(self.agent_id))
         if self.policy:
             message = messages.PolicyMessage(policy)
             self.communicate(message)
 
     def _register(self):
-        log('[BerkeleyAdapterAgent] Register {}/{}'.format(
-            'pacman', self.agent_type))
+        log('#{} Register {}/{}'.format(
+            self.agent_id, 'pacman', self.agent_algorithm))
 
-        if self.agent_type == 'random':
+        if self.agent_type == 'pacman':
+            self._register_pacman()
+        elif self.agent_type == 'ghost':
+            self._register_ghost()
+        else:
+            raise ValueError('Agent type must be either "pacman" or "ghost"')
+
+        message = messages.RequestRegisterMessage(
+            self.agent_id, self.agent_type, self.agent_class)
+        self.communicate(message)
+
+    def _register_pacman(self):
+        if self.agent_algorithm == 'random':
             self.agent_class = agents.RandomPacmanAgent
-        elif self.agent_type == 'random2':
+        elif self.agent_algorithm == 'random2':
             self.agent_class = agents.RandomPacmanAgentTwo
-        elif self.agent_type == 'ai':
+        elif self.agent_algorithm == 'ai':
             self.agent_class = agents.BehaviorLearningPacmanAgent
-        elif self.agent_type == 'eater':
+        elif self.agent_algorithm == 'eater':
             self.agent_class = agents.EaterPacmanAgent
         else:
             raise ValueError('Pac-Man agent must be ai, random, random2 or '
                              'eater.')
 
-        message = messages.RequestRegisterMessage(
-            self.agent_id, 'pacman', self.agent_class)
-        self.communicate(message)
+    def _register_ghost(self):
+        if self.agent_algorithm == 'random':
+            self.agent_class = agents.RandomGhostAgent
+        elif self.agent_algorithm == 'ai':
+            self.agent_class = agents.BehaviorLearningGhostAgent
+        else:
+            raise ValueError('Ghost agent must be ai or random.')
 
     def _initialize(self):
-        log('[BerkeleyAdapterAgent] Initialize agent')
+        log('#{} Initialize agent'.format(self.agent_id))
         message = messages.RequestInitializationMessage(self.agent_id)
         self.communicate(message)
 
     def finish_experiment(self):
-        log('[BerkeleyAdapterAgent] Finish experiment')
-        log('[BerkeleyAdapterAgent] Scores: {}'.format(self.results['scores']))
+        log('#{} Finish experiment'.format(self.agent_id))
+        log('#{} Scores: {}'.format(self.results['scores'], self.agent_id))
 
     def start_game(self):
-        log('[BerkeleyAdapterAgent] Start game')
+        log('#{} Start game'.format(self.agent_id))
         self._reset_game_data()
         self._request_game_start()
 
@@ -346,7 +334,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.previous_action = Directions.NORTH
 
     def _request_game_start(self):
-        log('[BerkeleyAdapterAgent] Request game start')
+        log('#{} Request game start'.format(self.agent_id))
         message = messages.RequestGameStartMessage(
             agent_id=self.agent_id,
             map_width=self.layout.width,
@@ -354,14 +342,15 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.communicate(message)
 
     def finish_game(self):
-        log('[BerkeleyAdapterAgent] Finish game')
-        log('[BerkeleyAdapterAgent] Scores: {}'.format(self.results['scores'][-1]))
+        log('#{} Finish game'.format(self.agent_id))
+        log('#{} Scores: {}'.format(
+            self.agent_id, self.results['scores'][-1]))
 
-        if self.agent_type == 'ai':
+        if self.agent_algorithm == 'ai':
             self._log_behavior_count()
 
     def _log_behavior_count(self):
-        log('[BerkeleyAdapterAgent] Log behavior count')
+        log('#{} Log behavior count'.format(self.agent_id))
         self._log_behavior_count(self.pacman)
 
         message = messages.RequestBehaviorCountMessage(self.agent_id)
@@ -375,7 +364,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
                 count)
 
     def send_state(self):
-        log('[BerkeleyAdapterAgent] Send state')
+        log('#{} Send state'.format(self.agent_id))
 
         agent_positions = {}
 
@@ -424,19 +413,19 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
                                 BerkeleyAdapterAgent.noise + 1)
 
     def receive_action(self):
-        log('[BerkeleyAdapterAgent] Receive action')
+        log('#{} Receive action'.format(self.agent_id))
         action_message = self.send_state()
         return action_message.action
 
     def send_reward(self):
-        log('[BerkeleyAdapterAgent] Send reward')
+        log('#{} Send reward'.format(self.agent_id))
         pass
 
     def _calculate_reward(self, current_score):
         return current_score - self.previous_score
 
     def enable_test_mode(self):
-        log('[BerkeleyAdapterAgent] Enable test mode')
+        log('#{} Enable test mode'.format(self.agent_id))
         self.is_test_mode = True
 
 
