@@ -47,7 +47,7 @@ def log(msg):
 
 class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
     def __init__(self, agent_id, *args, **kwargs):
-        core.BaseAgent.__init__(self, *args, **kwargs)
+        core.BaseAdapterAgent.__init__(self, *args, **kwargs)
         BerkeleyGameAgent.__init__(self, agent_id)
         self.test_mode = False
         self.previous_action = self._first_action()
@@ -169,17 +169,6 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
     def update(self, state):
         msg = self.create_state_message(state)
         return self.communicate(msg)
-
-
-class PacmanAdapterAgent(BerkeleyAdapterAgent):
-    def __init__(self, *args, **kwargs):
-        super(PacmanAdapterAgent, self).__init__(0, *args, **kwargs)
-
-    def _first_action(self):
-        self.previous_action = Directions.NORTH
-
-    def calculate_reward(self, current_score):
-        return current_score - self.previous_score
 
 
 class GhostAdapterAgent(BerkeleyAdapterAgent):

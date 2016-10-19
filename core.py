@@ -22,6 +22,14 @@ class BaseAdapterAgent(object):
         self.send(message)
         return self.receive()
 
+    def start_experiment(self):
+        """Execute before starting an experiment."""
+        raise NotImplementedError
+
+    def finish_experiment(self):
+        """Execute after finishing an experiment."""
+        raise NotImplementedError
+
     def start_game(self):
         """Execute before starting a game episode."""
         raise NotImplementedError
@@ -30,16 +38,12 @@ class BaseAdapterAgent(object):
         """Execute after finishing a game episode."""
         raise NotImplementedError
 
-    def register(self):
-        """Register agent at controller."""
+    def send_state(self):
+        """Send state message from adapter to controller."""
         raise NotImplementedError
 
     def receive_action(self):
         """Receive selected action from controller."""
-        raise NotImplementedError
-
-    def send_state(self):
-        """Send state message from adapter to controller."""
         raise NotImplementedError
 
     def send_reward(self):
