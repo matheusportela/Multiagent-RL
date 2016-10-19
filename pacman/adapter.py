@@ -52,7 +52,7 @@ def log(msg):
 
 # @todo Parse arguments outside class, pass values as arguments for
 # constructor.
-class Adapter(core.BaseExperiment):
+class BerkeleyAdapter(core.BaseExperiment):
     # @todo define pacman-agent choices and ghost-agent choices from agents.py
     # file
     def __init__(self,
@@ -81,7 +81,7 @@ class Adapter(core.BaseExperiment):
         log('Loaded {}.'.format(layout_file))
 
         # Pac-Man #############################################################
-        self.pacman = PacmanGameAgent(agent_type=pacman_agent)
+        self.pacman = BerkeleyAdapterAgent(agent_type=pacman_agent)
 
         # Ghosts ##############################################################
         self.num_ghosts = int(num_ghosts)
@@ -262,7 +262,7 @@ class Adapter(core.BaseExperiment):
         self._write_to_file(self.output_file, self.results)
 
 
-class PacmanGameAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
+class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
     pacman_index = 0
     noise = 0
 
@@ -280,7 +280,7 @@ class PacmanGameAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
             'behavior_count': {},
         }
 
-    # Berkeley simulator required methods
+    # BerkeleyGameAgent required methods
 
     @property
     def agent_id(self):
@@ -293,22 +293,22 @@ class PacmanGameAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.previous_action = action
         return action
 
-    # Adapter required methods
+    # BaseAdapterAgent required methods
 
     def start_experiment(self):
-        log('[PacmanGameAgent] Start experiment')
+        log('[BerkeleyAdapterAgent] Start experiment')
         self._load_policy()
         self._register()
         self._initialize()
 
     def _load_policy(self):
-        log('[PacmanGameAgent] Loading policies')
+        log('[BerkeleyAdapterAgent] Loading policies')
         if self.policy:
             message = messages.PolicyMessage(policy)
             self.communicate(message)
 
     def _register(self):
-        log('[PacmanGameAgent] Register {}/{}'.format(
+        log('[BerkeleyAdapterAgent] Register {}/{}'.format(
             'pacman', self.agent_type))
 
         if self.agent_type == 'random':
@@ -328,16 +328,16 @@ class PacmanGameAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.communicate(message)
 
     def _initialize(self):
-        log('[PacmanGameAgent] Initialize agent')
+        log('[BerkeleyAdapterAgent] Initialize agent')
         message = messages.RequestInitializationMessage(self.agent_id)
         self.communicate(message)
 
     def finish_experiment(self):
-        log('[PacmanGameAgent] Finish experiment')
-        log('[PacmanGameAgent] Scores: {}'.format(self.results['scores']))
+        log('[BerkeleyAdapterAgent] Finish experiment')
+        log('[BerkeleyAdapterAgent] Scores: {}'.format(self.results['scores']))
 
     def start_game(self):
-        log('[PacmanGameAgent] Start game')
+        log('[BerkeleyAdapterAgent] Start game')
         self._reset_game_data()
         self._request_game_start()
 
@@ -346,7 +346,7 @@ class PacmanGameAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.previous_action = Directions.NORTH
 
     def _request_game_start(self):
-        log('[PacmanGameAgent] Request game start')
+        log('[BerkeleyAdapterAgent] Request game start')
         message = messages.RequestGameStartMessage(
             agent_id=self.agent_id,
             map_width=self.layout.width,
@@ -354,14 +354,14 @@ class PacmanGameAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.communicate(message)
 
     def finish_game(self):
-        log('[PacmanGameAgent] Finish game')
-        log('[PacmanGameAgent] Scores: {}'.format(self.results['scores'][-1]))
+        log('[BerkeleyAdapterAgent] Finish game')
+        log('[BerkeleyAdapterAgent] Scores: {}'.format(self.results['scores'][-1]))
 
         if self.agent_type == 'ai':
             self._log_behavior_count()
 
     def _log_behavior_count(self):
-        log('[PacmanGameAgent] Log behavior count')
+        log('[BerkeleyAdapterAgent] Log behavior count')
         self._log_behavior_count(self.pacman)
 
         message = messages.RequestBehaviorCountMessage(self.agent_id)
@@ -375,11 +375,11 @@ class PacmanGameAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
                 count)
 
     def send_state(self):
-        log('[PacmanGameAgent] Send state')
+        log('[BerkeleyAdapterAgent] Send state')
 
         agent_positions = {}
 
-        agent_positions[PacmanGameAgent.pacman_index] = (
+        agent_positions[BerkeleyAdapterAgent.pacman_index] = (
             self.game_state.getPacmanPosition()[::-1])
 
         for id_, pos in enumerate(self.game_state.getGhostPositions()):
@@ -420,23 +420,23 @@ class PacmanGameAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         return self.communicate(message)
 
     def _noise_error(self):
-        return random.randrange(-PacmanGameAgent.noise,
-                                PacmanGameAgent.noise + 1)
+        return random.randrange(-BerkeleyAdapterAgent.noise,
+                                BerkeleyAdapterAgent.noise + 1)
 
     def receive_action(self):
-        log('[PacmanGameAgent] Receive action')
+        log('[BerkeleyAdapterAgent] Receive action')
         action_message = self.send_state()
         return action_message.action
 
     def send_reward(self):
-        log('[PacmanGameAgent] Send reward')
+        log('[BerkeleyAdapterAgent] Send reward')
         pass
 
     def _calculate_reward(self, current_score):
         return current_score - self.previous_score
 
     def enable_test_mode(self):
-        log('[PacmanGameAgent] Enable test mode')
+        log('[BerkeleyAdapterAgent] Enable test mode')
         self.is_test_mode = True
 
 
@@ -446,11 +446,11 @@ def build_adapter(context=None, endpoint=None,
                   **kwargs):
     if context and endpoint:
         log('Connecting with inproc communication')
-        adapter = Adapter(context=context, endpoint=endpoint, **kwargs)
+        adapter = BerkeleyAdapter(context=context, endpoint=endpoint, **kwargs)
     else:
         log('Connecting with TCP communication (address {}, port {})'.format(
             address, port))
-        adapter = Adapter(address=address, port=port, **kwargs)
+        adapter = BerkeleyAdapter(address=address, port=port, **kwargs)
 
     return adapter
 
