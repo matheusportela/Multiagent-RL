@@ -36,165 +36,9 @@ FIRST_ACTION = Directions.STOP
 # Indices
 PACMAN_INDEX = 0
 
-###############################################################################
-#                                AdapterAgents                                #
-###############################################################################
-
 
 def log(msg):
     print '[  Client  ] {}'.format(msg)
-
-
-class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
-    def __init__(self, agent_id, *args, **kwargs):
-        core.BaseAgent.__init__(self, *args, **kwargs)
-        BerkeleyGameAgent.__init__(self, agent_id)
-        self.test_mode = False
-        self.previous_action = self._first_action()
-        log('Created')
-
-    # BerkeleyGameAgent stuff #################################################
-
-    @property
-    def agent_id(self):
-        return self.index  # from BerkeleyGameAgent
-
-    def getAction(self, state):
-        """Returns a legal action (from Directions)."""
-
-        reply_msg = self.update(state)
-        self.previous_action = reply_msg.action
-        return reply_msg.action
-
-    # Other stuff #############################################################
-
-    def _first_action(self):
-        raise NotImplementedError('Agent must define an initial action')
-
-    def _noise_error(self):
-        # @todo Put this in the right place (when perceiving the environment)
-        return random.randrange(-NOISE, NOISE + 1)
-
-    def calculate_reward(self, current_score):
-        raise NotImplementedError('Communicating agent must calculate score')
-
-    def create_state_message(self, state):
-        agent_positions = {}
-
-        agent_positions[PACMAN_INDEX] = state.getPacmanPosition()[::-1]
-
-        for id_, pos in enumerate(state.getGhostPositions()):
-            pos_y = pos[::-1][0] + self._noise_error()
-            pos_x = pos[::-1][1] + self._noise_error()
-            agent_positions[id_ + 1] = (pos_y, pos_x)
-
-        food_positions = []
-        for x, row in enumerate(state.getFood()):
-            for y, is_food in enumerate(row):
-                if is_food:
-                    food_positions.append((y, x))
-
-        fragile_agents = {}
-        for id_, s in enumerate(state.data.agentStates):
-            fragile_agents[id_] = 1.0 if s.scaredTimer > 0 else 0.0
-
-        wall_positions = []
-        for x, row in enumerate(state.getWalls()):
-            for y, is_wall in enumerate(row):
-                if is_wall:
-                    wall_positions.append((y, x))
-
-        reward = self.calculate_reward(state.getScore())
-        self.previous_score = state.getScore()
-
-        msg = messages.StateMessage(
-            agent_id=self.agent_id,
-            agent_positions=agent_positions,
-            food_positions=food_positions,
-            fragile_agents=fragile_agents,
-            wall_positions=wall_positions,
-            legal_actions=state.getLegalActions(self.agent_id),
-            reward=reward,
-            executed_action=self.previous_action,
-            test_mode=self.test_mode)
-
-        return msg
-
-    def enable_learn_mode(self):
-        self.test_mode = False
-
-    def enable_test_mode(self):
-        self.test_mode = True
-
-    # Messaging ###############################################################
-    def get_behavior_count(self):
-        msg = messages.RequestBehaviorCountMessage(self.agent_id)
-        reply_msg = self.communicate(msg)
-        log('Received behavior count: {}'.format(reply_msg.count))
-        return reply_msg.count
-
-    def get_policy(self):
-        msg = messages.RequestPolicyMessage(self.agent_id)
-        reply_msg = self.communicate(msg)
-        log('Received policy')
-        return reply_msg.policy
-
-    def initialize(self):
-        log('Requested initialization')
-        msg = messages.RequestInitializationMessage(self.agent_id)
-        return self.communicate(msg)
-
-    def load_policy(self, policy):
-        log('Sent policy')
-        msg = messages.PolicyMessage(policy)
-        return self.communicate(msg)
-
-    def register(self, agent_team, agent_class):
-        log('Requested register {}/{}'.format(agent_team,
-                                              agent_class.__name__))
-        msg = messages.RequestRegisterMessage(
-            self.agent_id, agent_team, agent_class)
-        return self.communicate(msg)
-
-    def start_game(self, layout):
-        log('Requested game start')
-        self.previous_score = 0
-        self.previous_action = self._first_action()
-        msg = messages.RequestGameStartMessage(
-            agent_id=self.agent_id,
-            map_width=layout.width,
-            map_height=layout.height)
-        return self.communicate(msg)
-
-    def update(self, state):
-        msg = self.create_state_message(state)
-        return self.communicate(msg)
-
-
-class PacmanAdapterAgent(BerkeleyAdapterAgent):
-    def __init__(self, *args, **kwargs):
-        super(PacmanAdapterAgent, self).__init__(0, *args, **kwargs)
-
-    def _first_action(self):
-        self.previous_action = Directions.NORTH
-
-    def calculate_reward(self, current_score):
-        return current_score - self.previous_score
-
-
-class GhostAdapterAgent(BerkeleyAdapterAgent):
-    def __init__(self, *args, **kwargs):
-        super(GhostAdapterAgent, self).__init__(*args, **kwargs)
-
-    def _first_action(self):
-        self.previous_action = Directions.NORTH
-
-    def calculate_reward(self, current_score):
-        return self.previous_score - current_score
-
-###############################################################################
-#                              ControllerAgents                               #
-###############################################################################
 
 
 class ControllerAgent(object):
@@ -277,7 +121,7 @@ class RandomPacmanAgentTwo(PacmanAgent):
 class RandomGhostAgent(GhostAgent):
     """Agent that randomly selects an action."""
     def __init__(self, agent_id, ally_ids, enemy_ids):
-        super(RandomGhost, self).__init__(agent_id)
+        super(RandomGhostAgent, self).__init__(agent_id)
 
     def choose_action(self, state, action, reward, legal_actions, explore):
         if legal_actions:

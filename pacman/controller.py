@@ -44,18 +44,10 @@ class PacmanController(core.BaseController):
     def stop(self):
         log('Stopped')
 
-    def step(self):
-        pass
-
     def is_finished(self):
         return False
 
-    def communicate(self):
-        message = self.receive()
-        reply_message = self._reply(message)
-        self.send(reply_message)
-
-    def _reply(self, msg):
+    def step(self, msg):
         reply_msg = None
 
         if msg.type == messages.REQUEST_INIT_MSG:
