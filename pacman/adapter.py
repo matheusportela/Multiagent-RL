@@ -36,8 +36,8 @@ __email__ = "gnramos@unb.br"
 DEFAULT_GHOST_AGENT = 'ai'
 DEFAULT_LAYOUT = 'classic'
 DEFAULT_NUMBER_OF_GHOSTS = 3
-DEFAULT_NUMBER_OF_LEARNING_RUNS = 100
-DEFAULT_NUMBER_OF_TEST_RUNS = 15
+DEFAULT_NUMBER_OF_LEARNING_GAMES = 100
+DEFAULT_NUMBER_OF_TEST_GAMES = 15
 DEFAULT_PACMAN_AGENT = 'random'
 DEFAULT_NOISE = 0
 
@@ -50,11 +50,7 @@ def log(msg):
     print '[  Adapter ] {}'.format(msg)
 
 
-# @todo Parse arguments outside class, pass values as arguments for
-# constructor.
 class BerkeleyAdapter(core.BaseExperiment):
-    # @todo define pacman-agent choices and ghost-agent choices from agents.py
-    # file
     def __init__(self,
                  pacman_agent=DEFAULT_PACMAN_AGENT,
                  ghost_agent=DEFAULT_GHOST_AGENT,
@@ -62,8 +58,8 @@ class BerkeleyAdapter(core.BaseExperiment):
                  noise=DEFAULT_NOISE,
                  policy_file=None,
                  layout_map=DEFAULT_LAYOUT,
-                 learn_runs=DEFAULT_NUMBER_OF_LEARNING_RUNS,
-                 test_runs=DEFAULT_NUMBER_OF_TEST_RUNS,
+                 learn_games=DEFAULT_NUMBER_OF_LEARNING_GAMES,
+                 test_games=DEFAULT_NUMBER_OF_TEST_GAMES,
                  output_file=None,
                  graphics=False,
                  context=None,
@@ -71,11 +67,9 @@ class BerkeleyAdapter(core.BaseExperiment):
                  address=None,
                  port=None):
 
-        super(BerkeleyAdapter, self).__init__(
-            learn_games=learn_runs,
-            test_games=test_runs)
+        super(BerkeleyAdapter, self).__init__()
 
-        # Layout ##############################################################
+        # Layout
         LAYOUT_PATH = 'pacman/layouts'
         file_name = str(num_ghosts) + 'Ghosts'
         layout_file = '/'.join([LAYOUT_PATH, layout_map + file_name])
@@ -84,11 +78,11 @@ class BerkeleyAdapter(core.BaseExperiment):
             raise ValueError('Layout {} missing.'.format(layout_file))
         log('Loaded {}.'.format(layout_file))
 
-        # Pac-Man #############################################################
+        # Pac-Man
         self.pacman = BerkeleyAdapterAgent(agent_id=0, agent_type='pacman',
                                            agent_algorithm=pacman_agent)
 
-        # Ghosts ##############################################################
+        # Ghosts
         self.num_ghosts = int(num_ghosts)
         if not (1 <= self.num_ghosts <= 4):
             raise ValueError('Must 1-4 ghost(s).')
@@ -101,17 +95,17 @@ class BerkeleyAdapter(core.BaseExperiment):
 
         self.agents = [self.pacman] + self.ghosts
 
-        # Policies ############################################################
+        # Policies
         self.policy_file = str(policy_file) if policy_file else None
 
-        # Runs ################################################################
-        self.learn_runs = int(learn_runs)
-        assert self.learn_runs > 0
+        # Runs
+        self.learn_games = int(learn_games)
+        assert self.learn_games > 0
 
-        self.test_runs = int(test_runs)
-        assert self.test_runs > 0
+        self.test_games = int(test_games)
+        assert self.test_games > 0
 
-        # Output ##############################################################
+        # Output
         if output_file:
             self.output_file = str(output_file)
         else:
@@ -120,7 +114,7 @@ class BerkeleyAdapter(core.BaseExperiment):
                                                         num_ghosts,
                                                         ghost_agent)
 
-        # Graphical interface #################################################
+        # Graphical interface
         if graphics:
             self.display = BerkeleyGraphics()
         else:
@@ -422,8 +416,8 @@ if __name__ == '__main__':
     group.add_argument('--ghost-agent', dest='ghost_agent', type=str,
                        choices=['random', 'ai'], default=DEFAULT_GHOST_AGENT,
                        help='select ghost agent')
-    group.add_argument('-l', '--learn-num', dest='learn_runs', type=int,
-                       default=DEFAULT_NUMBER_OF_LEARNING_RUNS,
+    group.add_argument('-l', '--learn-games', dest='learn_games', type=int,
+                       default=DEFAULT_NUMBER_OF_LEARNING_GAMES,
                        help='number of games to learn from')
     group.add_argument('--layout', dest='layout', type=str,
                        default=DEFAULT_LAYOUT, choices=['classic', 'medium'],
@@ -442,8 +436,8 @@ if __name__ == '__main__':
     group.add_argument('--policy-file', dest='policy_file',
                        type=lambda s: unicode(s, 'utf8'),
                        help='load and save Pac-Man policy from the given file')
-    group.add_argument('-t', '--test-num', dest='test_runs', type=int,
-                       default=DEFAULT_NUMBER_OF_TEST_RUNS,
+    group.add_argument('-t', '--test-games', dest='test_games', type=int,
+                       default=DEFAULT_NUMBER_OF_TEST_GAMES,
                        help='number of games to test learned policy')
 
     group = parser.add_argument_group('Communication')
@@ -466,8 +460,8 @@ if __name__ == '__main__':
         noise=args.noise,
         policy_file=args.policy_file,
         layout_map=args.layout,
-        learn_runs=args.learn_runs,
-        test_runs=args.test_runs,
+        learn_games=args.learn_games,
+        test_games=args.test_games,
         output_file=args.output_file,
         graphics=args.graphics)
 
