@@ -71,6 +71,10 @@ class BerkeleyAdapter(core.BaseExperiment):
                  address=None,
                  port=None):
 
+        super(BerkeleyAdapter, self).__init__(
+            learn_games=learn_runs,
+            test_games=test_runs)
+
         # Layout ##############################################################
         LAYOUT_PATH = 'pacman/layouts'
         file_name = str(num_ghosts) + 'Ghosts'
@@ -124,49 +128,6 @@ class BerkeleyAdapter(core.BaseExperiment):
 
         log('Ready!')
 
-    def _load_policies_from_file(self, filename):
-        self.policies = {}
-
-        if filename and os.path.isfile(filename):
-            log('Loading policies from {}.'.format(filename))
-            with open(filename) as f:
-                self.policies = pickle.loads(f.read())
-
-    def _log_behavior_count(self, agent):
-        behavior_count = agent.get_behavior_count()
-
-        for behavior, count in behavior_count.items():
-            if behavior not in self.results['behavior_count'][agent.agent_id]:
-                self.results['behavior_count'][agent.agent_id][behavior] = []
-            self.results['behavior_count'][agent.agent_id][behavior].append(
-                count)
-
-    def _run_game(self):
-        log('Simulating game...')
-        simulated_game = run_berkeley_games(self.layout, self.pacman,
-                                            self.ghosts, self.display,
-                                            NUMBER_OF_BERKELEY_GAMES,
-                                            RECORD_BERKELEY_GAMES)[0]
-
-        # Do this so as agents can receive the last reward
-        for agent in self.agents:
-            agent.getAction(simulated_game.state)
-
-        # Return game final score
-        return simulated_game.state.getScore()
-
-    def _save_policies(self):
-        for agent in self.agents:
-            if agent.policy:
-                self.policies[agent.agent_id] = agent.policy
-
-        self._write_to_file(self.policy_file, self.policies)
-
-    def _write_to_file(self, filename, content):
-        log('Saving results to {}'.format(filename))
-        with open(filename, 'w') as f:
-            f.write(pickle.dumps(content))
-
     def start(self):
         log('Now running')
 
@@ -183,42 +144,41 @@ class BerkeleyAdapter(core.BaseExperiment):
         for agent in self.agents:
             agent.policy = self.policies.get(agent.agent_id, None)
             agent.layout = self.layout
-            agent.start_experiment()
 
-    def execute(self):
-        for x in xrange(self.learn_runs):
-            log('LEARN game {} (of {})'.format(x + 1, self.learn_runs))
+    def _load_policies_from_file(self, filename):
+        self.policies = {}
 
-            for agent in self.agents:
-                agent.start_game()
+        if filename and os.path.isfile(filename):
+            log('Loading policies from {}.'.format(filename))
+            with open(filename) as f:
+                self.policies = pickle.loads(f.read())
 
-            score = self._run_game()
+    def execute_game(self):
+        score = self._run_game()
+
+        if self.is_learn_game:
             self.results['learn_scores'].append(score)
-
-            for agent in self.agents:
-                agent.results['scores'].append(score)
-                agent.finish_game()
-
-        for agent in self.agents:
-            agent.set_explore(False)
-
-        for x in xrange(self.test_runs):
-            log('TEST game {} (of {})'.format(x + 1, self.test_runs))
-
-            for agent in self.agents:
-                agent.start_game()
-
-            score = self._run_game()
+        else:
             self.results['test_scores'].append(score)
 
-            for agent in self.agents:
-                agent.results['scores'].append(score)
-                agent.finish_game()
+        for agent in self.agents:
+            agent.results['scores'].append(score)
+
+    def _run_game(self):
+        log('Simulating game...')
+        simulated_game = run_berkeley_games(self.layout, self.pacman,
+                                            self.ghosts, self.display,
+                                            NUMBER_OF_BERKELEY_GAMES,
+                                            RECORD_BERKELEY_GAMES)[0]
+
+        # Do this so as agents can receive the last reward
+        for agent in self.agents:
+            agent.getAction(simulated_game.state)
+
+        # Return game final score
+        return simulated_game.state.getScore()
 
     def stop(self):
-        for agent in self.agents:
-            agent.finish_experiment()
-
         if self.policy_file:
             self._save_policies()
 
@@ -226,6 +186,18 @@ class BerkeleyAdapter(core.BaseExperiment):
         log('Test scores: {}'.format(self.results['test_scores']))
 
         self._write_to_file(self.output_file, self.results)
+
+    def _save_policies(self):
+        for agent in self.agents:
+            if agent.policy:
+                self.policies[agent.agent_id] = agent.policy
+
+        self._write_to_file(self.policy_file, self.policies)
+
+    def _write_to_file(self, filename, content):
+        log('Saving results to {}'.format(filename))
+        with open(filename, 'w') as f:
+            f.write(pickle.dumps(content))
 
 
 class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
@@ -345,12 +317,11 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         log('#{} Scores: {}'.format(
             self.agent_id, self.results['scores'][-1]))
 
-        if self.agent_algorithm == 'ai':
+        if self.agent_type == 'pacman' and self.agent_algorithm == 'ai':
             self._log_behavior_count()
 
     def _log_behavior_count(self):
         log('#{} Log behavior count'.format(self.agent_id))
-        self._log_behavior_count(self.pacman)
 
         message = messages.RequestBehaviorCountMessage(self.agent_id)
         reply_message = self.communicate(message)
@@ -418,7 +389,6 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
 
     def send_reward(self):
         log('#{} Send reward'.format(self.agent_id))
-        pass
 
     def _calculate_reward(self, current_score):
         return current_score - self.previous_score
@@ -437,6 +407,7 @@ def build_adapter(context=None, endpoint=None,
         adapter = BerkeleyAdapter(address=address, port=port, **kwargs)
 
     return adapter
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
