@@ -234,17 +234,10 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
 
     def start_experiment(self):
         log('#{} Start experiment'.format(self.agent_id))
+        self._send_start_experiment_message()
         self._load_policy()
-        self._register()
-        self._initialize()
 
-    def _load_policy(self):
-        log('#{} Loading policies'.format(self.agent_id))
-        if self.policy:
-            message = messages.PolicyMessage(policy)
-            self.communicate(message)
-
-    def _register(self):
+    def _send_start_experiment_message(self):
         log('#{} Register {}/{}'.format(
             self.agent_id, 'pacman', self.agent_algorithm))
 
@@ -255,8 +248,36 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         else:
             raise ValueError('Agent type must be either "pacman" or "ghost"')
 
-        message = messages.RequestRegisterMessage(
-            self.agent_id, self.agent_type, self.agent_class)
+        message = messages.StartExperimentMessage(
+            agent_id=self.agent_id,
+            agent_team=self.agent_type,
+            agent_class=self.agent_class,
+            map_width=self.layout.width,
+            map_height=self.layout.height)
+        self.communicate(message)
+
+    def _load_policy(self):
+        log('#{} Loading policies'.format(self.agent_id))
+        if self.policy:
+            message = messages.PolicyMessage(policy)
+            self.communicate(message)
+
+    def finish_experiment(self):
+        log('#{} Finish experiment'.format(self.agent_id))
+        log('#{} Scores: {}'.format(self.results['scores'], self.agent_id))
+        self._send_finish_experiment_message()
+
+    def _send_finish_experiment_message(self):
+        message = messages.FinishExperimentMessage(agent_id=self.agent_id)
+        self.communicate(message)
+
+    def start_game(self):
+        log('#{} Start game'.format(self.agent_id))
+        self._send_start_game_message()
+        self._reset_game_data()
+
+    def _send_start_game_message(self):
+        message = messages.StartGameMessage(agent_id=self.agent_id)
         self.communicate(message)
 
     def _register_pacman(self):
@@ -280,31 +301,10 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         else:
             raise ValueError('Ghost agent must be ai or random.')
 
-    def _initialize(self):
-        log('#{} Initialize agent'.format(self.agent_id))
-        message = messages.RequestInitializationMessage(self.agent_id)
-        self.communicate(message)
-
-    def finish_experiment(self):
-        log('#{} Finish experiment'.format(self.agent_id))
-        log('#{} Scores: {}'.format(self.results['scores'], self.agent_id))
-
-    def start_game(self):
-        log('#{} Start game'.format(self.agent_id))
-        self._reset_game_data()
-        self._request_game_start()
-
     def _reset_game_data(self):
         self.previous_score = 0
         self.previous_action = Directions.NORTH
-
-    def _request_game_start(self):
-        log('#{} Request game start'.format(self.agent_id))
-        message = messages.RequestGameStartMessage(
-            agent_id=self.agent_id,
-            map_width=self.layout.width,
-            map_height=self.layout.height)
-        self.communicate(message)
+        self.reward = 0
 
     def finish_game(self):
         log('#{} Finish game'.format(self.agent_id))
@@ -313,6 +313,12 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
 
         if self.agent_type == 'pacman' and self.agent_algorithm == 'ai':
             self._log_behavior_count()
+
+        self._send_finish_game_message()
+
+    def _send_finish_game_message(self):
+        message = messages.FinishGameMessage(agent_id=self.agent_id)
+        self.communicate(message)
 
     def _log_behavior_count(self):
         log('#{} Log behavior count'.format(self.agent_id))
@@ -356,7 +362,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
                 if is_wall:
                     wall_positions.append((y, x))
 
-        reward = self._calculate_reward(self.game_state.getScore())
+        self.reward = self._calculate_reward(self.game_state.getScore())
         self.previous_score = self.game_state.getScore()
 
         message = messages.StateMessage(
@@ -366,7 +372,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
             fragile_agents=fragile_agents,
             wall_positions=wall_positions,
             legal_actions=self.game_state.getLegalActions(self.agent_id),
-            reward=reward,
+            reward=self.reward,
             executed_action=self.previous_action,
             test_mode=(not self.is_exploring))
 
@@ -383,6 +389,8 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
 
     def send_reward(self):
         log('#{} Send reward'.format(self.agent_id))
+        message = messages.RewardMessage(agent_id=agent_id, reward=self.reward)
+        self.communicate(message)
 
     def _calculate_reward(self, current_score):
         return current_score - self.previous_score
