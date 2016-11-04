@@ -14,8 +14,8 @@ from state import GameState
 # @todo properly include communication module from parent folder
 import sys
 sys.path.insert(0, '..')
-import core
 import communication
+import core
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
