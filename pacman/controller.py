@@ -62,8 +62,6 @@ class PacmanController(core.BaseController):
             reply_msg = self._receive_state(msg)
         elif msg.type == messages.REWARD_MSG:
             reply_msg = self._receive_reward(msg)
-        # TODO: Deprecated message types. Must be removed to decouple
-        # controller and adapter
         elif msg.type == messages.REQUEST_POLICY_MSG:
             reply_msg = self._send_policy_request(msg)
         elif msg.type == messages.POLICY_MSG:
@@ -99,17 +97,6 @@ class PacmanController(core.BaseController):
                                                              ally_ids,
                                                              enemy_ids)
 
-        iteration = self.game_number[msg.agent_id]
-        eater = (self.agent_teams[msg.agent_id] == 'pacman')
-        self.game_states[msg.agent_id] = GameState(width=self.map_width,
-                                                   height=self.map_height,
-                                                   walls=[],
-                                                   agent_id=msg.agent_id,
-                                                   ally_ids=ally_ids,
-                                                   enemy_ids=enemy_ids,
-                                                   eater=eater,
-                                                   iteration=iteration)
-
         return messages.AcknowledgementMessage()
 
     def _get_allies(self, agent_id):
@@ -130,9 +117,24 @@ class PacmanController(core.BaseController):
 
     def _receive_state(self, msg):
         log('Receiving state for #{}'.format(msg.agent_id))
+
+        if msg.agent_id not in self.game_states:
+            ally_ids = self._get_allies(msg.agent_id)
+            enemy_ids = self._get_enemies(msg.agent_id)
+            iteration = 0
+            eater = (self.agent_teams[msg.agent_id] == 'pacman')
+            game_state = GameState(width=self.map_width,
+                                   height=self.map_height,
+                                   walls=[],
+                                   agent_id=msg.agent_id,
+                                   ally_ids=ally_ids,
+                                   enemy_ids=enemy_ids,
+                                   eater=eater,
+                                   iteration=iteration)
+            game_state.set_walls(msg.wall_positions)
+            self.game_states[msg.agent_id] = game_state
+
         game_state = self.game_states[msg.agent_id]
-        # @todo is it necessary to set walls every time?
-        game_state.set_walls(msg.wall_positions)
         game_state.set_food_positions(msg.food_positions)
 
         agent_action = self._choose_action(msg)

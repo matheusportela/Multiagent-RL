@@ -209,7 +209,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.agent_algorithm = agent_algorithm
         self.agent_class = None
         self.policy = None
-        self.game_state = None
+        self.pacman_game_state = None
         self.game_number = 0
         self.layout = None
         self.results = {
@@ -222,9 +222,9 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
     def agent_id(self):
         return self.index  # from BerkeleyGameAgent
 
-    def getAction(self, game_state):
+    def getAction(self, pacman_game_state):
         """Returns a legal action (from Directions)."""
-        self.game_state = game_state
+        self.pacman_game_state = pacman_game_state
         action = self.receive_action()
         self.previous_action = action
         return action
@@ -329,35 +329,38 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
 
     def send_state(self):
         log('#{} Send state'.format(self.agent_id))
+        message = self._create_state_message()
+        return self.communicate(message)
 
+    def _create_state_message(self):
         agent_positions = {}
 
         agent_positions[BerkeleyAdapterAgent.pacman_index] = (
-            self.game_state.getPacmanPosition()[::-1])
+            self.pacman_game_state.getPacmanPosition()[::-1])
 
-        for id_, pos in enumerate(self.game_state.getGhostPositions()):
+        for id_, pos in enumerate(self.pacman_game_state.getGhostPositions()):
             pos_y = pos[::-1][0] + self._noise_error()
             pos_x = pos[::-1][1] + self._noise_error()
             agent_positions[id_ + 1] = (pos_y, pos_x)
 
         food_positions = []
-        for x, row in enumerate(self.game_state.getFood()):
+        for x, row in enumerate(self.pacman_game_state.getFood()):
             for y, is_food in enumerate(row):
                 if is_food:
                     food_positions.append((y, x))
 
         fragile_agents = {}
-        for id_, s in enumerate(self.game_state.data.agentStates):
+        for id_, s in enumerate(self.pacman_game_state.data.agentStates):
             fragile_agents[id_] = 1.0 if s.scaredTimer > 0 else 0.0
 
         wall_positions = []
-        for x, row in enumerate(self.game_state.getWalls()):
+        for x, row in enumerate(self.pacman_game_state.getWalls()):
             for y, is_wall in enumerate(row):
                 if is_wall:
                     wall_positions.append((y, x))
 
-        self.reward = self._calculate_reward(self.game_state.getScore())
-        self.previous_score = self.game_state.getScore()
+        self.reward = self._calculate_reward(self.pacman_game_state.getScore())
+        self.previous_score = self.pacman_game_state.getScore()
 
         message = messages.StateMessage(
             agent_id=self.agent_id,
@@ -365,12 +368,12 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
             food_positions=food_positions,
             fragile_agents=fragile_agents,
             wall_positions=wall_positions,
-            legal_actions=self.game_state.getLegalActions(self.agent_id),
+            legal_actions=self.pacman_game_state.getLegalActions(
+                self.agent_id),
             reward=self.reward,
             executed_action=self.previous_action,
             test_mode=(not self.is_exploring))
-
-        return self.communicate(message)
+        return message
 
     def _noise_error(self):
         return random.randrange(-BerkeleyAdapterAgent.noise,

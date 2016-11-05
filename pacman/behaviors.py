@@ -58,8 +58,6 @@ class EatBehavior(BehaviorBase):
                         elif new_distance == min_dist:
                             best_actions.append(action)
 
-        print 'Actions:', best_actions
-
         if best_actions:
             return random.choice(best_actions)
         else:
