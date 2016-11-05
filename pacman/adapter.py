@@ -128,7 +128,6 @@ class BerkeleyAdapter(core.BaseExperiment):
         self.results = {
             'learn_scores': [],
             'test_scores': [],
-            'behavior_count': {},
         }
 
         # Load policies from file
@@ -211,10 +210,10 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.agent_class = None
         self.policy = None
         self.game_state = None
+        self.game_number = 0
         self.layout = None
         self.results = {
             'scores': [],
-            'behavior_count': {},
         }
 
     # BerkeleyGameAgent required methods
@@ -235,7 +234,6 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
     def start_experiment(self):
         log('#{} Start experiment'.format(self.agent_id))
         self._send_start_experiment_message()
-        self._load_policy()
 
     def _send_start_experiment_message(self):
         log('#{} Register {}/{}'.format(
@@ -256,16 +254,16 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
             map_height=self.layout.height)
         self.communicate(message)
 
-    def _load_policy(self):
-        log('#{} Loading policies'.format(self.agent_id))
-        if self.policy:
-            message = messages.PolicyMessage(policy)
-            self.communicate(message)
-
     def finish_experiment(self):
         log('#{} Finish experiment'.format(self.agent_id))
         log('#{} Scores: {}'.format(self.results['scores'], self.agent_id))
+        self._save_policy()
         self._send_finish_experiment_message()
+
+    def _save_policy(self):
+        message = messages.RequestPolicyMessage(agent_id=self.agent_id)
+        policy_message = self.communicate(message)
+        self.policy = policy_message.policy
 
     def _send_finish_experiment_message(self):
         message = messages.FinishExperimentMessage(agent_id=self.agent_id)
@@ -275,10 +273,23 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         log('#{} Start game'.format(self.agent_id))
         self._send_start_game_message()
         self._reset_game_data()
+        self._load_policy()
 
     def _send_start_game_message(self):
         message = messages.StartGameMessage(agent_id=self.agent_id)
         self.communicate(message)
+
+    def _reset_game_data(self):
+        self.previous_score = 0
+        self.previous_action = Directions.NORTH
+        self.reward = 0
+
+    def _load_policy(self):
+        if self.policy and self.game_number == 0:
+            log('#{} Loading policy'.format(self.agent_id))
+            message = messages.PolicyMessage(
+                agent_id=self.agent_id, policy=self.policy)
+            self.communicate(message)
 
     def _register_pacman(self):
         if self.agent_algorithm == 'random':
@@ -301,37 +312,20 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         else:
             raise ValueError('Ghost agent must be ai or random.')
 
-    def _reset_game_data(self):
-        self.previous_score = 0
-        self.previous_action = Directions.NORTH
-        self.reward = 0
-
     def finish_game(self):
         log('#{} Finish game'.format(self.agent_id))
         log('#{} Scores: {}'.format(
             self.agent_id, self.results['scores'][-1]))
 
-        if self.agent_type == 'pacman' and self.agent_algorithm == 'ai':
-            self._log_behavior_count()
-
+        self._update_game_number()
         self._send_finish_game_message()
+
+    def _update_game_number(self):
+        self.game_number += 1
 
     def _send_finish_game_message(self):
         message = messages.FinishGameMessage(agent_id=self.agent_id)
         self.communicate(message)
-
-    def _log_behavior_count(self):
-        log('#{} Log behavior count'.format(self.agent_id))
-
-        message = messages.RequestBehaviorCountMessage(self.agent_id)
-        reply_message = self.communicate(message)
-        behavior_count = reply_message.count
-
-        for behavior, count in behavior_count.items():
-            if behavior not in self.results['behavior_count'][agent.agent_id]:
-                self.results['behavior_count'][agent.agent_id][behavior] = []
-            self.results['behavior_count'][agent.agent_id][behavior].append(
-                count)
 
     def send_state(self):
         log('#{} Send state'.format(self.agent_id))

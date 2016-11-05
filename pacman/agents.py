@@ -46,22 +46,28 @@ class ControllerAgent(object):
     def __init__(self, agent_id):
         self.agent_id = agent_id
 
+    def get_policy(self):
+        """Get the current action selection policy."""
+        return None
+
+    def set_policy(self, policy):
+        """Set an action selection policy."""
+        pass
+
     def choose_action(self, state, action, reward, legal_actions, explore):
         """Return an action to be executed by the agent.
 
-        Args:
-            state: Current game state.
-            action: Last executed action.
-            reward: Reward for the previous action.
-            legal_actions: List of currently allowed actions.
-            explore: Boolean whether agent is allowed to explore.
+        Parameters:
+        state -- Current game state.
+        action -- Last executed action.
+        reward -- Reward for the previous action.
+        legal_actions -- List of currently allowed actions.
+        explore -- Boolean whether agent is allowed to explore.
 
         Returns:
-            A Direction for the agent to follow (NORTH, SOUTH, EAST, WEST or
-            STOP).
+        An action to be executed.
         """
-        raise NotImplementedError('ControllerAgent must implement '
-                                  'choose_action.')
+        raise NotImplementedError
 
 
 class PacmanAgent(ControllerAgent):

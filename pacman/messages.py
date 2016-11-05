@@ -12,7 +12,7 @@ __email__ = "gnramos@unb.br"
 
 
 # Message types
-ACK_MSG = 'Acknowledgment'
+ACKNOWLEDGMENT_MSG = 'Acknowledgment'
 START_EXPERIMENT_MSG = 'Start Experiment'
 FINISH_EXPERIMENT_MSG = 'Finish Experiment'
 START_GAME_MSG = 'Start Game'
@@ -20,6 +20,8 @@ FINISH_GAME_MSG = 'Finish Game'
 STATE_MSG = 'State'
 ACTION_MSG = 'Action'
 REWARD_MSG = 'Reward'
+POLICY_MSG = 'Policy'
+REQUEST_POLICY_MSG = 'RequestPolicy'
 
 
 class BaseMessage(object):
@@ -41,7 +43,7 @@ class AcknowledgementMessage(BaseMessage):
     server.
     """
     def __init__(self):
-        super(AcknowledgementMessage, self).__init__(type=ACK_MSG)
+        super(AcknowledgementMessage, self).__init__(type=ACKNOWLEDGMENT_MSG)
 
 
 class StartExperimentMessage(BaseMessage):
@@ -104,36 +106,11 @@ class RewardMessage(BaseMessage):
             type=REWARD_MSG, agent_id=agent_id, reward=reward)
 
 
-# =============================================================================
-# ============================ Deprecated messages ============================
-# =============================================================================
-
-# Message types
-BEHAVIOR_COUNT_MSG = 'BehaviorCount'
-POLICY_MSG = 'Policy'
-REQUEST_BEHAVIOR_COUNT_MSG = 'RequestBehaviorCount'
-REQUEST_POLICY_MSG = 'RequestPolicy'
-
-
-class BehaviorCountMessage(BaseMessage):
-    """Carries the requested behavior count."""
-    def __init__(self, count):
-        super(BehaviorCountMessage, self).__init__(
-            type=BEHAVIOR_COUNT_MSG, count=count)
-
-
 class PolicyMessage(BaseMessage):
     """Carries the requested policy."""
     def __init__(self, agent_id, policy):
         super(PolicyMessage, self).__init__(
             type=POLICY_MSG, agent_id=agent_id, policy=policy)
-
-
-class RequestBehaviorCountMessage(BaseMessage):
-    """Requests the identified agent's BaseMessage count information."""
-    def __init__(self, agent_id):
-        super(RequestBehaviorCountMessage, self).__init__(
-            type=REQUEST_BEHAVIOR_COUNT_MSG, agent_id=agent_id)
 
 
 class RequestPolicyMessage(BaseMessage):

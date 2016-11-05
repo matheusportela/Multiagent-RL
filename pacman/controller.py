@@ -64,8 +64,6 @@ class PacmanController(core.BaseController):
             reply_msg = self._receive_reward(msg)
         # TODO: Deprecated message types. Must be removed to decouple
         # controller and adapter
-        elif msg.type == messages.REQUEST_BEHAVIOR_COUNT_MSG:
-            reply_msg = self._request_behavior_count(msg.agent_id)
         elif msg.type == messages.REQUEST_POLICY_MSG:
             reply_msg = self._send_policy_request(msg)
         elif msg.type == messages.POLICY_MSG:
@@ -126,6 +124,8 @@ class PacmanController(core.BaseController):
 
     def _finish_game(self, msg):
         log('Finishing game for #{}'.format(msg.agent_id))
+
+        self.game_number[msg.agent_id] += 1
         return messages.AcknowledgementMessage()
 
     def _receive_state(self, msg):
@@ -166,13 +166,6 @@ class PacmanController(core.BaseController):
         reply_msg = messages.AcknowledgementMessage()
         return reply_msg
 
-    def _request_behavior_count(self, agent_id):
-        log('Sending behavior count for #{}'.format(msg.agent_id))
-        count = self.agents[agent_id].behavior_count
-        reply_msg = messages.BehaviorCountMessage(count)
-        self.agents[agent_id].reset_behavior_count()
-        return reply_msg
-
     def _send_policy_request(self, msg):
         log('Sending policy for #{}'.format(msg.agent_id))
         policy = self.agents[msg.agent_id].get_policy()
@@ -183,7 +176,7 @@ class PacmanController(core.BaseController):
         log('Receiving policy for #{}'.format(msg.agent_id))
         if msg.policy:
             self.agents[msg.agent_id].set_policy(msg.policy)
-        return messages.AckMessage()
+        return messages.AcknowledgementMessage()
 
 
 def build_controller(context=None, endpoint=None,
