@@ -41,7 +41,7 @@ def log(msg):
     print '[  Client  ] {}'.format(msg)
 
 
-class ControllerAgent(object):
+class BaseControllerAgent(object):
     """Autonomous agent for game controller."""
     def __init__(self, agent_id):
         self.agent_id = agent_id
@@ -70,12 +70,12 @@ class ControllerAgent(object):
         raise NotImplementedError
 
 
-class PacmanAgent(ControllerAgent):
+class PacmanAgent(BaseControllerAgent):
     def __init__(self, agent_id):
         super(PacmanAgent, self).__init__(agent_id)
 
 
-class GhostAgent(ControllerAgent):
+class GhostAgent(BaseControllerAgent):
     def __init__(self, agent_id):
         super(GhostAgent, self).__init__(agent_id)
 
