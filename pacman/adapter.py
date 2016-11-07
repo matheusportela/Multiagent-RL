@@ -18,6 +18,7 @@ from berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics
 
 import agents
 import messages
+from state import GameState
 
 # @todo properly include communication module from parent folder
 import sys
@@ -211,6 +212,10 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.policy = None
         self.pacman_game_state = None
         self.game_number = 0
+        self.game_state = None
+        self.agent_ids = [self.agent_id]
+        self.ally_ids = []
+        self.enemy_ids = []
         self.layout = None
         self.results = {
             'scores': [],
@@ -277,7 +282,10 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
 
     def _send_start_game_message(self):
         message = messages.StartGameMessage(agent_id=self.agent_id)
-        self.communicate(message)
+        response = self.communicate(message)
+        self.ally_ids = response.ally_ids
+        self.enemy_ids = response.enemy_ids
+        self.agent_ids += self.ally_ids + self.enemy_ids
 
     def _reset_game_data(self):
         self.previous_score = 0
@@ -362,16 +370,30 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.reward = self._calculate_reward(self.pacman_game_state.getScore())
         self.previous_score = self.pacman_game_state.getScore()
 
+        if self.game_number == 0:
+            self.game_state = GameState(agent_id=self.agent_id,
+                                        width=self.layout.width,
+                                        height=self.layout.height,
+                                        ally_ids=self.ally_ids,
+                                        enemy_ids=self.enemy_ids,
+                                        walls=wall_positions,
+                                        eater=(self.agent_type == 'pacman'),
+                                        iteration=self.game_number)
+        self.game_state.set_food_positions(food_positions)
+
+        for id_, pos in agent_positions.items():
+            self.game_state.observe_agent(id_, pos)
+
+        for id_, status in fragile_agents.items():
+            self.game_state.observe_fragile_agent(id_, status)
+
         message = messages.StateMessage(
             agent_id=self.agent_id,
-            agent_positions=agent_positions,
-            food_positions=food_positions,
-            fragile_agents=fragile_agents,
-            wall_positions=wall_positions,
+            state=self.game_state,
+            executed_action=self.previous_action,
+            reward=self.reward,
             legal_actions=self.pacman_game_state.getLegalActions(
                 self.agent_id),
-            reward=self.reward,
-            executed_action=self.previous_action,
             test_mode=(not self.is_exploring))
         return message
 
@@ -382,11 +404,13 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
     def receive_action(self):
         log('#{} Receive action'.format(self.agent_id))
         action_message = self.send_state()
+        self.game_state.predict_agent(self.agent_id, action_message.action)
         return action_message.action
 
     def send_reward(self):
         log('#{} Send reward'.format(self.agent_id))
-        message = messages.RewardMessage(agent_id=agent_id, reward=self.reward)
+        message = messages.RewardMessage(
+            agent_id=agent_id, action=self.last_action, reward=self.reward)
         self.communicate(message)
 
     def _calculate_reward(self, current_score):

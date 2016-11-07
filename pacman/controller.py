@@ -28,9 +28,9 @@ def log(msg):
     print '[Controller] {}'.format(msg)
 
 
-class PacmanController(core.BaseController):
+class Controller(core.BaseController):
     def __init__(self, *args, **kwargs):
-        super(PacmanController, self).__init__(*args, **kwargs)
+        super(Controller, self).__init__(*args, **kwargs)
 
         self.agents = {}
         self.agent_classes = {}
@@ -72,8 +72,8 @@ class PacmanController(core.BaseController):
         return reply_msg
 
     def _start_experiment(self, msg):
-        log('Starting experiment for {} #{}'.format(
-            msg.agent_class.__name__, msg.agent_id))
+        log('#{} Starting experiment for {}'.format(
+            msg.agent_id, msg.agent_class.__name__))
         self.map_width = msg.map_width
         self.map_height = msg.map_height
         self.agent_classes[msg.agent_id] = msg.agent_class
@@ -82,11 +82,11 @@ class PacmanController(core.BaseController):
         return messages.AcknowledgementMessage()
 
     def _finish_experiment(self, msg):
-        log('Finishing experiment for #{}'.format(msg.agent_id))
+        log('#{} Finishing experiment'.format(msg.agent_id))
         return messages.AcknowledgementMessage()
 
     def _start_game(self, msg):
-        log('Starting game for #{}'.format(msg.agent_id))
+        log('#{} Starting game'.format(msg.agent_id))
         agent_id = msg.agent_id
         ally_ids = self._get_allies(agent_id)
         enemy_ids = self._get_enemies(agent_id)
@@ -97,7 +97,8 @@ class PacmanController(core.BaseController):
                                                              ally_ids,
                                                              enemy_ids)
 
-        return messages.AcknowledgementMessage()
+        return messages.AcknowledgementMessage(
+            ally_ids=ally_ids, enemy_ids=enemy_ids)
 
     def _get_allies(self, agent_id):
         return [id_ for id_ in self.agent_teams
@@ -110,74 +111,37 @@ class PacmanController(core.BaseController):
                 id_ != agent_id]
 
     def _finish_game(self, msg):
-        log('Finishing game for #{}'.format(msg.agent_id))
+        log('#{} Finishing game'.format(msg.agent_id))
 
         self.game_number[msg.agent_id] += 1
         return messages.AcknowledgementMessage()
 
     def _receive_state(self, msg):
-        log('Receiving state for #{}'.format(msg.agent_id))
+        log('#{} Receiving state'.format(msg.agent_id))
 
-        if msg.agent_id not in self.game_states:
-            ally_ids = self._get_allies(msg.agent_id)
-            enemy_ids = self._get_enemies(msg.agent_id)
-            iteration = 0
-            eater = (self.agent_teams[msg.agent_id] == 'pacman')
-            game_state = GameState(width=self.map_width,
-                                   height=self.map_height,
-                                   walls=[],
-                                   agent_id=msg.agent_id,
-                                   ally_ids=ally_ids,
-                                   enemy_ids=enemy_ids,
-                                   eater=eater,
-                                   iteration=iteration)
-            game_state.set_walls(msg.wall_positions)
-            self.game_states[msg.agent_id] = game_state
+        choose_action = self.agents[msg.agent_id].choose_action
+        agent_action = choose_action(msg.state, msg.executed_action,
+                                     msg.reward, msg.legal_actions,
+                                     msg.test_mode)
 
-        game_state = self.game_states[msg.agent_id]
-        game_state.set_food_positions(msg.food_positions)
-
-        agent_action = self._choose_action(msg)
-
-        log('Sending action for #{}'.format(msg.agent_id))
+        log('#{} Sending action'.format(msg.agent_id))
         return messages.ActionMessage(agent_id=msg.agent_id,
                                       action=agent_action)
 
-    def _choose_action(self, state):
-        # Update agent state
-        for id_, pos in state.agent_positions.items():
-            self.game_states[state.agent_id].observe_agent(id_, pos)
-
-        for id_, status in state.fragile_agents.items():
-            self.game_states[state.agent_id].observe_fragile_agent(id_, status)
-
-        # Choose action
-        agent_state = self.game_states[state.agent_id]
-        choose_action = self.agents[state.agent_id].choose_action
-        agent_action = choose_action(agent_state, state.executed_action,
-                                     state.reward, state.legal_actions,
-                                     state.test_mode)
-
-        for id_ in self.game_states:
-            agent_state.predict_agent(id_, agent_action)
-
-        return agent_action
-
     def _receive_reward(self, msg):
-        log('Receiving reward for #{}'.format(msg.agent_id))
+        log('#{} Receiving reward'.format(msg.agent_id))
         reply_msg = messages.AcknowledgementMessage()
         return reply_msg
 
     def _send_policy_request(self, msg):
-        log('Sending policy for #{}'.format(msg.agent_id))
+        log('#{} Sending policy'.format(msg.agent_id))
         policy = self.agents[msg.agent_id].get_policy()
         reply_message = messages.PolicyMessage(msg.agent_id, policy)
         return reply_message
 
     def _set_agent_policy(self, msg):
-        log('Receiving policy for #{}'.format(msg.agent_id))
-        if msg.policy:
-            self.agents[msg.agent_id].set_policy(msg.policy)
+        log('#{} Receiving policy'.format(msg.agent_id))
+        self.agents[msg.agent_id].set_policy(msg.policy)
         return messages.AcknowledgementMessage()
 
 
@@ -190,7 +154,7 @@ def build_controller(context=None, endpoint=None,
         server = communication.TCPServer(port)
         log('Connecting with TCP communication (port {})'.format(port))
 
-    return PacmanController(server=server)
+    return Controller(server=server)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

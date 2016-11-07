@@ -238,10 +238,11 @@ def gaussian_distribution(pos1, pos2, sd):
 
 
 class GameState(object):
-    def __init__(self, width, height, walls, agent_id=None, ally_ids=[],
+    def __init__(self, width, height, walls=[], agent_id=None, ally_ids=[],
                  enemy_ids=[], eater=True, iteration=0):
         self.width = width
         self.height = height
+
         self.walls = walls
 
         self.agent_id = agent_id
@@ -255,6 +256,9 @@ class GameState(object):
         self.fragile_agents = {}
         for id_ in [self.agent_id] + self.ally_ids + self.enemy_ids:
             self.fragile_agents[id_] = 0.5
+
+        if walls:
+            self.set_walls(walls)
 
         self.eater = eater
         self.iteration = iteration

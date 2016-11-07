@@ -42,8 +42,9 @@ class AcknowledgementMessage(BaseMessage):
     """Simple acknowledgment message, used when no reply is required from the
     server.
     """
-    def __init__(self):
-        super(AcknowledgementMessage, self).__init__(type=ACKNOWLEDGMENT_MSG)
+    def __init__(self, *args, **kwargs):
+        super(AcknowledgementMessage, self).__init__(
+            type=ACKNOWLEDGMENT_MSG, *args, **kwargs)
 
 
 class StartExperimentMessage(BaseMessage):
@@ -79,15 +80,12 @@ class FinishGameMessage(BaseMessage):
 
 class StateMessage(BaseMessage):
     """Message containing information on the current game state."""
-    def __init__(self, agent_id, agent_positions, food_positions,
-                 fragile_agents, wall_positions, legal_actions, reward,
-                 executed_action, test_mode):
+    def __init__(self, agent_id, state, executed_action, reward,
+                 legal_actions, test_mode):
         super(StateMessage, self).__init__(
-            type=STATE_MSG, agent_id=agent_id, agent_positions=agent_positions,
-            food_positions=food_positions, fragile_agents=fragile_agents,
-            wall_positions=wall_positions, legal_actions=legal_actions,
-            reward=reward, executed_action=executed_action,
-            test_mode=test_mode)
+            type=STATE_MSG, agent_id=agent_id, state=state,
+            executed_action=executed_action, reward=reward,
+            legal_actions=legal_actions, test_mode=test_mode)
 
 
 class ActionMessage(BaseMessage):
@@ -101,9 +99,9 @@ class ActionMessage(BaseMessage):
 
 class RewardMessage(BaseMessage):
     """Message containing the reward received after executing the action."""
-    def __init__(self, agent_id, reward):
+    def __init__(self, agent_id, action, reward):
         super(RewardMessage, self).__init__(
-            type=REWARD_MSG, agent_id=agent_id, reward=reward)
+            type=REWARD_MSG, agent_id=agent_id, action=action, reward=reward)
 
 
 class PolicyMessage(BaseMessage):
