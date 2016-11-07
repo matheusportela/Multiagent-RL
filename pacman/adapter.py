@@ -70,14 +70,16 @@ class BerkeleyAdapter(core.BaseExperiment):
 
         super(BerkeleyAdapter, self).__init__()
 
+        log('Instantiating adapter')
+
         # Layout
         LAYOUT_PATH = 'pacman/layouts'
         file_name = str(num_ghosts) + 'Ghosts'
         layout_file = '/'.join([LAYOUT_PATH, layout_map + file_name])
         self.layout = get_berkeley_layout(layout_file)
         if not self.layout:
-            raise ValueError('Layout {} missing.'.format(layout_file))
-        log('Loaded {}.'.format(layout_file))
+            raise ValueError('Missing layout file "{}"'.format(layout_file))
+        log('Loading layout file "{}"'.format(layout_file))
 
         # Pac-Man
         self.pacman = BerkeleyAdapterAgent(agent_id=0, agent_type='pacman',
@@ -121,10 +123,10 @@ class BerkeleyAdapter(core.BaseExperiment):
         else:
             self.display = BerkeleyNullGraphics()
 
-        log('Ready!')
+        log('Ready')
 
     def start(self):
-        log('Now running')
+        log('Starting')
 
         self.results = {
             'learn_scores': [],
@@ -148,6 +150,8 @@ class BerkeleyAdapter(core.BaseExperiment):
                 self.policies = pickle.loads(f.read())
 
     def execute_game(self):
+        log('Executing game')
+
         score = self._run_game()
 
         if self.is_learn_game:
@@ -159,7 +163,6 @@ class BerkeleyAdapter(core.BaseExperiment):
             agent.results['scores'].append(score)
 
     def _run_game(self):
-        log('Simulating game...')
         simulated_game = run_berkeley_games(self.layout, self.pacman,
                                             self.ghosts, self.display,
                                             NUMBER_OF_BERKELEY_GAMES,
@@ -173,6 +176,8 @@ class BerkeleyAdapter(core.BaseExperiment):
         return simulated_game.state.getScore()
 
     def stop(self):
+        log('Stopping')
+
         if self.policy_file:
             self._save_policies()
 
@@ -189,7 +194,7 @@ class BerkeleyAdapter(core.BaseExperiment):
         self._write_to_file(self.policy_file, self.policies)
 
     def _write_to_file(self, filename, content):
-        log('Saving results to {}'.format(filename))
+        log('Saving results to "{}"'.format(filename))
         with open(filename, 'w') as f:
             f.write(pickle.dumps(content))
 
@@ -237,12 +242,12 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
     # BaseAdapterAgent required methods
 
     def start_experiment(self):
-        log('#{} Start experiment'.format(self.agent_id))
+        log('#{} Starting experiment'.format(self.agent_id))
         self._send_start_experiment_message()
 
     def _send_start_experiment_message(self):
-        log('#{} Register {}/{}'.format(
-            self.agent_id, 'pacman', self.agent_algorithm))
+        log('#{} Registering {}/{}'.format(
+            self.agent_id, self.agent_type, self.agent_algorithm))
 
         if self.agent_type == 'pacman':
             self._register_pacman()
@@ -260,8 +265,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.communicate(message)
 
     def finish_experiment(self):
-        log('#{} Finish experiment'.format(self.agent_id))
-        log('#{} Scores: {}'.format(self.results['scores'], self.agent_id))
+        log('#{} Finishing experiment'.format(self.agent_id))
         self._save_policy()
         self._send_finish_experiment_message()
 
@@ -275,7 +279,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.communicate(message)
 
     def start_game(self):
-        log('#{} Start game'.format(self.agent_id))
+        log('#{} Starting game'.format(self.agent_id))
         self._send_start_game_message()
         self._reset_game_data()
         self._load_policy()
@@ -321,10 +325,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
             raise ValueError('Ghost agent must be ai or random.')
 
     def finish_game(self):
-        log('#{} Finish game'.format(self.agent_id))
-        log('#{} Scores: {}'.format(
-            self.agent_id, self.results['scores'][-1]))
-
+        log('#{} Finishing game'.format(self.agent_id))
         self._update_game_number()
         self._send_finish_game_message()
 
@@ -336,7 +337,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.communicate(message)
 
     def send_state(self):
-        log('#{} Send state'.format(self.agent_id))
+        log('#{} Sending state'.format(self.agent_id))
         message = self._create_state_message()
         return self.communicate(message)
 
@@ -402,13 +403,13 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
                                 BerkeleyAdapterAgent.noise + 1)
 
     def receive_action(self):
-        log('#{} Receive action'.format(self.agent_id))
+        log('#{} Receiving action'.format(self.agent_id))
         action_message = self.send_state()
         self.game_state.predict_agent(self.agent_id, action_message.action)
         return action_message.action
 
     def send_reward(self):
-        log('#{} Send reward'.format(self.agent_id))
+        log('#{} Sending reward'.format(self.agent_id))
         message = messages.RewardMessage(
             agent_id=agent_id, action=self.last_action, reward=self.reward)
         self.communicate(message)
