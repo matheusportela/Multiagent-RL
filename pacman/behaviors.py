@@ -36,7 +36,7 @@ class EatBehavior(BehaviorBase):
         agent_map = state.get_map()
         food_map = state.food_map
         food_prob_threshold = food_map.max() / 2.0
-        best_action, min_dist = None, None
+        best_actions, min_dist = [], None
 
         for action in legal_actions:
             diff = agent_map.action_to_pos[action]
@@ -48,13 +48,20 @@ class EatBehavior(BehaviorBase):
                     new_distance = state.calculate_distance(new_position,
                                                             (y, x))
 
-                    if (best_action is None) or (food_map[y][x] >
-                                                 food_prob_threshold and
-                                                 new_distance < min_dist):
+                    if not best_actions:
                         min_dist = new_distance
-                        best_action = action
+                        best_actions = [action]
+                    elif (food_map[y][x] > food_prob_threshold):
+                        if new_distance < min_dist:
+                            min_dist = new_distance
+                            best_actions = [action]
+                        elif new_distance == min_dist:
+                            best_actions.append(action)
 
-        return best_action
+        if best_actions:
+            return random.choice(best_actions)
+        else:
+            return None
 
 
 class FleeBehavior(BehaviorBase):
