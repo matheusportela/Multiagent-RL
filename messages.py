@@ -80,12 +80,10 @@ class FinishGameMessage(BaseMessage):
 
 class StateMessage(BaseMessage):
     """Message containing information on the current game state."""
-    def __init__(self, agent_id, state, executed_action, reward,
-                 legal_actions, test_mode):
+    def __init__(self, agent_id, state, legal_actions):
         super(StateMessage, self).__init__(
             type=STATE_MSG, agent_id=agent_id, state=state,
-            executed_action=executed_action, reward=reward,
-            legal_actions=legal_actions, test_mode=test_mode)
+            legal_actions=legal_actions)
 
 
 class ActionMessage(BaseMessage):
@@ -99,9 +97,10 @@ class ActionMessage(BaseMessage):
 
 class RewardMessage(BaseMessage):
     """Message containing the reward received after executing the action."""
-    def __init__(self, agent_id, action, reward):
+    def __init__(self, agent_id, state, action, reward):
         super(RewardMessage, self).__init__(
-            type=REWARD_MSG, agent_id=agent_id, action=action, reward=reward)
+            type=REWARD_MSG, agent_id=agent_id, state=state, action=action,
+            reward=reward)
 
 
 class PolicyMessage(BaseMessage):

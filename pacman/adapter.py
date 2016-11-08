@@ -103,10 +103,10 @@ class BerkeleyAdapter(core.BaseExperiment):
 
         # Runs
         self.learn_games = int(learn_games)
-        assert self.learn_games > 0
+        assert self.learn_games >= 0
 
         self.test_games = int(test_games)
-        assert self.test_games > 0
+        assert self.test_games >= 0
 
         # Output
         if output_file:
@@ -218,6 +218,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.pacman_game_state = None
         self.game_number = 0
         self.game_state = None
+        self.is_first_step = True
         self.agent_ids = [self.agent_id]
         self.ally_ids = []
         self.enemy_ids = []
@@ -235,6 +236,13 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
     def getAction(self, pacman_game_state):
         """Returns a legal action (from Directions)."""
         self.pacman_game_state = pacman_game_state
+
+        if self.is_first_step:
+            self.is_first_step = False
+            self.previous_score = self.pacman_game_state.getScore()
+        else:
+            self.send_reward()
+
         action = self.receive_action()
         self.previous_action = action
         return action
@@ -283,6 +291,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self._send_start_game_message()
         self._reset_game_data()
         self._load_policy()
+        self.is_first_step = True
 
     def _send_start_game_message(self):
         message = messages.StartGameMessage(agent_id=self.agent_id)
@@ -368,9 +377,6 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
                 if is_wall:
                     wall_positions.append((y, x))
 
-        self.reward = self._calculate_reward(self.pacman_game_state.getScore())
-        self.previous_score = self.pacman_game_state.getScore()
-
         if self.game_number == 0:
             self.game_state = GameState(agent_id=self.agent_id,
                                         width=self.layout.width,
@@ -391,11 +397,8 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         message = messages.StateMessage(
             agent_id=self.agent_id,
             state=self.game_state,
-            executed_action=self.previous_action,
-            reward=self.reward,
             legal_actions=self.pacman_game_state.getLegalActions(
-                self.agent_id),
-            test_mode=(not self.is_exploring))
+                self.agent_id))
         return message
 
     def _noise_error(self):
@@ -409,10 +412,16 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         return action_message.action
 
     def send_reward(self):
-        log('#{} Sending reward'.format(self.agent_id))
-        message = messages.RewardMessage(
-            agent_id=agent_id, action=self.last_action, reward=self.reward)
-        self.communicate(message)
+        if self.is_learning:
+            log('#{} Sending reward'.format(self.agent_id))
+            self.reward = self._calculate_reward(
+                self.pacman_game_state.getScore())
+            self.previous_score = self.pacman_game_state.getScore()
+
+            message = messages.RewardMessage(
+                agent_id=self.agent_id, state=self.game_state,
+                action=self.previous_action, reward=self.reward)
+            self.communicate(message)
 
     def _calculate_reward(self, current_score):
         return current_score - self.previous_score
