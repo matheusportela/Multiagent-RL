@@ -17,14 +17,15 @@ from berkeley.layout import getLayout as get_berkeley_layout
 from berkeley.pacman import runGames as run_berkeley_games
 from berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics
 
-# @todo properly include communication module from parent folder
+import agents
+import state
+
+# @todo properly include multiagentrl without relative import
 import sys
 sys.path.insert(0, '..')
-import agents
-import communication
-import core
-import messages
-import state
+from multiagentrl import communication
+from multiagentrl import core
+from multiagentrl import messages
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
@@ -73,7 +74,7 @@ class BerkeleyAdapter(core.BaseExperiment):
         logger.info('Instantiating adapter')
 
         # Layout
-        LAYOUT_PATH = 'pacman/layouts'
+        LAYOUT_PATH = 'experiments/pacman/layouts'
         file_name = str(num_ghosts) + 'Ghosts'
         layout_file = '/'.join([LAYOUT_PATH, layout_map + file_name])
         self.layout = get_berkeley_layout(layout_file)

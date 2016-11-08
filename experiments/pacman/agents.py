@@ -10,12 +10,12 @@ from berkeley.game import Agent as BerkeleyGameAgent, Directions
 import behaviors
 import features
 
-# @todo properly include core module from parent folder
+# @todo properly include multiagentrl without relative imports
 import sys
 sys.path.insert(0, '..')
-import core
-import exploration
-import learning
+from multiagentrl import core
+from multiagentrl import exploration
+from multiagentrl import learning
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",

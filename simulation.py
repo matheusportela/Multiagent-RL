@@ -13,33 +13,32 @@
 
 import argparse
 from importlib import import_module
+import logging
+import os
 import threading  # @todo Use multiprocessing instead?
 
-import zmq
-
-import controller
-
-
-def log(msg):
-    print '[Simulation] {}'.format(msg)
+from experiments.pacman import adapter
+from multiagentrl import controller
 
 
-def get_module_name():
-    """Gets the module name for the problem form the CLI arguments."""
-    parser = argparse.ArgumentParser(
-        description='Run Multiagent-RL.', add_help=False,
-        usage=argparse.SUPPRESS)
-    parser.add_argument('-m', '--module', type=str, default='pacman',
-                        choices=['pacman'],
-                        help='name of the module to run the simulation')
-    args, unknown = parser.parse_known_args()
-    return args.module
+# Logging configuration
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('Simulation')
 
 
 if __name__ == '__main__':
-    module_name = get_module_name()
+    parser = argparse.ArgumentParser(
+        description='Run Multiagent-RL.', add_help=False,
+        usage=argparse.SUPPRESS)
+    parser.add_argument('-p', '--path', type=str, default='experiments',
+                        help='Path containing experiment packages')
+    parser.add_argument('-m', '--module', type=str, default='pacman',
+                        choices=['pacman'],
+                        help='Name of the package to run the simulation')
 
-    log('Starting "{}" simulation'.format(module_name))
+    args, unknown = parser.parse_known_args()
+
+    logger.info('Starting "{}" simulation'.format(args.module))
 
     # @todo spawn one agent per thread
 
@@ -48,9 +47,7 @@ if __name__ == '__main__':
     controller_thread.daemon = True
     controller_thread.start()
 
-    adapter_module = import_module(module_name + '.adapter')
-    build_adapter = getattr(adapter_module, 'build_adapter')
-    adapter = build_adapter()
+    adapter = adapter.build_adapter()
     adapter_thread = threading.Thread(target=adapter.run)
     adapter_thread.daemon = True
     adapter_thread.start()
@@ -61,4 +58,4 @@ if __name__ == '__main__':
             # Non-blocking join allows to catch keyboard interrupt
             adapter_thread.join(1)
     except KeyboardInterrupt:
-        log('Interrupted')
+        logger.info('Interrupted')

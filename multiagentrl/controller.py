@@ -13,7 +13,7 @@ import communication
 import core
 import messages
 
-from pacman import agents
+from experiments.pacman import agents
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
