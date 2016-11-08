@@ -17,17 +17,17 @@ class BaseAdapterAgent(object):
         else:
             self.client = communication.TCPClient()
 
-        # Whether the agent must can explore the action space or must only
-        # exploit the best actions so far
-        self.is_exploring = True
+        # Whether the agent is learning from current experiences or should only
+        # exploit what has been learned previously.
+        self.is_learning = True
 
-    def set_explore(self, is_exploring):
-        """Set whether the agent can explore the action space.
+    def set_learning(self, is_learning):
+        """Set whether the agent is learning from experiences.
 
         Parameters:
-        is_exploring -- Boolean defining whether the agent can explore.
+        is_learning -- Boolean defining whether the agent is learning or not.
         """
-        self.is_exploring = is_exploring
+        self.is_learning = is_learning
 
     def communicate(self, message):
         """Send message to controller and wait for its reply.
@@ -265,7 +265,7 @@ class BaseExperiment(object):
         self._execute_games(self.learn_games)
 
         for agent in self.agents:
-            agent.set_explore(False)
+            agent.set_learning(False)
 
         self._execute_games(self.test_games)
 

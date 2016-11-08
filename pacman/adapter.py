@@ -412,7 +412,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         return action_message.action
 
     def send_reward(self):
-        if self.is_exploring:
+        if self.is_learning:
             log('#{} Sending reward'.format(self.agent_id))
             self.reward = self._calculate_reward(
                 self.pacman_game_state.getScore())
