@@ -37,10 +37,6 @@ FIRST_ACTION = Directions.STOP
 PACMAN_INDEX = 0
 
 
-def log(msg):
-    print '[  Client  ] {}'.format(msg)
-
-
 class PacmanAgent(core.BaseControllerAgent):
     def __init__(self, agent_id):
         super(PacmanAgent, self).__init__(agent_id)

@@ -6,6 +6,7 @@ Adapts communication between controller and the Berkeley Pac-man simulator.
 
 
 import argparse
+import logging
 import os
 import pickle
 import random
@@ -33,6 +34,10 @@ __maintainer__ = "Guilherme N. Ramos"
 __email__ = "gnramos@unb.br"
 
 
+# Logging configuration
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('Adapter')
+
 # Default settings (CLI parsing)
 DEFAULT_GHOST_AGENT = 'ai'
 DEFAULT_LAYOUT = 'classic'
@@ -45,10 +50,6 @@ DEFAULT_NOISE = 0
 # Pac-Man game configuration
 NUMBER_OF_BERKELEY_GAMES = 1
 RECORD_BERKELEY_GAMES = False
-
-
-def log(msg):
-    print '[  Adapter ] {}'.format(msg)
 
 
 class BerkeleyAdapter(core.BaseExperiment):
@@ -70,7 +71,7 @@ class BerkeleyAdapter(core.BaseExperiment):
 
         super(BerkeleyAdapter, self).__init__()
 
-        log('Instantiating adapter')
+        logger.info('Instantiating adapter')
 
         # Layout
         LAYOUT_PATH = 'pacman/layouts'
@@ -79,7 +80,7 @@ class BerkeleyAdapter(core.BaseExperiment):
         self.layout = get_berkeley_layout(layout_file)
         if not self.layout:
             raise ValueError('Missing layout file "{}"'.format(layout_file))
-        log('Loading layout file "{}"'.format(layout_file))
+        logger.info('Loading layout file "{}"'.format(layout_file))
 
         # Pac-Man
         self.pacman = BerkeleyAdapterAgent(agent_id=0, agent_type='pacman',
@@ -123,10 +124,10 @@ class BerkeleyAdapter(core.BaseExperiment):
         else:
             self.display = BerkeleyNullGraphics()
 
-        log('Ready')
+        logger.info('Ready')
 
     def start(self):
-        log('Starting')
+        logger.info('Starting')
 
         self.results = {
             'learn_scores': [],
@@ -145,12 +146,12 @@ class BerkeleyAdapter(core.BaseExperiment):
         self.policies = {}
 
         if filename and os.path.isfile(filename):
-            log('Loading policies from {}.'.format(filename))
+            logger.info('Loading policies from {}.'.format(filename))
             with open(filename) as f:
                 self.policies = pickle.loads(f.read())
 
     def execute_game(self):
-        log('Executing game')
+        logger.info('Executing game')
 
         score = self._run_game()
 
@@ -176,13 +177,13 @@ class BerkeleyAdapter(core.BaseExperiment):
         return simulated_game.state.getScore()
 
     def stop(self):
-        log('Stopping')
+        logger.info('Stopping')
 
         if self.policy_file:
             self._save_policies()
 
-        log('Learn scores: {}'.format(self.results['learn_scores']))
-        log('Test scores: {}'.format(self.results['test_scores']))
+        logger.info('Learn scores: {}'.format(self.results['learn_scores']))
+        logger.info('Test scores: {}'.format(self.results['test_scores']))
 
         self._write_to_file(self.output_file, self.results)
 
@@ -194,7 +195,7 @@ class BerkeleyAdapter(core.BaseExperiment):
         self._write_to_file(self.policy_file, self.policies)
 
     def _write_to_file(self, filename, content):
-        log('Saving results to "{}"'.format(filename))
+        logger.info('Saving results to "{}"'.format(filename))
         with open(filename, 'w') as f:
             f.write(pickle.dumps(content))
 
@@ -250,11 +251,11 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
     # BaseAdapterAgent required methods
 
     def start_experiment(self):
-        log('#{} Starting experiment'.format(self.agent_id))
+        logger.info('#{} Starting experiment'.format(self.agent_id))
         self._send_start_experiment_message()
 
     def _send_start_experiment_message(self):
-        log('#{} Registering {}/{}'.format(
+        logger.info('#{} Registering {}/{}'.format(
             self.agent_id, self.agent_type, self.agent_algorithm))
 
         if self.agent_type == 'pacman':
@@ -273,7 +274,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.communicate(message)
 
     def finish_experiment(self):
-        log('#{} Finishing experiment'.format(self.agent_id))
+        logger.info('#{} Finishing experiment'.format(self.agent_id))
         self._save_policy()
         self._send_finish_experiment_message()
 
@@ -287,7 +288,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.communicate(message)
 
     def start_game(self):
-        log('#{} Starting game'.format(self.agent_id))
+        logger.info('#{} Starting game'.format(self.agent_id))
         self._send_start_game_message()
         self._reset_game_data()
         self._load_policy()
@@ -307,7 +308,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
 
     def _load_policy(self):
         if self.policy and self.game_number == 0:
-            log('#{} Loading policy'.format(self.agent_id))
+            logger.info('#{} Loading policy'.format(self.agent_id))
             message = messages.PolicyMessage(
                 agent_id=self.agent_id, policy=self.policy)
             self.communicate(message)
@@ -334,7 +335,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
             raise ValueError('Ghost agent must be ai or random.')
 
     def finish_game(self):
-        log('#{} Finishing game'.format(self.agent_id))
+        logger.info('#{} Finishing game'.format(self.agent_id))
         self._update_game_number()
         self._send_finish_game_message()
 
@@ -346,7 +347,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.communicate(message)
 
     def send_state(self):
-        log('#{} Sending state'.format(self.agent_id))
+        logger.info('#{} Sending state'.format(self.agent_id))
         message = self._create_state_message()
         return self.communicate(message)
 
@@ -407,14 +408,14 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
                                 BerkeleyAdapterAgent.noise + 1)
 
     def receive_action(self):
-        log('#{} Receiving action'.format(self.agent_id))
+        logger.info('#{} Receiving action'.format(self.agent_id))
         action_message = self.send_state()
         self.game_state.predict_agent(self.agent_id, action_message.action)
         return action_message.action
 
     def send_reward(self):
         if self.is_learning:
-            log('#{} Sending reward'.format(self.agent_id))
+            logger.info('#{} Sending reward'.format(self.agent_id))
             self.reward = self._calculate_reward(
                 self.pacman_game_state.getScore())
             self.previous_score = self.pacman_game_state.getScore()
@@ -433,11 +434,12 @@ def build_adapter(context=None, endpoint=None,
                   port=communication.DEFAULT_TCP_PORT,
                   **kwargs):
     if context and endpoint:
-        log('Connecting with inproc communication')
+        logger.info('Connecting with inproc communication')
         adapter = BerkeleyAdapter(context=context, endpoint=endpoint, **kwargs)
     else:
-        log('Connecting with TCP communication (address {}, port {})'.format(
-            address, port))
+        logger.info(
+            'Connecting with TCP communication (address {}, port {})'.format(
+                address, port))
         adapter = BerkeleyAdapter(address=address, port=port, **kwargs)
 
     return adapter

@@ -138,14 +138,6 @@ class BaseController(object):
         else:
             self.server = communication.TCPServer()
 
-    def log(self, string):
-        """Log message to standard output.
-
-        Parameters:
-        string -- String to output.
-        """
-        print '[Controller] {}'.format(string)
-
     def communicate(self):
         """Send message to adapter and wait for its reply.
 

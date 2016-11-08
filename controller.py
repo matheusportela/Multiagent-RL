@@ -7,6 +7,7 @@
 from __future__ import division
 
 import argparse
+import logging
 
 import communication
 import core
@@ -21,8 +22,9 @@ __maintainer__ = "Matheus Portela"
 __email__ = "matheus.v.portela@gmail.com"
 
 
-def log(msg):
-    print '[Controller] {}'.format(msg)
+# Logging configuration
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('Controller')
 
 
 class Controller(core.BaseController):
@@ -36,10 +38,10 @@ class Controller(core.BaseController):
         self.game_number = {}
 
     def start(self):
-        log('Starting')
+        logger.info('Starting')
 
     def stop(self):
-        log('Stopped')
+        logger.info('Stopped')
 
     def is_finished(self):
         return False
@@ -69,7 +71,7 @@ class Controller(core.BaseController):
         return reply_msg
 
     def _start_experiment(self, msg):
-        log('#{} Starting experiment for {}'.format(
+        logger.info('#{} Starting experiment for {}'.format(
             msg.agent_id, msg.agent_class.__name__))
         self.map_width = msg.map_width
         self.map_height = msg.map_height
@@ -79,11 +81,11 @@ class Controller(core.BaseController):
         return messages.AcknowledgementMessage()
 
     def _finish_experiment(self, msg):
-        log('#{} Finishing experiment'.format(msg.agent_id))
+        logger.info('#{} Finishing experiment'.format(msg.agent_id))
         return messages.AcknowledgementMessage()
 
     def _start_game(self, msg):
-        log('#{} Starting game'.format(msg.agent_id))
+        logger.info('#{} Starting game'.format(msg.agent_id))
         agent_id = msg.agent_id
         ally_ids = self._get_allies(agent_id)
         enemy_ids = self._get_enemies(agent_id)
@@ -108,30 +110,30 @@ class Controller(core.BaseController):
                 id_ != agent_id]
 
     def _finish_game(self, msg):
-        log('#{} Finishing game'.format(msg.agent_id))
+        logger.info('#{} Finishing game'.format(msg.agent_id))
         self.game_number[msg.agent_id] += 1
         return messages.AcknowledgementMessage()
 
     def _receive_state(self, msg):
-        log('#{} Receiving state'.format(msg.agent_id))
+        logger.info('#{} Receiving state'.format(msg.agent_id))
         action = self.agents[msg.agent_id].act(
             msg.state, msg.legal_actions, msg.explore)
 
-        log('#{} Sending action'.format(msg.agent_id))
+        logger.info('#{} Sending action'.format(msg.agent_id))
         return messages.ActionMessage(agent_id=msg.agent_id, action=action)
 
     def _receive_reward(self, msg):
-        log('#{} Receiving reward'.format(msg.agent_id))
+        logger.info('#{} Receiving reward'.format(msg.agent_id))
         self.agents[msg.agent_id].learn(msg.state, msg.action, msg.reward)
         return messages.AcknowledgementMessage()
 
     def _send_policy_request(self, msg):
-        log('#{} Sending policy'.format(msg.agent_id))
+        logger.info('#{} Sending policy'.format(msg.agent_id))
         policy = self.agents[msg.agent_id].get_policy()
         return messages.PolicyMessage(msg.agent_id, policy)
 
     def _set_agent_policy(self, msg):
-        log('#{} Receiving policy'.format(msg.agent_id))
+        logger.info('#{} Receiving policy'.format(msg.agent_id))
         self.agents[msg.agent_id].set_policy(msg.policy)
         return messages.AcknowledgementMessage()
 
@@ -140,10 +142,10 @@ def build_controller(context=None, endpoint=None,
                      port=communication.DEFAULT_TCP_PORT):
     if context and endpoint:
         server = communication.InprocServer(context, endpoint)
-        log('Connecting with inproc communication')
+        logger.info('Connecting with inproc communication')
     else:
         server = communication.TCPServer(port)
-        log('Connecting with TCP communication (port {})'.format(port))
+        logger.info('Connecting with TCP communication (port {})'.format(port))
 
     return Controller(server=server)
 
