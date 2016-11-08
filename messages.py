@@ -80,10 +80,10 @@ class FinishGameMessage(BaseMessage):
 
 class StateMessage(BaseMessage):
     """Message containing information on the current game state."""
-    def __init__(self, agent_id, state, legal_actions):
+    def __init__(self, agent_id, state, legal_actions, explore):
         super(StateMessage, self).__init__(
             type=STATE_MSG, agent_id=agent_id, state=state,
-            legal_actions=legal_actions)
+            legal_actions=legal_actions, explore=explore)
 
 
 class ActionMessage(BaseMessage):

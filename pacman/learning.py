@@ -7,11 +7,10 @@ This module contains classes implementing multiple reinforcement learning
 algorithms. These classes are agnostic to their usage, containing no
 information specific to environments where they will be applied to.
 
-In order to achieve that, all classes must inheric from BaseLearningAlgorithm
+In order to achieve that, all classes must inherit from BaseLearningAlgorithm
 and implement its virtual methods.
 """
 
-from __future__ import division
 import random
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
@@ -202,14 +201,13 @@ class QLearning(BaseLearningAlgorithm):
 
 class QLearningWithApproximation(BaseLearningAlgorithm):
     def __init__(self, actions=None, features=None, learning_rate=1,
-                 discount_factor=1, exploration_rate=0):
+                 discount_factor=1):
         super(QLearningWithApproximation, self).__init__()
         self.actions = actions
         self.features = features
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.previous_state = None
-        self.exploration_rate = exploration_rate
 
         self.weights = {}
         self._init_weights()
@@ -272,16 +270,5 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
 
         self.previous_state = state
 
-    def _explore(self):
-        return random.choice(self.actions)
-
-    def _exploit(self, state):
-        return self._get_max_action_from_list(state, self.actions)
-
     def act(self, state):
-        p = random.random()
-
-        if p < self.exploration_rate:
-            return self._explore()
-        else:
-            return self._exploit(state)
+        return self._get_max_action_from_list(state, self.actions)

@@ -398,7 +398,8 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
             agent_id=self.agent_id,
             state=self.game_state,
             legal_actions=self.pacman_game_state.getLegalActions(
-                self.agent_id))
+                self.agent_id),
+            explore=self.is_learning)
         return message
 
     def _noise_error(self):

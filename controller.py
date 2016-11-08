@@ -90,9 +90,9 @@ class Controller(core.BaseController):
 
         if agent_id in self.agents:
             del self.agents[agent_id]
-        self.agents[agent_id] = self.agent_classes[agent_id](agent_id,
-                                                             ally_ids,
-                                                             enemy_ids)
+
+        self.agents[agent_id] = self.agent_classes[agent_id](
+            agent_id, ally_ids, enemy_ids)
 
         return messages.AcknowledgementMessage(
             ally_ids=ally_ids, enemy_ids=enemy_ids)
@@ -109,34 +109,26 @@ class Controller(core.BaseController):
 
     def _finish_game(self, msg):
         log('#{} Finishing game'.format(msg.agent_id))
-
         self.game_number[msg.agent_id] += 1
         return messages.AcknowledgementMessage()
 
     def _receive_state(self, msg):
         log('#{} Receiving state'.format(msg.agent_id))
-
-        agent = self.agents[msg.agent_id]
-        agent_action = agent.act(msg.state, msg.legal_actions)
+        action = self.agents[msg.agent_id].act(
+            msg.state, msg.legal_actions, msg.explore)
 
         log('#{} Sending action'.format(msg.agent_id))
-        return messages.ActionMessage(agent_id=msg.agent_id,
-                                      action=agent_action)
+        return messages.ActionMessage(agent_id=msg.agent_id, action=action)
 
     def _receive_reward(self, msg):
         log('#{} Receiving reward'.format(msg.agent_id))
-
-        agent = self.agents[msg.agent_id]
-        agent.learn(msg.state, msg.action, msg.reward)
-
-        reply_msg = messages.AcknowledgementMessage()
-        return reply_msg
+        self.agents[msg.agent_id].learn(msg.state, msg.action, msg.reward)
+        return messages.AcknowledgementMessage()
 
     def _send_policy_request(self, msg):
         log('#{} Sending policy'.format(msg.agent_id))
         policy = self.agents[msg.agent_id].get_policy()
-        reply_message = messages.PolicyMessage(msg.agent_id, policy)
-        return reply_message
+        return messages.PolicyMessage(msg.agent_id, policy)
 
     def _set_agent_policy(self, msg):
         log('#{} Receiving policy'.format(msg.agent_id))

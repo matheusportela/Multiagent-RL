@@ -8,6 +8,7 @@ import random
 from berkeley.game import Agent as BerkeleyGameAgent, Directions
 
 import behaviors
+import exploration
 import features
 import learning
 
@@ -58,7 +59,7 @@ class RandomPacmanAgent(PacmanAgent):
     def learn(self, state, action, reward):
         pass
 
-    def act(self, state, legal_actions):
+    def act(self, state, legal_actions, explore):
         if legal_actions:
             return random.choice(legal_actions)
 
@@ -75,7 +76,7 @@ class RandomPacmanAgentTwo(PacmanAgent):
     def learn(self, state, action, reward):
         self.last_action = action
 
-    def act(self, state, legal_actions):
+    def act(self, state, legal_actions, explore):
         if self.last_action == 'Stop' or self.last_action not in legal_actions:
             if 'Stop' in legal_actions:
                 legal_actions.remove('Stop')
@@ -111,7 +112,7 @@ class RandomGhostAgent(GhostAgent):
     def learn(self, state, action, reward):
         pass
 
-    def act(self, state, legal_actions):
+    def act(self, state, legal_actions, explore):
         if legal_actions:
             return random.choice(legal_actions)
 
@@ -124,13 +125,13 @@ class EaterPacmanAgent(PacmanAgent):
     def learn(self, state, action, reward):
         pass
 
-    def act(self, state, legal_actions):
+    def act(self, state, legal_actions, explore):
         suggested_action = self.eat_behavior(state, legal_actions)
 
-        if suggested_action in legal_actions:
-            return suggested_action
-        elif legal_actions == []:
+        if legal_actions == []:
             return Directions.STOP
+        elif suggested_action in legal_actions:
+            return suggested_action
         else:
             return random.choice(legal_actions)
 
@@ -152,11 +153,11 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
         self.K = 1.0  # Learning rate
         self.exploration_rate = 0.1
 
-        QLearning = learning.QLearningWithApproximation
-        self.learning = QLearning(learning_rate=0.1, discount_factor=0.9,
-                                  actions=self.behaviors,
-                                  features=self.features,
-                                  exploration_rate=self.exploration_rate)
+        self.learning = learning.QLearningWithApproximation(
+            learning_rate=0.1, discount_factor=0.9, actions=self.behaviors,
+            features=self.features)
+        self.exploration = exploration.EGreedy(
+            exploration_rate=self.exploration_rate)
         self.previous_behavior = self.behaviors[0]
         self.behavior_count = {}
         self.reset_behavior_count()
@@ -177,17 +178,21 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
         self.learning.learning_rate = self.K / (self.K + state.iteration)
         self.learning.learn(state, self.previous_behavior, reward)
 
-    def act(self, state, legal_actions):
+    def act(self, state, legal_actions, explore):
         behavior = self.learning.act(state)
         self.previous_behavior = behavior
         suggested_action = behavior(state, legal_actions)
 
+        if explore:
+            suggested_action = self.exploration.explore(
+                suggested_action, legal_actions)
+
         self.behavior_count[str(behavior)] += 1
 
-        if suggested_action in legal_actions:
-            return suggested_action
-        elif legal_actions == []:
+        if legal_actions == []:
             return Directions.STOP
+        elif suggested_action in legal_actions:
+            return suggested_action
         else:
             return random.choice(legal_actions)
 
@@ -215,11 +220,11 @@ class BehaviorLearningGhostAgent(GhostAgent):
 
         self.K = 1.0  # Learning rate
         self.exploration_rate = 0.1
-        QLearning = learning.QLearningWithApproximation
-        self.learning = QLearning(learning_rate=0.1, discount_factor=0.9,
-                                  actions=self.behaviors,
-                                  features=self.features,
-                                  exploration_rate=self.exploration_rate)
+        self.learning = learning.QLearningWithApproximation(
+            learning_rate=0.1, discount_factor=0.9, actions=self.behaviors,
+            features=self.features)
+        self.exploration = exploration.EGreedy(
+            exploration_rate=self.exploration_rate)
         self.previous_behavior = self.behaviors[0]
         self.behavior_count = {}
         self.reset_behavior_count()
@@ -240,17 +245,21 @@ class BehaviorLearningGhostAgent(GhostAgent):
         self.learning.learning_rate = self.K / (self.K + state.iteration)
         self.learning.learn(state, self.previous_behavior, reward)
 
-    def act(self, state, legal_actions):
+    def act(self, state, legal_actions, explore):
         behavior = self.learning.act(state)
         self.previous_behavior = behavior
         suggested_action = behavior(state, legal_actions)
 
+        if explore:
+            suggested_action = self.exploration.explore(
+                suggested_action, legal_actions)
+
         self.behavior_count[str(behavior)] += 1
 
-        if suggested_action in legal_actions:
-            return suggested_action
-        elif legal_actions == []:
+        if legal_actions == []:
             return Directions.STOP
+        elif suggested_action in legal_actions:
+            return suggested_action
         else:
             return random.choice(legal_actions)
 
