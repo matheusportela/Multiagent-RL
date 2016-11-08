@@ -116,10 +116,14 @@ class Controller(core.BaseController):
     def _receive_state(self, msg):
         log('#{} Receiving state'.format(msg.agent_id))
 
-        choose_action = self.agents[msg.agent_id].choose_action
-        agent_action = choose_action(msg.state, msg.executed_action,
-                                     msg.reward, msg.legal_actions,
-                                     msg.test_mode)
+        agent = self.agents[msg.agent_id]
+
+        if not msg.test_mode:
+            log('#{} Learning from reward'.format(msg.agent_id))
+            agent.learn(msg.state, msg.executed_action, msg.reward)
+
+        log('#{} Choosing action'.format(msg.agent_id))
+        agent_action = agent.act(msg.state, msg.legal_actions)
 
         log('#{} Sending action'.format(msg.agent_id))
         return messages.ActionMessage(agent_id=msg.agent_id,

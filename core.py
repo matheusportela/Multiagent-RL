@@ -86,6 +86,42 @@ class BaseAdapterAgent(object):
         raise NotImplementedError
 
 
+class BaseControllerAgent(object):
+    """Autonomous agent for game controller."""
+    def __init__(self, agent_id):
+        self.agent_id = agent_id
+
+    def get_policy(self):
+        """Get the current action selection policy."""
+        return None
+
+    def set_policy(self, policy):
+        """Set an action selection policy."""
+        pass
+
+    def learn(self, state, action, reward):
+        """Learn from received reward after executing an action.
+
+        Parameters:
+        state -- Current game state.
+        action -- Last executed action.
+        reward -- Reward for the previous action.
+        """
+        raise NotImplementedError
+
+    def act(self, state, legal_actions):
+        """Return an action to be executed by the agent.
+
+        Parameters:
+        state -- Current game state.
+        legal_actions -- List of currently allowed actions.
+
+        Returns:
+        An action to be executed.
+        """
+        raise NotImplementedError
+
+
 class BaseController(object):
     """Base class for a controller, which manages agents and routes messages.
     """

@@ -40,41 +40,12 @@ def log(msg):
     print '[  Client  ] {}'.format(msg)
 
 
-class BaseControllerAgent(object):
-    """Autonomous agent for game controller."""
-    def __init__(self, agent_id):
-        self.agent_id = agent_id
-
-    def get_policy(self):
-        """Get the current action selection policy."""
-        return None
-
-    def set_policy(self, policy):
-        """Set an action selection policy."""
-        pass
-
-    def choose_action(self, state, action, reward, legal_actions, explore):
-        """Return an action to be executed by the agent.
-
-        Parameters:
-        state -- Current game state.
-        action -- Last executed action.
-        reward -- Reward for the previous action.
-        legal_actions -- List of currently allowed actions.
-        explore -- Boolean whether agent is allowed to explore.
-
-        Returns:
-        An action to be executed.
-        """
-        raise NotImplementedError
-
-
-class PacmanAgent(BaseControllerAgent):
+class PacmanAgent(core.BaseControllerAgent):
     def __init__(self, agent_id):
         super(PacmanAgent, self).__init__(agent_id)
 
 
-class GhostAgent(BaseControllerAgent):
+class GhostAgent(core.BaseControllerAgent):
     def __init__(self, agent_id):
         super(GhostAgent, self).__init__(agent_id)
 
@@ -84,7 +55,10 @@ class RandomPacmanAgent(PacmanAgent):
     def __init__(self, agent_id, ally_ids, enemy_ids):
         super(RandomPacmanAgent, self).__init__(agent_id)
 
-    def choose_action(self, state, action, reward, legal_actions, explore):
+    def learn(self, state, action, reward):
+        pass
+
+    def act(self, state, legal_actions):
         if legal_actions:
             return random.choice(legal_actions)
 
@@ -94,9 +68,15 @@ class RandomPacmanAgentTwo(PacmanAgent):
     until it reaches a wall or have more than three possible moves. In these
     case, continue to follow the previous directions have twice the chance of
     happening then the other possible movements"""
-    def choose_action(self, state, action, reward, legal_actions, explore):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(RandomPacmanAgentTwo, self).__init__(agent_id)
+        self.last_action = None
 
-        if action == 'Stop' or action not in legal_actions:
+    def learn(self, state, action, reward):
+        self.last_action = action
+
+    def act(self, state, legal_actions):
+        if self.last_action == 'Stop' or self.last_action not in legal_actions:
             if 'Stop' in legal_actions:
                 legal_actions.remove('Stop')
             if len(legal_actions) > 0:
@@ -108,10 +88,10 @@ class RandomPacmanAgentTwo(PacmanAgent):
                 else:
                     number = random.choice([1, 2, 3, 4, 5, 6])
                 if number == 1 or number == 2:
-                    return action
+                    return self.last_action
                 else:
                     aux = 3
-                    legal_actions.remove(action)
+                    legal_actions.remove(self.last_action)
                     for possible_action in legal_actions:
                         if number == aux:
                             return possible_action
@@ -120,7 +100,7 @@ class RandomPacmanAgentTwo(PacmanAgent):
                     else:
                         return random.choice(legal_actions)
             else:
-                return action
+                return self.last_action
 
 
 class RandomGhostAgent(GhostAgent):
@@ -128,7 +108,10 @@ class RandomGhostAgent(GhostAgent):
     def __init__(self, agent_id, ally_ids, enemy_ids):
         super(RandomGhostAgent, self).__init__(agent_id)
 
-    def choose_action(self, state, action, reward, legal_actions, explore):
+    def learn(self, state, action, reward):
+        pass
+
+    def act(self, state, legal_actions):
         if legal_actions:
             return random.choice(legal_actions)
 
@@ -138,7 +121,10 @@ class EaterPacmanAgent(PacmanAgent):
         super(EaterPacmanAgent, self).__init__(agent_id)
         self.eat_behavior = behaviors.EatBehavior()
 
-    def choose_action(self, state, action, reward, legal_actions, test):
+    def learn(self, state, action, reward):
+        pass
+
+    def act(self, state, legal_actions):
         suggested_action = self.eat_behavior(state, legal_actions)
 
         if suggested_action in legal_actions:
@@ -187,16 +173,11 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
     def set_policy(self, weights):
         self.learning.set_weights(weights)
 
-    def choose_action(self, state, action, reward, legal_actions, test):
-        if test:
-            self.enable_test_mode()
-        else:
-            self.enable_learn_mode()
+    def learn(self, state, action, reward):
+        self.learning.learning_rate = self.K / (self.K + state.iteration)
+        self.learning.learn(state, self.previous_behavior, reward)
 
-        if not self.test_mode:
-            self.learning.learning_rate = self.K / (self.K + state.iteration)
-            self.learning.learn(state, self.previous_behavior, reward)
-
+    def act(self, state, legal_actions):
         behavior = self.learning.act(state)
         self.previous_behavior = behavior
         suggested_action = behavior(state, legal_actions)
@@ -255,16 +236,11 @@ class BehaviorLearningGhostAgent(GhostAgent):
     def set_policy(self, weights):
         self.learning.set_weights(weights)
 
-    def choose_action(self, state, action, reward, legal_actions, test):
-        if test:
-            self.enable_test_mode()
-        else:
-            self.enable_learn_mode()
+    def learn(self, state, action, reward):
+        self.learning.learning_rate = self.K / (self.K + state.iteration)
+        self.learning.learn(state, self.previous_behavior, reward)
 
-        if not self.test_mode:
-            self.learning.learning_rate = self.K / (self.K + state.iteration)
-            self.learning.learn(state, self.previous_behavior, reward)
-
+    def act(self, state, legal_actions):
         behavior = self.learning.act(state)
         self.previous_behavior = behavior
         suggested_action = behavior(state, legal_actions)
