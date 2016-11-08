@@ -117,12 +117,6 @@ class Controller(core.BaseController):
         log('#{} Receiving state'.format(msg.agent_id))
 
         agent = self.agents[msg.agent_id]
-
-        if not msg.test_mode:
-            log('#{} Learning from reward'.format(msg.agent_id))
-            agent.learn(msg.state, msg.executed_action, msg.reward)
-
-        log('#{} Choosing action'.format(msg.agent_id))
         agent_action = agent.act(msg.state, msg.legal_actions)
 
         log('#{} Sending action'.format(msg.agent_id))
@@ -131,6 +125,10 @@ class Controller(core.BaseController):
 
     def _receive_reward(self, msg):
         log('#{} Receiving reward'.format(msg.agent_id))
+
+        agent = self.agents[msg.agent_id]
+        agent.learn(msg.state, msg.action, msg.reward)
+
         reply_msg = messages.AcknowledgementMessage()
         return reply_msg
 
