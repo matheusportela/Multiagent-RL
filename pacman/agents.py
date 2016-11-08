@@ -10,7 +10,6 @@ from berkeley.game import Agent as BerkeleyGameAgent, Directions
 import behaviors
 import features
 import learning
-import messages
 
 # @todo properly include core module from parent folder
 import sys

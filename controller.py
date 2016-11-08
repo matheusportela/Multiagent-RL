@@ -8,20 +8,17 @@ from __future__ import division
 
 import argparse
 
-import messages
-from state import GameState
-
-# @todo properly include communication module from parent folder
-import sys
-sys.path.insert(0, '..')
 import communication
 import core
+import messages
+
+from pacman import agents
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
                "Pedro Saman"]
-__maintainer__ = "Guilherme N. Ramos"
-__email__ = "gnramos@unb.br"
+__maintainer__ = "Matheus Portela"
+__email__ = "matheus.v.portela@gmail.com"
 
 
 def log(msg):
@@ -156,9 +153,10 @@ def build_controller(context=None, endpoint=None,
 
     return Controller(server=server)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Run Pac-Man controller system.')
+        description='Run multiagent controller system.')
     parser.add_argument('--port', dest='port', type=int,
                         default=communication.DEFAULT_TCP_PORT,
                         help='TCP port to connect to adapter')

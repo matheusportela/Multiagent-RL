@@ -17,7 +17,6 @@ from berkeley.pacman import runGames as run_berkeley_games
 from berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics
 
 import agents
-import messages
 from state import GameState
 
 # @todo properly include communication module from parent folder
@@ -25,6 +24,7 @@ import sys
 sys.path.insert(0, '..')
 import communication
 import core
+import messages
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",

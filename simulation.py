@@ -17,6 +17,8 @@ import threading  # @todo Use multiprocessing instead?
 
 import zmq
 
+import controller
+
 
 def log(msg):
     print '[Simulation] {}'.format(msg)
@@ -39,20 +41,16 @@ if __name__ == '__main__':
 
     log('Starting "{}" simulation'.format(module_name))
 
-    context = zmq.Context()
-
     # @todo spawn one agent per thread
 
-    controller_module = import_module(module_name + '.controller')
-    build_controller = getattr(controller_module, 'build_controller')
-    controller = build_controller(context, module_name)
+    controller = controller.build_controller()
     controller_thread = threading.Thread(target=controller.run)
     controller_thread.daemon = True
     controller_thread.start()
 
     adapter_module = import_module(module_name + '.adapter')
     build_adapter = getattr(adapter_module, 'build_adapter')
-    adapter = build_adapter(context, module_name)
+    adapter = build_adapter()
     adapter_thread = threading.Thread(target=adapter.run)
     adapter_thread.daemon = True
     adapter_thread.start()
