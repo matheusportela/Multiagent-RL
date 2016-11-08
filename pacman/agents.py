@@ -8,14 +8,14 @@ import random
 from berkeley.game import Agent as BerkeleyGameAgent, Directions
 
 import behaviors
-import exploration
 import features
-import learning
 
 # @todo properly include core module from parent folder
 import sys
 sys.path.insert(0, '..')
 import core
+import exploration
+import learning
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
