@@ -17,15 +17,14 @@ from berkeley.layout import getLayout as get_berkeley_layout
 from berkeley.pacman import runGames as run_berkeley_games
 from berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics
 
-import agents
-from state import GameState
-
 # @todo properly include communication module from parent folder
 import sys
 sys.path.insert(0, '..')
+import agents
 import communication
 import core
 import messages
+import state
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
@@ -379,14 +378,15 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
                     wall_positions.append((y, x))
 
         if self.game_number == 0:
-            self.game_state = GameState(agent_id=self.agent_id,
-                                        width=self.layout.width,
-                                        height=self.layout.height,
-                                        ally_ids=self.ally_ids,
-                                        enemy_ids=self.enemy_ids,
-                                        walls=wall_positions,
-                                        eater=(self.agent_type == 'pacman'),
-                                        iteration=self.game_number)
+            self.game_state = state.GameState(
+                agent_id=self.agent_id,
+                width=self.layout.width,
+                height=self.layout.height,
+                ally_ids=self.ally_ids,
+                enemy_ids=self.enemy_ids,
+                walls=wall_positions,
+                eater=(self.agent_type == 'pacman'),
+                iteration=self.game_number)
         self.game_state.set_food_positions(food_positions)
 
         for id_, pos in agent_positions.items():
