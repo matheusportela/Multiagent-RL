@@ -103,10 +103,10 @@ class BerkeleyAdapter(core.BaseExperiment):
 
         # Runs
         self.learn_games = int(learn_games)
-        assert self.learn_games > 0
+        assert self.learn_games >= 0
 
         self.test_games = int(test_games)
-        assert self.test_games > 0
+        assert self.test_games >= 0
 
         # Output
         if output_file:
