@@ -446,7 +446,7 @@ def build_adapter(context=None, endpoint=None,
     return adapter
 
 
-if __name__ == '__main__':
+def build_parser():
     parser = argparse.ArgumentParser(
         description='Run Pac-Man simulator adapter system.')
     parser.add_argument('-g', '--graphics', dest='graphics', default=False,
@@ -492,9 +492,10 @@ if __name__ == '__main__':
                        default=communication.DEFAULT_TCP_PORT,
                        help='Port to connect to controller (TCP connection)')
 
-    args, unknown = parser.parse_known_args()
+    return parser
 
-    adapter = build_adapter(
+def build_adapter_with_args(args):
+    return build_adapter(
         address=communication.DEFAULT_CLIENT_ADDRESS,
         port=communication.DEFAULT_TCP_PORT,
         pacman_agent=args.pacman_agent,
@@ -507,6 +508,12 @@ if __name__ == '__main__':
         test_games=args.test_games,
         output_file=args.output_file,
         graphics=args.graphics)
+
+
+if __name__ == '__main__':
+    parser = build_parser()
+    args = parser.parse_args()
+    adapter = build_adapter_with_args(args)
 
     try:
         adapter.run()
