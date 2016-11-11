@@ -494,6 +494,7 @@ def build_parser():
 
     return parser
 
+
 def build_adapter_with_args(args):
     return build_adapter(
         address=communication.DEFAULT_CLIENT_ADDRESS,
