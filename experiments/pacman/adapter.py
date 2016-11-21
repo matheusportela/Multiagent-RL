@@ -18,14 +18,10 @@ from berkeley.pacman import runGames as run_berkeley_games
 from berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics
 
 import agents
-import state
-
-# @todo properly include multiagentrl without relative import
-import sys
-sys.path.insert(0, '..')
 from multiagentrl import communication
 from multiagentrl import core
 from multiagentrl import messages
+import state
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",

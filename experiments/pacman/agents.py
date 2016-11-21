@@ -9,10 +9,6 @@ from berkeley.game import Agent as BerkeleyGameAgent, Directions
 
 import behaviors
 import features
-
-# @todo properly include multiagentrl without relative imports
-import sys
-sys.path.insert(0, '..')
 from multiagentrl import core
 from multiagentrl import exploration
 from multiagentrl import learning
