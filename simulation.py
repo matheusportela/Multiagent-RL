@@ -38,7 +38,8 @@ if __name__ == '__main__':
     parser = adapter_module.build_parser()
     args = parser.parse_args()
 
-    controller = controller_module.build_controller()
+    agents_path = 'experiments.' + MODULE + '.agents'
+    controller = controller_module.build_controller(agents_path=agents_path)
     controller_thread = threading.Thread(target=controller.run)
     controller_thread.daemon = True
     controller_thread.start()

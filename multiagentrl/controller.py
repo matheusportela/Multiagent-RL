@@ -7,13 +7,12 @@
 from __future__ import division
 
 import argparse
+from importlib import import_module
 import logging
 
 import communication
 import core
 import messages
-
-from experiments.pacman import agents
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
@@ -138,8 +137,10 @@ class Controller(core.BaseController):
         return messages.AcknowledgementMessage()
 
 
-def build_controller(context=None, endpoint=None,
+def build_controller(agents_path, context=None, endpoint=None,
                      port=communication.DEFAULT_TCP_PORT):
+    agents = import_module(agents_path)
+
     if context and endpoint:
         server = communication.InprocServer(context, endpoint)
         logger.info('Connecting with inproc communication')
