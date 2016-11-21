@@ -11,7 +11,7 @@ class WindyWorldSimulator(object):
     * * * W W * * * * *
     * * * W W * * * * *
     * * * * * * * * * *
-    * * * * * * * * * *
+    * * A * * * * * * *
     * * * * * * * * * *
 
     where:
@@ -19,6 +19,7 @@ class WindyWorldSimulator(object):
     S: Initial state
     W: Water that gives penalty
     G: Goal state
+    A: Agent current position
     *: Free cell
 
     Each step gives a reward of -1, going into the water rewards -100 and
