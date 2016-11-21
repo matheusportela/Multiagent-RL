@@ -1,14 +1,17 @@
 #  -*- coding: utf-8 -*-
-#       @file: simulation.py
-#     @author: Guilherme N. Ramos (gnramos@unb.br)
+#  @file: simulation.py
+#  @author: Guilherme N. Ramos (gnramos@unb.br)
 #
-# Runs the simulation.
+# Runs the simulation in different threads for speed.
 #
-# Assumes a problem module exists in a subdirectory (along with  all its
-# associated files), and that it has a cliparser.py file which will provide an
-# instance of a Controller and an Adapter.
+# It assumes the experiment has a package located at "experiments/" containing
+# a module called "adapter.py". For example, an experiment called "pacman" must
+# have at least the structure:
 #
-# The simulation is run in different threads for speed.
+# experiments/
+#   pacman/
+#       __init__.py
+#       adapter.py
 
 
 import argparse
@@ -17,8 +20,7 @@ import logging
 import os
 import threading  # @todo Use multiprocessing instead?
 
-from experiments.pacman import adapter
-from multiagentrl import controller
+from multiagentrl import controller as controller_module
 
 
 # Logging configuration
@@ -30,19 +32,18 @@ MODULE = 'pacman'
 
 
 if __name__ == '__main__':
-    parser = adapter.build_parser()
-    args = parser.parse_args()
-
     logger.info('Starting "{}" simulation'.format(MODULE))
 
-    # @todo spawn one agent per thread
+    adapter_module = import_module('experiments.' + MODULE + '.adapter')
+    parser = adapter_module.build_parser()
+    args = parser.parse_args()
 
-    controller = controller.build_controller()
+    controller = controller_module.build_controller()
     controller_thread = threading.Thread(target=controller.run)
     controller_thread.daemon = True
     controller_thread.start()
 
-    adapter = adapter.build_adapter_with_args(args)
+    adapter = adapter_module.build_adapter_with_args(args)
     adapter_thread = threading.Thread(target=adapter.run)
     adapter_thread.daemon = True
     adapter_thread.start()
