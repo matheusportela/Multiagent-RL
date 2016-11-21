@@ -9,7 +9,7 @@ from simulator import WindyWorldSimulator
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('Adapter')
+logger = logging.getLogger('Windy')
 
 
 class WindyExperiment(core.BaseExperiment):

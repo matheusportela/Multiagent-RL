@@ -32,7 +32,7 @@ __email__ = "gnramos@unb.br"
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('Adapter')
+logger = logging.getLogger('Pacman')
 
 # Default settings (CLI parsing)
 DEFAULT_GHOST_AGENT = 'ai'
