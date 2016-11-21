@@ -157,7 +157,7 @@ if __name__ == '__main__':
     parser.add_argument('--port', dest='port', type=int,
                         default=communication.DEFAULT_TCP_PORT,
                         help='TCP port to connect to adapter')
-    args, unknown = parser.parse_known_args()
+    args = parser.parse_args()
 
     controller = build_controller(port=args.port)
 
