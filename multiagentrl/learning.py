@@ -141,14 +141,13 @@ class QLearning(BaseLearningAlgorithm):
         """
         self.q_values[state][action] = value
 
-    def _get_max_action_from_list(self, state, action_list):
+    def _get_max_action_from_list(self, state):
         """Get the action with maximum estimated value from the given list of
         actions.
 
         state -- Environment state.
-        action_list -- Actions to be evaluated.
         """
-        actions = filter(lambda a: a in action_list, self.q_values[state])
+        actions = self.q_values[state]
         values = [self.q_values[state][action] for action in actions]
         max_value = max(values)
         max_actions = [action for action in actions
@@ -163,7 +162,7 @@ class QLearning(BaseLearningAlgorithm):
         state -- Environment state.
         """
         self.initialize_unknown_state(state)
-        return self._get_max_action_from_list(state, self.actions)
+        return self._get_max_action_from_list(state)
 
     def get_max_q_value(self, state):
         max_action = self.get_max_action(state)
@@ -189,14 +188,13 @@ class QLearning(BaseLearningAlgorithm):
         self.set_q_value(self.previous_state, action, new_value)
         self.update_state(state)
 
-    def act(self, state, legal_actions):
+    def act(self, state):
         """Select the best legal action for the given state.
 
         Parameters:
         state -- Agent state to select an action.
-        legal_actions -- Actions allowed in the current state.
         """
-        return self._get_max_action_from_list(state, legal_actions)
+        return self.get_max_action(state)
 
 
 class QLearningWithApproximation(BaseLearningAlgorithm):
@@ -231,15 +229,13 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
 
         return q_value
 
-    def _get_max_action_from_list(self, state, action_list):
+    def _get_max_action_from_list(self, state):
         """Get the action with maximum estimated value from the given list of
         actions.
 
         state -- Environment state.
-        action_list -- Actions to be evaluated.
         """
-        actions = filter(lambda a: a in action_list, self.actions)
-        values = [self.get_q_value(state, action) for action in actions]
+        values = [self.get_q_value(state, action) for action in self.actions]
         max_value = max(values)
         max_actions = [action for action in actions
                        if self.get_q_value(state, action) == max_value]
@@ -247,7 +243,7 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
         return random.choice(max_actions)
 
     def get_max_action(self, state):
-        return self._get_max_action_from_list(state, self.actions)
+        return self._get_max_action_from_list(state)
 
     def get_max_q_value(self, state):
         action = self.get_max_action(state)
@@ -271,4 +267,4 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
         self.previous_state = state
 
     def act(self, state):
-        return self._get_max_action_from_list(state, self.actions)
+        return self._get_max_action_from_list(state)
