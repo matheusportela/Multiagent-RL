@@ -1,5 +1,6 @@
 import argparse
 import logging
+import pickle
 
 import agents
 from multiagentrl import core
@@ -13,7 +14,8 @@ logger = logging.getLogger('Windy')
 
 
 class WindyExperiment(core.BaseExperiment):
-    def __init__(self, learn_games, test_games, sleep, agent_algorithm):
+    def __init__(self, learn_games, test_games, sleep, agent_algorithm,
+                 output_file):
         super(WindyExperiment, self).__init__(
             learn_games=learn_games,
             test_games=test_games)
@@ -27,6 +29,7 @@ class WindyExperiment(core.BaseExperiment):
             'learn_scores': [],
             'test_scores': []
         }
+        self.output_file = output_file
 
     def start(self):
         logger.info('Starting')
@@ -55,6 +58,12 @@ class WindyExperiment(core.BaseExperiment):
     def stop(self):
         logger.info('Stopping')
         print self.results
+        self._save_results()
+
+    def _save_results(self):
+        if self.output_file:
+            logger.info('Saving results to "{}"'.format(self.output_file))
+            pickle.dump(self.results, open(self.output_file, 'w'))
 
 
 class WindyAgent(core.BaseAdapterAgent):
@@ -143,6 +152,9 @@ def build_parser():
     parser.add_argument(
         '-a', '--agent', dest='agent', type=str, choices=['random', 'ai'],
         default='random', help='select Reinforcement Learning agent')
+    parser.add_argument(
+        '-o', '--output', dest='output', type=str,
+        help='output file to save simulation results (e.g. "windy.res")')
     return parser
 
 
@@ -151,4 +163,5 @@ def build_adapter_with_args(args):
         learn_games=args.learn_games,
         test_games=args.test_games,
         sleep=args.sleep,
-        agent_algorithm=args.agent)
+        agent_algorithm=args.agent,
+        output_file=args.output)
