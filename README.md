@@ -21,7 +21,7 @@ This project requires the following Python packages:
 
 ### GNU/Unix
 
-This assumes a GNU/Unix distribution (Ubuntu), but everything is in Pỳthon so the setup shouldn't be too different for other platforms.
+This assumes a GNU/Unix distribution (Ubuntu), but everything is in Python so the setup shouldn't be too different for other platforms.
 
 Install by running the following commands.
 
