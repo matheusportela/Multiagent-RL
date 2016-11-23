@@ -27,11 +27,11 @@ class RandomAgent(core.BaseControllerAgent):
 class LearningAgent(core.BaseControllerAgent):
     def __init__(self, agent_id, ally_ids, enemy_ids):
         super(LearningAgent, self).__init__(agent_id)
-        self.K = 1.0  # Learning rate
+        self.K = 1.0  # Initial learning rate
         self.iteration = 1
         self.exploration_rate = 0.1
         self.learning = learning.QLearning(
-            learning_rate=0.1, discount_factor=0.9, actions=range(4))
+            learning_rate=self.K, discount_factor=0.5, actions=range(4))
         self.exploration = exploration.EGreedy(
             exploration_rate=self.exploration_rate)
 
