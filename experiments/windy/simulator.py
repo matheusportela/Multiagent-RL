@@ -67,6 +67,7 @@ class WindyWorldSimulator(object):
     def prepate_new_episode(self):
         self.agent_coordinates = self.initial_coordinates
         self.score = 0
+        self.steps = 0
 
     def get_state(self):
         return (self.agent_coordinates[0]*self.cols +
