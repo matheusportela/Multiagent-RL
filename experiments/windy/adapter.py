@@ -9,8 +9,8 @@ from simulator import WindyWorldSimulator
 
 
 # Logging configuration
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('Windy')
+logger.setLevel(logging.DEBUG)
 
 
 class WindyExperiment(core.BaseExperiment):
@@ -41,12 +41,23 @@ class WindyExperiment(core.BaseExperiment):
         logger.info('Executing game')
         self.simulator.start()
 
+        # Send first state before start learning
+        self.agent.state = self.simulator.get_state()
+        self.agent.send_state()
+
         while not self.simulator.is_finished():
-            self.agent.state = self.simulator.get_state()
-            self.agent.send_state()
+            # Receive an action for the current state
             action = self.agent.receive_action()
+
+            # Simulate one step
             self.simulator.step(action)
             print self.simulator
+
+            # Update state to learn from the received reward
+            self.agent.state = self.simulator.get_state()
+            self.agent.send_state()
+
+            # Get reward when executing the action and reaching the new state
             self.agent.reward = self.simulator.get_reward()
             self.agent.send_reward()
 
@@ -121,12 +132,14 @@ class WindyAgent(core.BaseAdapterAgent):
             state=self.state,
             legal_actions=self.actions,
             explore=self.is_learning)
+        logger.debug('State: {}'.format(self.state))
         return self.communicate(message)
 
     def receive_action(self):
         logger.info('Receiving action')
         action_message = self.send_state()
         self.action = action_message.action
+        logger.debug('Action: {}'.format(self.action))
         return self.action
 
     def send_reward(self):
@@ -135,6 +148,7 @@ class WindyAgent(core.BaseAdapterAgent):
             message = messages.RewardMessage(
                 agent_id=self.agent_id, state=self.state,
                 action=self.action, reward=self.reward)
+            logger.debug('Reward: {}'.format(self.reward))
             self.communicate(message)
 
 
@@ -147,7 +161,7 @@ def build_parser():
         '-t', '--test-games', dest='test_games', type=int, default=1,
         help='number of games to test learned policy')
     parser.add_argument(
-        '-s', '--sleep', dest='sleep', type=int, default=0.1,
+        '-s', '--sleep', dest='sleep', type=float, default=0.1,
         help='seconds to sleep between game steps')
     parser.add_argument(
         '-a', '--agent', dest='agent', type=str, choices=['random', 'ai'],
