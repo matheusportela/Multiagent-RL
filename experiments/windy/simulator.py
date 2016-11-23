@@ -42,6 +42,8 @@ class WindyWorldSimulator(object):
         self.num_states = self.rows*self.cols
         self.sleep = sleep
         self.score = 0
+        self.steps = 0
+        self.max_steps = 1000
 
     def __repr__(self):
         lines = [[]]
@@ -67,8 +69,8 @@ class WindyWorldSimulator(object):
         self.score = 0
 
     def get_state(self):
-        return (self.agent_coordinates[0]*self.rows +
-                self.agent_coordinates[1]*self.cols)
+        return (self.agent_coordinates[0]*self.cols +
+                self.agent_coordinates[1])
 
     def generate_state(self, action):
         # wind
@@ -101,12 +103,16 @@ class WindyWorldSimulator(object):
         return reward
 
     def is_finished(self):
-        return self.agent_coordinates == self.goal_coordinates
+        # Limit maximum number of steps to avoid stuck agents halting the
+        # entire experiment
+        return (self.agent_coordinates == self.goal_coordinates or
+                self.steps > self.max_steps)
 
     def start(self):
         self.prepate_new_episode()
 
     def step(self, action):
+        self.steps += 1
         coordinates = self.generate_state(action)
         self.score += self.get_reward()
         time.sleep(self.sleep)
