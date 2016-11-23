@@ -22,8 +22,8 @@ __email__ = "matheus.v.portela@gmail.com"
 
 
 # Logging configuration
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('Controller')
+logger.setLevel(logging.INFO)
 
 
 class Controller(core.BaseController):
@@ -89,11 +89,11 @@ class Controller(core.BaseController):
         ally_ids = self._get_allies(agent_id)
         enemy_ids = self._get_enemies(agent_id)
 
-        if agent_id in self.agents:
-            del self.agents[agent_id]
+        if agent_id not in self.agents:
+            self.agents[agent_id] = self.agent_classes[agent_id](
+                agent_id, ally_ids, enemy_ids)
 
-        self.agents[agent_id] = self.agent_classes[agent_id](
-            agent_id, ally_ids, enemy_ids)
+        self.agents[agent_id].start_game()
 
         return messages.AcknowledgementMessage(
             ally_ids=ally_ids, enemy_ids=enemy_ids)
@@ -110,6 +110,7 @@ class Controller(core.BaseController):
 
     def _finish_game(self, msg):
         logger.info('#{} Finishing game'.format(msg.agent_id))
+        self.agents[msg.agent_id].finish_game()
         self.game_number[msg.agent_id] += 1
         return messages.AcknowledgementMessage()
 
