@@ -10,6 +10,12 @@ class RandomAgent(core.BaseControllerAgent):
     def __init__(self, agent_id, ally_ids, enemy_ids):
         super(RandomAgent, self).__init__(agent_id)
 
+    def start_game(self):
+        pass
+
+    def finish_game(self):
+        pass
+
     def learn(self, state, action, reward):
         pass
 
@@ -35,10 +41,16 @@ class LearningAgent(core.BaseControllerAgent):
     def set_policy(self, weights):
         self.learning.q_values = weights
 
-    def learn(self, state, action, reward):
-        self.learning.learning_rate = self.K / (self.K + self.iteration)
-        self.learning.learn(state, action, reward)
+    def start_game(self):
+        # Reduce learning rate after every game
+        self.K = self.K / (self.K + self.iteration)
+        self.learning.learning_rate = self.K
+
+    def finish_game(self):
         self.iteration += 1
+
+    def learn(self, state, action, reward):
+        self.learning.learn(state, action, reward)
 
     def act(self, state, legal_actions, explore):
         action = self.learning.act(state)

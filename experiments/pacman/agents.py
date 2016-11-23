@@ -37,10 +37,22 @@ class PacmanAgent(core.BaseControllerAgent):
     def __init__(self, agent_id):
         super(PacmanAgent, self).__init__(agent_id)
 
+    def start_game(self):
+        pass
+
+    def finish_game(self):
+        pass
+
 
 class GhostAgent(core.BaseControllerAgent):
     def __init__(self, agent_id):
         super(GhostAgent, self).__init__(agent_id)
+
+    def start_game(self):
+        pass
+
+    def finish_game(self):
+        pass
 
 
 class RandomPacmanAgent(PacmanAgent):
