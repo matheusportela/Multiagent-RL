@@ -1,7 +1,5 @@
 # Multiagent RL
 
-## Introduction
-
 **Multiagent RL** is a framework to run reinforcement learning experiment with multiple agents. There are other simulators and frameworks for reinforcement learning, such as [OpenAI Gym](https://gym.openai.com), [Arcade Learning Environment](http://www.arcadelearningenvironment.org), [PyBrain](http://pybrain.org) and [Maja](http://mmlf.sourceforge.net), and they are great. However, they are mostly focused in single agent reinforcement learning scenarios and adapting them to multiagent systems isn't trivial.
 
 This code was used in the undergraduate thesis in Mechatronics Engineering, at the [University of Brasilia](http://www.unb.br), entitled ["Behavior selection for multiple autonomous agents with reinforcement learning in stochastic environments"](https://db.tt/TIvw9aXx).
