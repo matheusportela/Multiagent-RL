@@ -93,12 +93,23 @@ class QLearning(BaseLearningAlgorithm):
     def __str__(self):
         """Generates Q-values string representation."""
         results = []
-        results.append('Q-values\n')
-        for state in self.q_values:
-            results.append(str(state))
+
+        # Print table header
+        results.append('Q-values ')
+        for action in self.actions:
+            results.append('{0: ^9}    '.format(str(action)))
+        results.append('\n')
+
+        # Print Q-values
+        for state in sorted(self.q_values):
+            results.append('{0: >4}:    '.format(str(state)))
             for action in self.q_values[state]:
-                results.append(str(self.q_values[state][action]))
-                results.append('\t')
+                q_value = self.q_values[state][action]
+
+                if q_value == 0.0:
+                    results.append('{0: >9}    '.format('0'))
+                else:
+                    results.append('{0:+f}    '.format(q_value))
             results.append('\n')
         return ''.join(results)
 
