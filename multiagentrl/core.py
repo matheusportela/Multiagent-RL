@@ -99,6 +99,14 @@ class BaseControllerAgent(object):
         """Set an action selection policy."""
         pass
 
+    def start_game(self):
+        """Execute before starting a new game."""
+        raise NotImplementedError
+
+    def stop_game(self):
+        """Execute after finishing a new game."""
+        raise NotImplementedError
+
     def learn(self, state, action, reward):
         """Learn from received reward after executing an action.
 

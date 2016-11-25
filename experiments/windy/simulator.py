@@ -6,13 +6,16 @@ class WindyWorldSimulator(object):
     """Windy water example problem.
 
     The agent lives in the following world:
-    * * * W W * * * * *
-    S * * * * * * G * *
-    * * * W W * * * * *
-    * * * W W * * * * *
-    * * * * * * * * * *
-    * * A * * * * * * *
-    * * * * * * * * * *
+
+         0 1 2 3 4 5 6 7 8 9
+        --------------------
+     0 | * * * W W * * * * *
+    10 | S * * * * * * G * *
+    20 | * * * W W * * * * *
+    30 | * * * W W * * * * *
+    40 | * * * * * * * * * *
+    50 | * * A * * * * * * *
+    60 | * * * * * * * * * *
 
     where:
 
@@ -22,15 +25,26 @@ class WindyWorldSimulator(object):
     A: Agent current position
     *: Free cell
 
+    and actions:
+    0: right
+    1: up
+    2: left
+    3: down
+
     Each step gives a reward of -1, going into the water rewards -100 and
     reaching the goal state rewards 100.
     """
 
-    def __init__(self, wind_frequency=0.1, sleep=0.1):
+    def __init__(self, wind_frequency=0.0, sleep=0.1):
         super(WindyWorldSimulator, self).__init__()
         self.initial_coordinates = [1, 0]
         self.agent_coordinates = self.initial_coordinates
-        self.actions = [[0, 1], [-1, 0], [0, -1], [1, 0]]
+        self.actions = [
+            [0, 1],   # right
+            [-1, 0],  # up
+            [0, -1],  # left
+            [1, 0]    # down
+        ]
         self.rows = 7
         self.cols = 10
         self.goal_coordinates = [1, 7]
@@ -42,6 +56,8 @@ class WindyWorldSimulator(object):
         self.num_states = self.rows*self.cols
         self.sleep = sleep
         self.score = 0
+        self.steps = 0
+        self.max_steps = 1000
 
     def __repr__(self):
         lines = [[]]
@@ -65,10 +81,11 @@ class WindyWorldSimulator(object):
     def prepate_new_episode(self):
         self.agent_coordinates = self.initial_coordinates
         self.score = 0
+        self.steps = 0
 
     def get_state(self):
-        return (self.agent_coordinates[0]*self.rows +
-                self.agent_coordinates[1]*self.cols)
+        return (self.agent_coordinates[0]*self.cols +
+                self.agent_coordinates[1])
 
     def generate_state(self, action):
         # wind
@@ -101,12 +118,16 @@ class WindyWorldSimulator(object):
         return reward
 
     def is_finished(self):
-        return self.agent_coordinates == self.goal_coordinates
+        # Limit maximum number of steps to avoid stuck agents halting the
+        # entire experiment
+        return (self.agent_coordinates == self.goal_coordinates or
+                self.steps > self.max_steps)
 
     def start(self):
         self.prepate_new_episode()
 
     def step(self, action):
+        self.steps += 1
         coordinates = self.generate_state(action)
         self.score += self.get_reward()
         time.sleep(self.sleep)
