@@ -1,16 +1,19 @@
-# Multiagent-RL
+# Multiagent RL
 
 ## Introduction
 
-This repository contains the code used in the undergraduate thesis in Mechatronics Engineering, at the [University of Brasilia](http://www.unb.br), entitled ["Behavior selection for multiple autonomous agents with reinforcement learning in stochastic environments"](https://db.tt/TIvw9aXx).
+**Multiagent RL** is a framework to run reinforcement learning experiment with multiple agents. There are other simulators and frameworks for reinforcement learning, such as [OpenAI Gym](https://gym.openai.com), [Arcade Learning Environment](http://www.arcadelearningenvironment.org), [PyBrain](http://pybrain.org) and [Maja](http://mmlf.sourceforge.net), and they are great. However, they are mostly focused in single agent reinforcement learning scenarios and adapting them to multiagent systems isn't trivial.
 
-The idea is to have multiple simulated robotic agents learning to select appropriate behaviors in a stochastic environment. The uncertainty of a state is handled through [Bayesian Programming](https://en.wikipedia.org/wiki/Bayesian_programming), and the agents learn by applying [Q-learning](https://en.wikipedia.org/wiki/Q-learning) with [function approximation](http://people.csail.mit.edu/agf/Files/13FTML-RLTutorial.pdf).
+This code was used in the undergraduate thesis in Mechatronics Engineering, at the [University of Brasilia](http://www.unb.br), entitled ["Behavior selection for multiple autonomous agents with reinforcement learning in stochastic environments"](https://db.tt/TIvw9aXx).
 
-Currently, the approach is tested in a predator-prey problem using a modified version of the [Pac-Man game](https://en.wikipedia.org/wiki/Pac-Man) with introduced uncertainties. Therefore, this simplified multi-agent situation aims to answer the following question: __can the ghosts learn to get the Pac-Man?__
+## Experiments
+
+The [experiments directory](experiments/) contains code of simulations that have already been implemented with Multiagent RL. Take a look to better understand how this project can be useful in your case.
+
+- [Windy World](experiments/windy/): single agent learning to reach a goal position without falling in the water
+- [Pac-Man](experiments/pacman/): Pac-Man game where ghosts learn to capture the Pac-Man
 
 ## Installation
-
- The Pac-Man AI Projects provides six Pac-Man-like simulators that are free to use for educational purposes. The one we will be using is [Project 5: Classification](http://ai.berkeley.edu/classification.html), which provides an arena mimicking the complete Pac-Man game, including various ghosts.
 
 This project requires the following Python packages:
 
