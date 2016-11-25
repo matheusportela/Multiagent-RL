@@ -35,7 +35,7 @@ class WindyWorldSimulator(object):
     reaching the goal state rewards 100.
     """
 
-    def __init__(self, wind_frequency=0.0, sleep=0.1):
+    def __init__(self, wind_frequency=0.2, sleep=0.1):
         super(WindyWorldSimulator, self).__init__()
         self.initial_coordinates = [1, 0]
         self.agent_coordinates = self.initial_coordinates
