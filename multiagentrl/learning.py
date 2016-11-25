@@ -11,7 +11,11 @@ In order to achieve that, all classes must inherit from BaseLearningAlgorithm
 and implement its virtual methods.
 """
 
+import logging
 import random
+
+# Logging configuration
+logger = logging.getLogger(__name__)
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
@@ -190,6 +194,11 @@ class QLearning(BaseLearningAlgorithm):
         action -- Executed action.
         reward -- Reward received after executing the action.
         """
+        logger.debug('Previous state: {}'.format(self.previous_state))
+        logger.debug('Current state: {}'.format(state))
+        logger.debug('Action: {}'.format(action))
+        logger.debug('Reward: {}'.format(reward))
+
         old_value = self.get_q_value(self.previous_state, action)
         next_expected_value = self.get_max_q_value(state)
         new_value = (old_value + self.learning_rate * (reward +
@@ -198,6 +207,8 @@ class QLearning(BaseLearningAlgorithm):
                                                        old_value))
         self.set_q_value(self.previous_state, action, new_value)
         self.update_state(state)
+
+        logger.debug('Q-values:\n{}'.format(self))
 
     def act(self, state):
         """Select the best legal action for the given state.

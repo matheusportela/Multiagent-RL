@@ -6,13 +6,16 @@ class WindyWorldSimulator(object):
     """Windy water example problem.
 
     The agent lives in the following world:
-    * * * W W * * * * *
-    S * * * * * * G * *
-    * * * W W * * * * *
-    * * * W W * * * * *
-    * * * * * * * * * *
-    * * A * * * * * * *
-    * * * * * * * * * *
+
+         0 1 2 3 4 5 6 7 8 9
+        --------------------
+     0 | * * * W W * * * * *
+    10 | S * * * * * * G * *
+    20 | * * * W W * * * * *
+    30 | * * * W W * * * * *
+    40 | * * * * * * * * * *
+    50 | * * A * * * * * * *
+    60 | * * * * * * * * * *
 
     where:
 
@@ -22,15 +25,26 @@ class WindyWorldSimulator(object):
     A: Agent current position
     *: Free cell
 
+    and actions:
+    0: right
+    1: up
+    2: left
+    3: down
+
     Each step gives a reward of -1, going into the water rewards -100 and
     reaching the goal state rewards 100.
     """
 
-    def __init__(self, wind_frequency=0.1, sleep=0.1):
+    def __init__(self, wind_frequency=0.0, sleep=0.1):
         super(WindyWorldSimulator, self).__init__()
         self.initial_coordinates = [1, 0]
         self.agent_coordinates = self.initial_coordinates
-        self.actions = [[0, 1], [-1, 0], [0, -1], [1, 0]]
+        self.actions = [
+            [0, 1],   # right
+            [-1, 0],  # up
+            [0, -1],  # left
+            [1, 0]    # down
+        ]
         self.rows = 7
         self.cols = 10
         self.goal_coordinates = [1, 7]

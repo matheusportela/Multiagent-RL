@@ -9,8 +9,8 @@ from simulator import WindyWorldSimulator
 
 
 # Logging configuration
-logger = logging.getLogger('Windy')
-logger.setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class WindyExperiment(core.BaseExperiment):
@@ -51,7 +51,9 @@ class WindyExperiment(core.BaseExperiment):
 
             # Simulate one step
             self.simulator.step(action)
-            print self.simulator
+
+            # Show simulation state
+            logger.info('Simulator:\n{}'.format(self.simulator))
 
             # Update state to learn from the received reward
             self.agent.state = self.simulator.get_state()
@@ -126,7 +128,7 @@ class WindyAgent(core.BaseAdapterAgent):
         self.communicate(message)
 
     def send_state(self):
-        logger.info('Sending state')
+        logger.debug('Sending state')
         message = messages.StateMessage(
             agent_id=self.agent_id,
             state=self.state,
@@ -136,7 +138,7 @@ class WindyAgent(core.BaseAdapterAgent):
         return self.communicate(message)
 
     def receive_action(self):
-        logger.info('Receiving action')
+        logger.debug('Receiving action')
         action_message = self.send_state()
         self.action = action_message.action
         logger.debug('Action: {}'.format(self.action))
@@ -144,7 +146,7 @@ class WindyAgent(core.BaseAdapterAgent):
 
     def send_reward(self):
         if self.is_learning:
-            logger.info('Sending reward')
+            logger.debug('Sending reward')
             message = messages.RewardMessage(
                 agent_id=self.agent_id, state=self.state,
                 action=self.action, reward=self.reward)
