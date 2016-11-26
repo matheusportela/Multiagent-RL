@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 import pickle
 
 import agents
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class WindyExperiment(core.BaseExperiment):
     def __init__(self, learn_games, test_games, sleep, agent_algorithm,
-                 output_file):
+                 output_file, policy_file):
         super(WindyExperiment, self).__init__(
             learn_games=learn_games,
             test_games=test_games)
@@ -30,12 +31,19 @@ class WindyExperiment(core.BaseExperiment):
             'test_scores': []
         }
         self.output_file = output_file
+        self.policy_file = policy_file
 
     def start(self):
         logger.info('Starting')
         self.agent.map_width = self.simulator.cols
         self.agent.map_height = self.simulator.rows
         self.agent.actions = range(len(self.simulator.actions))
+        self._load_agent_policy()
+
+    def _load_agent_policy(self):
+        if self.policy_file and os.path.isfile(self.policy_file):
+            logger.debug('Loading policies from "{}"'.format(self.policy_file))
+            self.agent.policy = pickle.load(open(self.policy_file))
 
     def execute_game(self):
         logger.info('Executing game')
@@ -70,17 +78,23 @@ class WindyExperiment(core.BaseExperiment):
 
     def stop(self):
         logger.info('Stopping')
-        print self.results
+        logger.info('Results: {}'.format(self.results))
         self._save_results()
+        self._save_agent_policy()
 
     def _save_results(self):
         if self.output_file:
             logger.info('Saving results to "{}"'.format(self.output_file))
             pickle.dump(self.results, open(self.output_file, 'w'))
 
+    def _save_agent_policy(self):
+        if self.policy_file:
+            logger.info('Saving policy to "{}"'.format(self.policy_file))
+            pickle.dump(self.agent.policy, open(self.policy_file, 'w'))
+
 
 class WindyAgent(core.BaseAdapterAgent):
-    def __init__(self, agent_algorithm):
+    def __init__(self, agent_algorithm, policy=None):
         super(WindyAgent, self).__init__()
         self.agent_id = 0
         self.agent_type = 'windy'
@@ -91,6 +105,9 @@ class WindyAgent(core.BaseAdapterAgent):
         self.state = None
         self.reward = 0
         self.is_learning = True
+        self.policy = None
+        self.game_number = 0
+        self.experiment_number = 0
         self._set_agent_class(agent_algorithm)
 
     def _set_agent_class(self, agent_algorithm):
@@ -111,6 +128,7 @@ class WindyAgent(core.BaseAdapterAgent):
             map_width=self.map_width,
             map_height=self.map_height)
         self.communicate(message)
+        self.experiment_number += 1
 
     def finish_experiment(self):
         logger.info('Finishing experiment')
@@ -119,13 +137,34 @@ class WindyAgent(core.BaseAdapterAgent):
 
     def start_game(self):
         logger.info('Starting game')
+        self._send_start_game_message()
+        self._send_policy()
+        self.game_number += 1
+
+    def _send_start_game_message(self):
         message = messages.StartGameMessage(agent_id=self.agent_id)
         self.communicate(message)
 
+    def _send_policy(self):
+        if self.policy and self.game_number == 0:
+            logger.debug('Loading policy'.format(self.agent_id))
+            message = messages.PolicyMessage(
+                agent_id=self.agent_id, policy=self.policy)
+            self.communicate(message)
+
     def finish_game(self):
         logger.info('Finishing game')
+        self._send_finish_game_message()
+        self._update_policy()
+
+    def _send_finish_game_message(self):
         message = messages.FinishGameMessage(agent_id=self.agent_id)
         self.communicate(message)
+
+    def _update_policy(self):
+        message = messages.RequestPolicyMessage(agent_id=self.agent_id)
+        policy_message = self.communicate(message)
+        self.policy = policy_message.policy
 
     def send_state(self):
         logger.debug('Sending state')
@@ -166,11 +205,15 @@ def build_parser():
         '-s', '--sleep', dest='sleep', type=float, default=0.1,
         help='seconds to sleep between game steps')
     parser.add_argument(
-        '-a', '--agent', dest='agent', type=str, choices=['random', 'ai'],
+        '-a', '--agent', dest='agent_algorithm', type=str,
+        choices=['random', 'ai'],
         default='random', help='select Reinforcement Learning agent')
     parser.add_argument(
-        '-o', '--output', dest='output', type=str,
+        '-o', '--output', dest='output_file', type=str,
         help='output file to save simulation results (e.g. "windy.res")')
+    parser.add_argument(
+        '-p', '--policy', dest='policy_file', type=str,
+        help='file to load and save agent policies (e.g. "windy.pol")')
     return parser
 
 
@@ -179,5 +222,6 @@ def build_adapter_with_args(args):
         learn_games=args.learn_games,
         test_games=args.test_games,
         sleep=args.sleep,
-        agent_algorithm=args.agent,
-        output_file=args.output)
+        agent_algorithm=args.agent_algorithm,
+        output_file=args.output_file,
+        policy_file=args.policy_file)
