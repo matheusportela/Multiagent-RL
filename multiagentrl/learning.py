@@ -117,7 +117,7 @@ class QLearning(BaseLearningAlgorithm):
             results.append('\n')
         return ''.join(results)
 
-    def update_state(self, state):
+    def _update_state(self, state):
         """Update Q Learning current state.
 
         Parameters:
@@ -125,7 +125,7 @@ class QLearning(BaseLearningAlgorithm):
         """
         self.previous_state = state
 
-    def initialize_unknown_state(self, state):
+    def _initialize_unknown_state(self, state):
         """Initialize Q-values for states that were not previously seen.
 
         Parameters:
@@ -136,17 +136,17 @@ class QLearning(BaseLearningAlgorithm):
             for action_ in self.actions:
                 self.q_values[state][action_] = 0.0
 
-    def get_q_value(self, state, action):
+    def _get_q_value(self, state, action):
         """Get the current estimated value for the state-action pair.
 
         Parameters:
         state -- Environment state.
         action -- Agent action.
         """
-        self.initialize_unknown_state(state)
+        self._initialize_unknown_state(state)
         return self.q_values[state][action]
 
-    def set_q_value(self, state, action, value):
+    def _set_q_value(self, state, action, value):
         """Set a new estimated value for the state-action pair.
 
         Parameters:
@@ -170,17 +170,17 @@ class QLearning(BaseLearningAlgorithm):
 
         return random.choice(max_actions)
 
-    def get_max_action(self, state):
+    def _get_max_action(self, state):
         """Get the action with maximum estimated value.
 
         Parameters:
         state -- Environment state.
         """
-        self.initialize_unknown_state(state)
+        self._initialize_unknown_state(state)
         return self._get_max_action_from_list(state)
 
-    def get_max_q_value(self, state):
-        max_action = self.get_max_action(state)
+    def _get_max_q_value(self, state):
+        max_action = self._get_max_action(state)
         return self.q_values[state][max_action]
 
     def learn(self, state, action, reward):
@@ -199,14 +199,14 @@ class QLearning(BaseLearningAlgorithm):
         logger.debug('Action: {}'.format(action))
         logger.debug('Reward: {}'.format(reward))
 
-        old_value = self.get_q_value(self.previous_state, action)
-        next_expected_value = self.get_max_q_value(state)
+        old_value = self._get_q_value(self.previous_state, action)
+        next_expected_value = self._get_max_q_value(state)
         new_value = (old_value + self.learning_rate * (reward +
                                                        self.discount_factor *
                                                        next_expected_value -
                                                        old_value))
-        self.set_q_value(self.previous_state, action, new_value)
-        self.update_state(state)
+        self._set_q_value(self.previous_state, action, new_value)
+        self._update_state(state)
 
         logger.debug('Q-values:\n{}'.format(self))
 
@@ -216,7 +216,7 @@ class QLearning(BaseLearningAlgorithm):
         Parameters:
         state -- Agent state to select an action.
         """
-        return self.get_max_action(state)
+        return self._get_max_action(state)
 
 
 class QLearningWithApproximation(BaseLearningAlgorithm):
@@ -243,7 +243,7 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
     def set_weights(self, weights):
         self.weights = weights
 
-    def get_q_value(self, state, action):
+    def _get_q_value(self, state, action):
         q_value = 0
 
         for weight, feature in zip(self.weights[str(action)], self.features):
@@ -257,19 +257,19 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
 
         state -- Environment state.
         """
-        values = [self.get_q_value(state, action) for action in self.actions]
+        values = [self._get_q_value(state, action) for action in self.actions]
         max_value = max(values)
         max_actions = [action for action in actions
-                       if self.get_q_value(state, action) == max_value]
+                       if self._get_q_value(state, action) == max_value]
 
         return random.choice(max_actions)
 
-    def get_max_action(self, state):
+    def _get_max_action(self, state):
         return self._get_max_action_from_list(state)
 
-    def get_max_q_value(self, state):
-        action = self.get_max_action(state)
-        return self.get_q_value(state, action)
+    def _get_max_q_value(self, state):
+        action = self._get_max_action(state)
+        return self._get_q_value(state, action)
 
     def _update_weights(self, action, delta):
         self.weights[str(action)] = [weight + self.learning_rate * delta *
@@ -281,8 +281,8 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
     def learn(self, state, action, reward):
         if self.previous_state:
             delta = (reward + self.discount_factor *
-                     self.get_max_q_value(state) -
-                     self.get_q_value(self.previous_state, action))
+                     self._get_max_q_value(state) -
+                     self._get_q_value(self.previous_state, action))
 
             self._update_weights(action, delta)
 
