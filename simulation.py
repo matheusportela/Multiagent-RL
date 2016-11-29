@@ -1,18 +1,16 @@
 #  -*- coding: utf-8 -*-
-#  @file: simulation.py
-#  @author: Guilherme N. Ramos (gnramos@unb.br)
-#
-# Runs the simulation in different threads for speed.
-#
-# It assumes the experiment has a package located at "experiments/" containing
-# a module called "adapter.py". For example, an experiment called "pacman" must
-# have at least the structure:
-#
-# experiments/
-#   pacman/
-#       __init__.py
-#       adapter.py
 
+"""Runs the simulation in different threads for speed.
+
+It assumes the experiment has a package located at "experiments/" containing
+a module called "adapter.py". For example, an experiment called "pacman" must
+have at least the structure:
+
+experiments/
+  pacman/
+      __init__.py
+      adapter.py
+"""
 
 import argparse
 from importlib import import_module
@@ -22,7 +20,6 @@ import sys
 import threading
 
 from multiagentrl import controller as controller_module
-
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)

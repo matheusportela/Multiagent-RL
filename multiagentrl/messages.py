@@ -1,15 +1,6 @@
-#!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 
 """Messages exchanged between controller and adapter."""
-
-
-__author__ = "Matheus Portela and Guilherme N. Ramos"
-__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
-               "Pedro Saman"]
-__maintainer__ = "Guilherme N. Ramos"
-__email__ = "gnramos@unb.br"
-
 
 # Message types
 ACKNOWLEDGMENT_MSG = 'Acknowledgment'

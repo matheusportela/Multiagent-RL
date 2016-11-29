@@ -3,9 +3,6 @@
 
 """Routes messages between server and agents."""
 
-
-from __future__ import division
-
 import argparse
 from importlib import import_module
 import logging
@@ -13,13 +10,6 @@ import logging
 import communication
 import core
 import messages
-
-__author__ = "Matheus Portela and Guilherme N. Ramos"
-__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
-               "Pedro Saman"]
-__maintainer__ = "Matheus Portela"
-__email__ = "matheus.v.portela@gmail.com"
-
 
 # Logging configuration
 logger = logging.getLogger(__name__)

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 
 """Define the agents."""
@@ -12,12 +11,6 @@ import features
 from multiagentrl import core
 from multiagentrl import exploration
 from multiagentrl import learning
-
-__author__ = "Matheus Portela and Guilherme N. Ramos"
-__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
-               "Pedro Saman"]
-__maintainer__ = "Guilherme N. Ramos"
-__email__ = "gnramos@unb.br"
 
 # Default noise configuration
 # @todo Receive noise via constructor

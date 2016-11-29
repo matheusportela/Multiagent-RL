@@ -59,9 +59,3 @@ class LearningAgent(core.BaseControllerAgent):
         self.game_step += 1
 
         return action
-
-    def enable_learn_mode(self):
-        self.learning.exploration_rate = self.exploration_rate
-
-    def enable_test_mode(self):
-        self.learning.exploration_rate = 0
