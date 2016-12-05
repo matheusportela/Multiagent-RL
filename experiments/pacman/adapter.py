@@ -21,40 +21,15 @@ from multiagentrl import core
 from multiagentrl import messages
 import state
 
+
 # Logging configuration
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('Pacman')
-
-# Default settings (CLI parsing)
-DEFAULT_GHOST_AGENT = 'ai'
-DEFAULT_LAYOUT = 'classic'
-DEFAULT_NUMBER_OF_GHOSTS = 3
-DEFAULT_NUMBER_OF_LEARNING_GAMES = 100
-DEFAULT_NUMBER_OF_TEST_GAMES = 15
-DEFAULT_PACMAN_AGENT = 'random'
-DEFAULT_NOISE = 0
-
-# Pac-Man game configuration
-NUMBER_OF_BERKELEY_GAMES = 1
-RECORD_BERKELEY_GAMES = False
+logger = logging.getLogger(__name__)
 
 
 class BerkeleyAdapter(core.BaseExperiment):
-    def __init__(self,
-                 pacman_agent=DEFAULT_PACMAN_AGENT,
-                 ghost_agent=DEFAULT_GHOST_AGENT,
-                 num_ghosts=DEFAULT_NUMBER_OF_GHOSTS,
-                 noise=DEFAULT_NOISE,
-                 policy_file=None,
-                 layout_map=DEFAULT_LAYOUT,
-                 learn_games=DEFAULT_NUMBER_OF_LEARNING_GAMES,
-                 test_games=DEFAULT_NUMBER_OF_TEST_GAMES,
-                 output_file=None,
-                 graphics=False,
-                 context=None,
-                 endpoint=None,
-                 address=None,
-                 port=None):
+    def __init__(self, pacman_agent, ghost_agent, num_ghosts, noise,
+                 policy_file, layout_map, learn_games, test_games, output_file,
+                 graphics):
 
         super(BerkeleyAdapter, self).__init__()
 
@@ -138,7 +113,7 @@ class BerkeleyAdapter(core.BaseExperiment):
                 self.policies = pickle.loads(f.read())
 
     def execute_game(self):
-        logger.info('Executing game')
+        logger.info('Executing game #{}'.format(self.game_number + 1))
 
         score = self._run_game()
 
@@ -151,10 +126,12 @@ class BerkeleyAdapter(core.BaseExperiment):
             agent.results['scores'].append(score)
 
     def _run_game(self):
+        num_berkeley_games = 1
+        record_berkeley_games = False
         simulated_game = run_berkeley_games(self.layout, self.pacman,
                                             self.ghosts, self.display,
-                                            NUMBER_OF_BERKELEY_GAMES,
-                                            RECORD_BERKELEY_GAMES)[0]
+                                            num_berkeley_games,
+                                            record_berkeley_games)[0]
 
         # Do this so as agents can receive the last reward
         for agent in self.agents:
@@ -309,6 +286,8 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
             self.agent_class = agents.BehaviorLearningPacmanAgent
         elif self.agent_algorithm == 'eater':
             self.agent_class = agents.EaterPacmanAgent
+        elif self.agent_algorithm == 'qlearning':
+            self.agent_class = agents.QLearningPacmanAgent
         else:
             raise ValueError('Pac-Man agent must be ai, random, random2 or '
                              'eater.')
@@ -334,7 +313,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.communicate(message)
 
     def send_state(self):
-        logger.info('#{} Sending state'.format(self.agent_id))
+        logger.debug('#{} Sending state'.format(self.agent_id))
         message = self._create_state_message()
         return self.communicate(message)
 
@@ -396,14 +375,14 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
                                 BerkeleyAdapterAgent.noise + 1)
 
     def receive_action(self):
-        logger.info('#{} Receiving action'.format(self.agent_id))
+        logger.debug('#{} Receiving action'.format(self.agent_id))
         action_message = self.send_state()
         self.game_state.predict_agent(self.agent_id, action_message.action)
         return action_message.action
 
     def send_reward(self):
         if self.is_learning:
-            logger.info('#{} Sending reward'.format(self.agent_id))
+            logger.debug('#{} Sending reward'.format(self.agent_id))
             self.reward = self._calculate_reward(
                 self.pacman_game_state.getScore())
             self.previous_score = self.pacman_game_state.getScore()
@@ -417,22 +396,6 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         return current_score - self.previous_score
 
 
-def build_adapter(context=None, endpoint=None,
-                  address=communication.DEFAULT_CLIENT_ADDRESS,
-                  port=communication.DEFAULT_TCP_PORT,
-                  **kwargs):
-    if context and endpoint:
-        logger.info('Connecting with inproc communication')
-        adapter = BerkeleyAdapter(context=context, endpoint=endpoint, **kwargs)
-    else:
-        logger.info(
-            'Connecting with TCP communication (address {}, port {})'.format(
-                address, port))
-        adapter = BerkeleyAdapter(address=address, port=port, **kwargs)
-
-    return adapter
-
-
 def build_parser():
     parser = argparse.ArgumentParser(
         description='Run Pac-Man simulator adapter system.')
@@ -443,49 +406,39 @@ def build_parser():
                         help='results output file')
 
     group = parser.add_argument_group('Experiment Setup')
-    group.add_argument('--ghost-agent', dest='ghost_agent', type=str,
-                       choices=['random', 'ai'], default=DEFAULT_GHOST_AGENT,
-                       help='select ghost agent')
+    group.add_argument('-t', '--test-games', dest='test_games', type=int,
+                       default=15,
+                       help='number of games to test learned policy')
     group.add_argument('-l', '--learn-games', dest='learn_games', type=int,
-                       default=DEFAULT_NUMBER_OF_LEARNING_GAMES,
+                       default=100,
                        help='number of games to learn from')
+    group.add_argument('--ghost-agent', dest='ghost_agent', type=str,
+                       choices=['random', 'ai'], default='ai',
+                       help='select ghost agent')
+    group.add_argument('--pacman-agent', dest='pacman_agent', type=str,
+                       choices=['random', 'random2', 'ai', 'eater',
+                                'qlearning'],
+                       default='random',
+                       help='select Pac-Man agent')
     group.add_argument('--layout', dest='layout', type=str,
-                       default=DEFAULT_LAYOUT, choices=['classic', 'medium'],
+                       default='classic', choices=['classic', 'medium'],
                        help='Game layout')
     group.add_argument('--noise', dest='noise', type=int,
-                       default=DEFAULT_NOISE,
+                       default=0,
                        help='introduce noise in position measurements')
     group.add_argument('--num-ghosts', dest='num_ghosts',
                        type=int, choices=range(1, 5),
-                       default=DEFAULT_NUMBER_OF_GHOSTS,
+                       default=3,
                        help='number of ghosts in game')
-    group.add_argument('--pacman-agent', dest='pacman_agent', type=str,
-                       choices=['random', 'random2', 'ai', 'eater'],
-                       default=DEFAULT_PACMAN_AGENT,
-                       help='select Pac-Man agent')
     group.add_argument('--policy-file', dest='policy_file',
                        type=lambda s: unicode(s, 'utf8'),
                        help='load and save Pac-Man policy from the given file')
-    group.add_argument('-t', '--test-games', dest='test_games', type=int,
-                       default=DEFAULT_NUMBER_OF_TEST_GAMES,
-                       help='number of games to test learned policy')
-
-    group = parser.add_argument_group('Communication')
-    group.add_argument('--addr', dest='address', type=str,
-                       default=communication.DEFAULT_CLIENT_ADDRESS,
-                       help='Client address to connect to adapter (TCP '
-                            'connection)')
-    group.add_argument('--port', dest='port', type=int,
-                       default=communication.DEFAULT_TCP_PORT,
-                       help='Port to connect to controller (TCP connection)')
 
     return parser
 
 
 def build_adapter_with_args(args):
-    return build_adapter(
-        address=communication.DEFAULT_CLIENT_ADDRESS,
-        port=communication.DEFAULT_TCP_PORT,
+    return BerkeleyAdapter(
         pacman_agent=args.pacman_agent,
         ghost_agent=args.ghost_agent,
         num_ghosts=args.num_ghosts,

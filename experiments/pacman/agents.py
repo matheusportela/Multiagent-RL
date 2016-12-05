@@ -2,6 +2,7 @@
 
 """Define the agents."""
 
+import logging
 import random
 
 from berkeley.game import Agent as BerkeleyGameAgent, Directions
@@ -12,22 +13,23 @@ from multiagentrl import core
 from multiagentrl import exploration
 from multiagentrl import learning
 
-# Default noise configuration
-# @todo Receive noise via constructor
-NOISE = 0
 
-# Actions
+# Logging configuration
+logger = logging.getLogger(__name__)
+
+
+# Berkeley simulator actions
 GHOST_ACTIONS = [Directions.NORTH, Directions.SOUTH, Directions.EAST,
                  Directions.WEST]
 PACMAN_ACTIONS = GHOST_ACTIONS + [Directions.STOP]
-FIRST_ACTION = Directions.STOP
 
-# Indices
+# Berkeley simulator indices
 PACMAN_INDEX = 0
 
 
 class PacmanAgent(core.BaseControllerAgent):
     def __init__(self, agent_id):
+        assert agent_id == PACMAN_INDEX
         super(PacmanAgent, self).__init__(agent_id)
 
     def start_game(self):
@@ -39,6 +41,7 @@ class PacmanAgent(core.BaseControllerAgent):
 
 class GhostAgent(core.BaseControllerAgent):
     def __init__(self, agent_id):
+        assert agent_id != PACMAN_INDEX
         super(GhostAgent, self).__init__(agent_id)
 
     def start_game(self):
@@ -129,6 +132,51 @@ class EaterPacmanAgent(PacmanAgent):
             return Directions.STOP
         elif suggested_action in legal_actions:
             return suggested_action
+        else:
+            return random.choice(legal_actions)
+
+
+class QLearningPacmanAgent(PacmanAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(QLearningPacmanAgent, self).__init__(agent_id)
+        self.game_number = 1
+        self.game_step = 1
+        self.exploration_rate = 0.1
+        self.learning = learning.QLearning(
+            learning_rate=0.1, discount_factor=0.9, actions=PACMAN_ACTIONS)
+        self.exploration = exploration.EGreedy(
+            exploration_rate=self.exploration_rate)
+
+    def get_policy(self):
+        return self.learning.q_values
+
+    def set_policy(self, weights):
+        self.learning.q_values = weights
+
+    def start_game(self):
+        self.game_step = 1
+
+    def finish_game(self):
+        self.game_number += 1
+
+    def learn(self, state, action, reward):
+        self.learning.learn(state.get_position(), action, reward)
+
+    def act(self, state, legal_actions, explore):
+        action = self.learning.act(state)
+
+        if explore and legal_actions:
+            action = self.exploration.explore(action, legal_actions)
+
+        self.game_step += 1
+
+        return self._select_valid_action(action, legal_actions)
+
+    def _select_valid_action(self, action, legal_actions):
+        if legal_actions == []:
+            return Directions.STOP
+        elif action in legal_actions:
+            return action
         else:
             return random.choice(legal_actions)
 

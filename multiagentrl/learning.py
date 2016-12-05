@@ -73,7 +73,7 @@ class QLearning(BaseLearningAlgorithm):
         divergent.
     """
 
-    def __init__(self, initial_state=0, learning_rate=1, discount_factor=1,
+    def __init__(self, initial_state=0, learning_rate=0.1, discount_factor=0.9,
                  actions=None):
         """Constructor.
 
@@ -219,22 +219,21 @@ class QLearning(BaseLearningAlgorithm):
 
 
 class QLearningWithApproximation(BaseLearningAlgorithm):
-    def __init__(self, actions=None, features=None, learning_rate=1,
-                 discount_factor=1):
+    def __init__(self, actions=None, features=None, learning_rate=0.1,
+                 discount_factor=0.9):
         super(QLearningWithApproximation, self).__init__()
         self.actions = actions
         self.features = features
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.previous_state = None
-
         self.weights = {}
         self._init_weights()
 
     def _init_weights(self):
         for action in self.actions:
-            self.weights[str(action)] = [random.random()
-                                         for _ in range(len(self.features))]
+            self.weights[str(action)] = [
+                random.random() for _ in self.features]
 
     def get_weights(self):
         return self.weights
@@ -250,7 +249,7 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
 
         return q_value
 
-    def _get_max_action_from_list(self, state):
+    def _get_max_action(self, state):
         """Get the action with maximum estimated value from the given list of
         actions.
 
@@ -263,19 +262,16 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
 
         return random.choice(max_actions)
 
-    def _get_max_action(self, state):
-        return self._get_max_action_from_list(state)
-
     def _get_max_q_value(self, state):
         action = self._get_max_action(state)
         return self._get_q_value(state, action)
 
     def _update_weights(self, action, delta):
-        self.weights[str(action)] = [weight + self.learning_rate * delta *
-                                     feature(self.previous_state, action)
-                                     for weight, feature in
-                                     zip(self.weights[str(action)],
-                                         self.features)]
+        self.weights[str(action)] = [
+            weight +
+            self.learning_rate*delta*feature(self.previous_state, action)
+            for weight, feature in zip(self.weights[str(action)],
+                                       self.features)]
 
     def learn(self, state, action, reward):
         if self.previous_state:
@@ -288,4 +284,4 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
         self.previous_state = state
 
     def act(self, state):
-        return self._get_max_action_from_list(state)
+        return self._get_max_action(state)
