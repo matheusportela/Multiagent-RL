@@ -525,7 +525,7 @@ class Game:
     The Game manages the control flow, soliciting actions from agents.
     """
 
-    def __init__( self, agents, display, rules, startingIndex=0, muteAgents=False, catchExceptions=False ):
+    def __init__( self, agents, display, rules, startingIndex=0, muteAgents=False, catchExceptions=False, maxSteps = None ):
         self.agentCrashed = False
         self.agents = agents
         self.display = display
@@ -539,6 +539,7 @@ class Game:
         self.totalAgentTimeWarnings = [0 for agent in agents]
         self.agentTimeout = False
         self.agentOutput = [StringIO() for agent in agents]
+        self.maxSteps = maxSteps
 
     def getProgress(self):
         if self.gameOver:
@@ -619,7 +620,14 @@ class Game:
         agentIndex = self.startingIndex
         numAgents = len( self.agents )
 
+        gameSteps = 0
+
         while not self.gameOver:
+            gameSteps += 1
+
+            if self.maxSteps and gameSteps == self.maxSteps:
+                self.gameOver = True
+
             # Fetch the next agent
             agent = self.agents[agentIndex]
             move_time = 0
