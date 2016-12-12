@@ -16,12 +16,6 @@ import random
 # Logging configuration
 logger = logging.getLogger(__name__)
 
-__author__ = "Matheus Portela and Guilherme N. Ramos"
-__credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
-               "Pedro Saman"]
-__maintainer__ = "Guilherme N. Ramos"
-__email__ = "gnramos@unb.br"
-
 
 class BaseLearningAlgorithm(object):
     def learn(self, state, action, reward):
