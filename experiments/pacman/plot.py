@@ -4,6 +4,8 @@
 """Plot simulation results."""
 
 from __future__ import division
+from __future__ import print_function
+
 import argparse
 import pickle
 import matplotlib.pylab as plt
@@ -30,8 +32,8 @@ COLOR_LIST = ['r', 'g', 'b', 'y', 'p', 'w', 'k']
 
 
 def load_results(filename):
-    with open(filename) as f:
-        results = pickle.loads(f.read())
+    with open(filename, 'rb') as f:
+        results = pickle.load(f)
     return results
 
 
@@ -55,7 +57,7 @@ def plot_scores(learn_scores, test_scores):
     coeff = calculate_regression_coefficients(data, degree=1)
     regression = [calculate_regression_y(x, coeff) for x in range(len(data))]
 
-    print 'Regression coefficients:', coeff
+    print('Regression coefficients:', coeff)
 
     ax.scatter(range(len(learn_scores)), learn_scores,
                c=COLOR_TABLE['r'], marker='o')
@@ -112,9 +114,12 @@ def plot_behavior_count(agent_id, behavior_count):
 def plot(args):
     results = load_results(args.input_filename)
     plot_scores(results['learn_scores'], results['test_scores'])
-    plot_game_duration(results['behavior_count'])
-    for agent_id, behavior_count in results['behavior_count'].items():
-        plot_behavior_count(agent_id, behavior_count)
+
+    if 'behavior_count' in results:
+        plot_game_duration(results['behavior_count'])
+        for agent_id, behavior_count in results['behavior_count'].items():
+            plot_behavior_count(agent_id, behavior_count)
+
     plt.show()
 
 

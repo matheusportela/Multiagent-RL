@@ -20,3 +20,9 @@ When learning with the Pac-Man, it is expected it will be able to learn how to e
 - `features.py`: Features for function approximation.
 - `plot.py`: Plot experiment results for later analysis.
 - `state.py`: Simulation game state.
+
+# Example run
+
+```bash
+$ python simulation.py pacman --pacman-agent qlearning --ghost-agent random --layout medium -l 100 -t 10 --policy-file qlearning.pol -o qlearning.res
+```

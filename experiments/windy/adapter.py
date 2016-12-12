@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import
+
 import argparse
 import logging
 import os
 import pickle
 
-import agents
+from . import agents
 from multiagentrl import core
 from multiagentrl import messages
-from simulator import WindyWorldSimulator
+from .simulator import WindyWorldSimulator
 
 
 # Logging configuration
@@ -87,12 +89,12 @@ class WindyExperiment(core.BaseExperiment):
     def _save_results(self):
         if self.output_file:
             logger.info('Saving results to "{}"'.format(self.output_file))
-            pickle.dump(self.results, open(self.output_file, 'w'))
+            pickle.dump(self.results, open(self.output_file, 'wb'))
 
     def _save_agent_policy(self):
         if self.policy_file:
             logger.info('Saving policy to "{}"'.format(self.policy_file))
-            pickle.dump(self.agent.policy, open(self.policy_file, 'w'))
+            pickle.dump(self.agent.policy, open(self.policy_file, 'wb'))
 
 
 class WindyAgent(core.BaseAdapterAgent):

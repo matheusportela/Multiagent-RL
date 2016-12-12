@@ -11,11 +11,13 @@
 # Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
+from __future__ import absolute_import
 
-from util import manhattanDistance
-from game import Grid
 import os
 import random
+
+from .util import manhattanDistance
+from .game import Grid
 
 VISIBILITY_MATRIX_CACHE = {}
 

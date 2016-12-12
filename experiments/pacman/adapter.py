@@ -3,23 +3,26 @@
 
 """Communicate controller and Berkeley Pac-man simulator."""
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import argparse
 import logging
 import os
 import pickle
 import random
 
-from berkeley.game import Agent as BerkeleyGameAgent, Directions
-from berkeley.graphicsDisplay import PacmanGraphics as BerkeleyGraphics
-from berkeley.layout import getLayout as get_berkeley_layout
-from berkeley.pacman import runGames as run_berkeley_games
-from berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics
+from .berkeley.game import Agent as BerkeleyGameAgent, Directions
+from .berkeley.graphicsDisplay import PacmanGraphics as BerkeleyGraphics
+from .berkeley.layout import getLayout as get_berkeley_layout
+from .berkeley.pacman import runGames as run_berkeley_games
+from .berkeley.textDisplay import NullGraphics as BerkeleyNullGraphics
 
-import agents
+from . import agents
 from multiagentrl import communication
 from multiagentrl import core
 from multiagentrl import messages
-import state
+from . import state
 
 
 # Logging configuration
@@ -50,11 +53,11 @@ class BerkeleyAdapter(core.BaseExperiment):
 
         # Ghosts
         self.num_ghosts = int(num_ghosts)
-        if not (1 <= self.num_ghosts <= 4):
-            raise ValueError('Must 1-4 ghost(s).')
+        if not (0 <= self.num_ghosts <= 4):
+            raise ValueError('Must 0-4 ghost(s).')
 
         self.ghosts = []
-        for i in xrange(num_ghosts):
+        for i in range(num_ghosts):
             self.ghosts.append(BerkeleyAdapterAgent(
                                    agent_id=i+1, agent_type='ghost',
                                    agent_algorithm=ghost_agent))
@@ -160,8 +163,8 @@ class BerkeleyAdapter(core.BaseExperiment):
 
     def _write_to_file(self, filename, content):
         logger.info('Saving results to "{}"'.format(filename))
-        with open(filename, 'w') as f:
-            f.write(pickle.dumps(content))
+        with open(filename, 'wb') as f:
+            pickle.dump(content, f)
 
 
 class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
@@ -427,7 +430,7 @@ def build_parser():
                        default=0,
                        help='introduce noise in position measurements')
     group.add_argument('--num-ghosts', dest='num_ghosts',
-                       type=int, choices=range(1, 5),
+                       type=int, choices=range(0, 5),
                        default=3,
                        help='number of ghosts in game')
     group.add_argument('--policy-file', dest='policy_file',
@@ -459,4 +462,4 @@ if __name__ == '__main__':
     try:
         adapter.run()
     except KeyboardInterrupt:
-        print '\n\nInterrupted execution\n'
+        print('\n\nInterrupted execution\n')

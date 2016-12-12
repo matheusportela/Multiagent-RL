@@ -3,13 +3,16 @@
 
 """Routes messages between server and agents."""
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import argparse
 from importlib import import_module
 import logging
 
-import communication
-import core
-import messages
+from . import communication
+from . import core
+from . import messages
 
 # Logging configuration
 logger = logging.getLogger(__name__)
@@ -154,4 +157,4 @@ if __name__ == '__main__':
     try:
         controller.run()
     except KeyboardInterrupt:
-        print '\n\nInterrupted execution\n'
+        print('\n\nInterrupted execution\n')

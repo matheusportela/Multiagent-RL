@@ -31,7 +31,10 @@ class LearningAgent(core.BaseControllerAgent):
         self.game_step = 1
         self.exploration_rate = 0.1
         self.learning = learning.QLearning(
-            learning_rate=0.1, discount_factor=0.9, actions=range(4))
+            initial_state=(0, 0),
+            learning_rate=0.1,
+            discount_factor=0.9,
+            actions=range(4))
         self.exploration = exploration.EGreedy(
             exploration_rate=self.exploration_rate)
 

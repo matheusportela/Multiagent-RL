@@ -2,6 +2,8 @@
 
 """Game state for Pac-Man simulator."""
 
+from __future__ import print_function
+
 import math
 
 
@@ -408,11 +410,11 @@ if __name__ == '__main__':
     initial_pos = (1, 0)
     final_pos = (1, 2)
 
-    print game_map
+    print(game_map)
     positions = [(y, x) for y in range(game_map.height)
                  for x in range(game_map.width)]
     for pos1 in positions:
         for pos2 in positions:
-            print pos1, '->', pos2, game_map.calculate_distance(pos1, pos2)
+            print(pos1, '->', pos2, game_map.calculate_distance(pos1, pos2))
 
-    print game_map.calculate_distance((1, 0), (1, 0))
+    print(game_map.calculate_distance((1, 0), (1, 0)))

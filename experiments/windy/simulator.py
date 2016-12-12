@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import random
 import time
 
@@ -62,8 +64,8 @@ class WindyWorldSimulator(object):
     def __repr__(self):
         lines = [[]]
 
-        for i in xrange(self.rows):
-            for j in xrange(self.cols):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 if [i, j] == self.agent_coordinates:
                     lines[-1].append('A')
                 elif [i, j] == self.initial_coordinates:
@@ -136,4 +138,4 @@ class WindyWorldSimulator(object):
 
 if __name__ == '__main__':
     simulator = WindyWorldSimulator()
-    print simulator
+    print(simulator)

@@ -4,18 +4,21 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
+from __future__ import absolute_import
+from __future__ import print_function
 
 import time
-try: 
-    import pacman
-except:
+
+try:
+    from . import pacman
+except ImportError:
     pass
 
 DRAW_EVERY = 1
@@ -37,7 +40,7 @@ class NullGraphics:
         time.sleep(SLEEP_TIME)
 
     def draw(self, state):
-        print state
+        print(state)
 
     def updateDistributions(self, dist):
         pass
@@ -64,7 +67,7 @@ class PacmanGraphics:
             self.turn += 1
             if DISPLAY_MOVES:
                 ghosts = [pacman.nearestPoint(state.getGhostPosition(i)) for i in range(1, numAgents)]
-                print "%4d) P: %-8s" % (self.turn, str(pacman.nearestPoint(state.getPacmanPosition()))),'| Score: %-5d' % state.score,'| Ghosts:', ghosts
+                print("%4d) P: %-8s" % (self.turn, str(pacman.nearestPoint(state.getPacmanPosition()))),'| Score: %-5d' % state.score,'| Ghosts:', ghosts)
             if self.turn % DRAW_EVERY == 0:
                 self.draw(state)
                 self.pause()
@@ -75,7 +78,7 @@ class PacmanGraphics:
         time.sleep(SLEEP_TIME)
 
     def draw(self, state):
-        print state
+        print(state)
 
     def finish(self):
         pass

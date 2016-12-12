@@ -1,4 +1,6 @@
-import communication
+from __future__ import absolute_import
+
+from . import communication
 
 
 class BaseAdapterAgent(object):
@@ -275,7 +277,7 @@ class BaseExperiment(object):
         Parameters:
         num_games -- Number of games to be executed.
         """
-        for _ in xrange(num_games):
+        for _ in range(num_games):
             for agent in self.agents:
                 agent.start_game()
 

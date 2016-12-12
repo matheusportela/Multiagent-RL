@@ -2,13 +2,15 @@
 
 """Define the agents."""
 
+from __future__ import absolute_import
+
 import logging
 import random
 
-from berkeley.game import Agent as BerkeleyGameAgent, Directions
+from .berkeley.game import Agent as BerkeleyGameAgent, Directions
 
-import behaviors
-import features
+from . import behaviors
+from . import features
 from multiagentrl import core
 from multiagentrl import exploration
 from multiagentrl import learning
@@ -143,7 +145,10 @@ class QLearningPacmanAgent(PacmanAgent):
         self.game_step = 1
         self.exploration_rate = 0.1
         self.learning = learning.QLearning(
-            learning_rate=0.1, discount_factor=0.9, actions=PACMAN_ACTIONS)
+            initial_state=(0, 0),
+            learning_rate=0.3,
+            discount_factor=0.7,
+            actions=PACMAN_ACTIONS)
         self.exploration = exploration.EGreedy(
             exploration_rate=self.exploration_rate)
 
