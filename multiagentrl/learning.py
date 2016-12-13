@@ -72,8 +72,9 @@ class QLearning(BaseLearningAlgorithm):
         possible, it may make the expected discounted reward infinite or
         divergent.
     """
+    divergence_threshold = 1e6
 
-    def __init__(self, initial_state=0, learning_rate=0.1, discount_factor=0.9,
+    def __init__(self, learning_rate=0.1, discount_factor=0.9,
                  actions=None):
         """Constructor.
 
@@ -83,7 +84,7 @@ class QLearning(BaseLearningAlgorithm):
         num_actions -- Number of actions to be represented.
         """
         super(QLearning, self).__init__()
-        self.previous_state = initial_state
+        self.previous_state = None
         self.q_values = {}
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
@@ -105,6 +106,9 @@ class QLearning(BaseLearningAlgorithm):
 
         # Print Q-values
         for state in sorted(self.q_values):
+            if not any(self.q_values[state].values()):
+                continue
+
             results.append('{0: >4}:    '.format(str(state)))
             for action in self.q_values[state]:
                 q_value = self.q_values[state][action]
@@ -153,6 +157,9 @@ class QLearning(BaseLearningAlgorithm):
         action -- Agent action.
         value -- New estimated value.
         """
+        if abs(value) > QLearning.divergence_threshold:
+            logger.warn('Q-learning seems to be diverging')
+
         self.q_values[state][action] = value
 
     def _get_max_action_from_list(self, state):
@@ -198,13 +205,12 @@ class QLearning(BaseLearningAlgorithm):
         logger.debug('Action: {}'.format(action))
         logger.debug('Reward: {}'.format(reward))
 
-        old_value = self._get_q_value(self.previous_state, action)
-        next_expected_value = self._get_max_q_value(state)
-        new_value = (old_value + self.learning_rate * (reward +
-                                                       self.discount_factor *
-                                                       next_expected_value -
-                                                       old_value))
-        self._set_q_value(self.previous_state, action, new_value)
+        if self.previous_state:
+            old_value = self._get_q_value(self.previous_state, action)
+            next_expected_value = self._get_max_q_value(state)
+            new_value = (old_value + self.learning_rate*(
+                reward + self.discount_factor*next_expected_value - old_value))
+            self._set_q_value(self.previous_state, action, new_value)
         self._update_state(state)
 
         logger.debug('Q-values:\n{}'.format(self))
@@ -219,6 +225,8 @@ class QLearning(BaseLearningAlgorithm):
 
 
 class QLearningWithApproximation(BaseLearningAlgorithm):
+    divergence_threshold = 1e6
+
     def __init__(self, actions=None, features=None, learning_rate=0.1,
                  discount_factor=0.9):
         super(QLearningWithApproximation, self).__init__()
@@ -245,7 +253,7 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
         q_value = 0
 
         for weight, feature in zip(self.weights[str(action)], self.features):
-            q_value += weight * feature(state, action)
+            q_value += weight * feature(state)
 
         return q_value
 
@@ -257,8 +265,8 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
         """
         values = [self._get_q_value(state, action) for action in self.actions]
         max_value = max(values)
-        max_actions = [action for action in actions
-                       if self._get_q_value(state, action) == max_value]
+        max_actions = [action for action, value in zip(self.actions, values)
+                       if value == max_value]
 
         return random.choice(max_actions)
 
@@ -268,10 +276,14 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
 
     def _update_weights(self, action, delta):
         self.weights[str(action)] = [
-            weight +
-            self.learning_rate*delta*feature(self.previous_state, action)
+            weight + self.learning_rate*delta*feature(self.previous_state)
             for weight, feature in zip(self.weights[str(action)],
                                        self.features)]
+
+        for weight in self.weights[str(action)]:
+            if abs(weight) > QLearningWithApproximation.divergence_threshold:
+                logger.warn(
+                    'Q-learning with approximation seems to be diverging')
 
     def learn(self, state, action, reward):
         if self.previous_state:
