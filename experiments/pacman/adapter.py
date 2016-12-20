@@ -64,6 +64,9 @@ class BerkeleyAdapter(core.BaseExperiment):
 
         self.agents = [self.pacman] + self.ghosts
 
+        # Noise
+        BerkeleyAdapterAgent.noise = noise
+
         # Policies
         self.policy_file = str(policy_file) if policy_file else None
 
