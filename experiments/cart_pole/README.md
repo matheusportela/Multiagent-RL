@@ -17,5 +17,5 @@ pip install gym
 # Example run
 
 ```bash
-python simulation.py cart_pole -l 500 -t 50 -a ai -o cart_pole_ai.res -p cart_pole_ai.pol -g --main-thread
+python simulation.py cart_pole -l 500 -t 50 -a ai -o cart_pole_ai.res -p cart_pole_ai.pol -g
 ```
