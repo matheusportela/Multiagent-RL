@@ -28,7 +28,7 @@ Install by running the following commands.
 
 ```bash
 sudo apt-get install python python-dev python-pip python-tk libzmq-dev python-matplotlib
-sudo pip install pyzmq
+pip install pyzmq
 ```
 
 ### Mac OS X
