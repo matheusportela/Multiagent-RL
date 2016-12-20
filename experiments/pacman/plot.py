@@ -52,7 +52,6 @@ def plot_scores(learn_scores, test_scores):
     plt.xlabel(u'Número de jogos')
     plt.ylabel(u'Pontuação final')
     plt.title(u'Pontuação final ao longo dos jogos')
-    plt.xlim([0, 115])
     data = learn_scores + test_scores
     coeff = calculate_regression_coefficients(data, degree=1)
     regression = [calculate_regression_y(x, coeff) for x in range(len(data))]
@@ -72,7 +71,6 @@ def plot_game_duration(behavior_count):
     plt.xlabel(u'Número de jogos')
     plt.ylabel(u'Número de instantes de jogo')
     plt.title(u'Duração dos jogos')
-    plt.xlim([0, 115])
 
     data = np.sum(np.array([np.array(b) for b in
                             behavior_count.values()[0].values()]), axis=0)
@@ -93,7 +91,6 @@ def plot_behavior_count(agent_id, behavior_count):
     plt.title(u'Probabilidades do agente %d selecionar comportamento'
               % agent_id)
 
-    plt.xlim([0, 115])
     plt.ylim([-0.1, 1.1])
 
     data = np.array([b for b in behavior_count.values()])
