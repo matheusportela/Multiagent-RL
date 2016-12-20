@@ -64,6 +64,8 @@ class RandomPacmanAgent(PacmanAgent):
     def act(self, state, legal_actions, explore):
         if legal_actions:
             return random.choice(legal_actions)
+        else:
+            return Directions.STOP
 
 
 class RandomPacmanAgentTwo(PacmanAgent):
@@ -117,6 +119,8 @@ class RandomGhostAgent(GhostAgent):
     def act(self, state, legal_actions, explore):
         if legal_actions:
             return random.choice(legal_actions)
+        else:
+            return Directions.STOP
 
 
 class EaterPacmanAgent(PacmanAgent):
@@ -128,11 +132,12 @@ class EaterPacmanAgent(PacmanAgent):
         pass
 
     def act(self, state, legal_actions, explore):
+        if not legal_actions:
+            return Directions.STOP
+
         suggested_action = self.eat_behavior(state, legal_actions)
 
-        if legal_actions == []:
-            return Directions.STOP
-        elif suggested_action in legal_actions:
+        if suggested_action in legal_actions:
             return suggested_action
         else:
             return random.choice(legal_actions)
@@ -167,6 +172,9 @@ class QLearningPacmanAgent(PacmanAgent):
         self.learning.learn(state.get_position(), action, reward)
 
     def act(self, state, legal_actions, explore):
+        if not legal_actions:
+            return Directions.STOP
+
         action = self.learning.act(state.get_position())
 
         if explore and legal_actions:
@@ -177,9 +185,7 @@ class QLearningPacmanAgent(PacmanAgent):
         return self._select_valid_action(action, legal_actions)
 
     def _select_valid_action(self, action, legal_actions):
-        if legal_actions == []:
-            return Directions.STOP
-        elif action in legal_actions:
+        if action in legal_actions:
             return action
         else:
             return random.choice(legal_actions)
@@ -228,6 +234,9 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
         self.learning.learn(state, self.previous_behavior, reward)
 
     def act(self, state, legal_actions, explore):
+        if not legal_actions:
+            return Directions.STOP
+
         behavior = self.learning.act(state)
         self.previous_behavior = behavior
         suggested_action = behavior(state, legal_actions)
@@ -238,9 +247,7 @@ class BehaviorLearningPacmanAgent(PacmanAgent):
 
         self.behavior_count[str(behavior)] += 1
 
-        if legal_actions == []:
-            return Directions.STOP
-        elif suggested_action in legal_actions:
+        if suggested_action in legal_actions:
             return suggested_action
         else:
             return random.choice(legal_actions)
@@ -295,6 +302,9 @@ class BehaviorLearningGhostAgent(GhostAgent):
         self.learning.learn(state, self.previous_behavior, reward)
 
     def act(self, state, legal_actions, explore):
+        if not legal_actions:
+            return Directions.STOP
+
         behavior = self.learning.act(state)
         self.previous_behavior = behavior
         suggested_action = behavior(state, legal_actions)
@@ -305,9 +315,7 @@ class BehaviorLearningGhostAgent(GhostAgent):
 
         self.behavior_count[str(behavior)] += 1
 
-        if legal_actions == []:
-            return Directions.STOP
-        elif suggested_action in legal_actions:
+        if suggested_action in legal_actions:
             return suggested_action
         else:
             return random.choice(legal_actions)
