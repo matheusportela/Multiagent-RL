@@ -31,6 +31,21 @@ class YPositionFeature(Feature):
         return agent_position[0]
 
 
+class VisitedPositionFeature(Feature):
+    def __init__(self):
+        super(VisitedPositionFeature, self).__init__()
+        self.visited_positions = set()
+
+    def __call__(self, state):
+        agent_position = state.get_position()
+
+        if agent_position in self.visited_positions:
+            return 1.0
+        else:
+            self.visited_positions.add(agent_position)
+            return 0.0
+
+
 class EnemyDistanceFeature(Feature):
     """Defines the distance to an enemy."""
     def __init__(self, enemy_id):

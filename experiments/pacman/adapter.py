@@ -114,7 +114,7 @@ class BerkeleyAdapter(core.BaseExperiment):
         self.policies = {}
 
         if filename and os.path.isfile(filename):
-            logger.info('Loading policies from {}.'.format(filename))
+            logger.info('Loading policies from {}'.format(filename))
             with open(filename) as f:
                 self.policies = pickle.loads(f.read())
 
@@ -326,12 +326,14 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
     def _create_state_message(self):
         agent_positions = {}
 
-        agent_positions[BerkeleyAdapterAgent.pacman_index] = (
-            self.pacman_game_state.getPacmanPosition()[::-1])
+        pacman_position = self.pacman_game_state.getPacmanPosition()[::-1]
+        pos_y = pacman_position[0] + self._generate_measurement_noise()
+        pos_x = pacman_position[1] + self._generate_measurement_noise()
+        agent_positions[BerkeleyAdapterAgent.pacman_index] = (pos_y, pos_x)
 
         for id_, pos in enumerate(self.pacman_game_state.getGhostPositions()):
-            pos_y = pos[::-1][0] + self._noise_error()
-            pos_x = pos[::-1][1] + self._noise_error()
+            pos_y = pos[::-1][0] + self._generate_measurement_noise()
+            pos_x = pos[::-1][1] + self._generate_measurement_noise()
             agent_positions[id_ + 1] = (pos_y, pos_x)
 
         food_positions = []
@@ -376,9 +378,9 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
             explore=self.is_learning)
         return message
 
-    def _noise_error(self):
-        return random.randrange(-BerkeleyAdapterAgent.noise,
-                                BerkeleyAdapterAgent.noise + 1)
+    def _generate_measurement_noise(self):
+        return random.randrange(
+            -BerkeleyAdapterAgent.noise, BerkeleyAdapterAgent.noise + 1)
 
     def receive_action(self):
         logger.debug('#{} Receiving action'.format(self.agent_id))

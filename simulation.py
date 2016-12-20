@@ -62,3 +62,4 @@ if __name__ == '__main__':
         adapter.run()
     except KeyboardInterrupt:
         logger.info('Interrupted')
+        adapter.stop()

@@ -149,12 +149,18 @@ class QLearningPacmanAgent(PacmanAgent):
         self.game_number = 1
         self.game_step = 1
         self.exploration_rate = 0.1
+        self.features = [
+            features.XPositionFeature(),
+            features.YPositionFeature(),
+            features.VisitedPositionFeature(),
+        ]
         self.learning = learning.QLearning(
             learning_rate=0.3,
             discount_factor=0.7,
             actions=PACMAN_ACTIONS)
         self.exploration = exploration.EGreedy(
             exploration_rate=self.exploration_rate)
+        self.agent_state = None
 
     def get_policy(self):
         return self.learning.q_values
@@ -168,19 +174,30 @@ class QLearningPacmanAgent(PacmanAgent):
     def finish_game(self):
         self.game_number += 1
 
+    def _get_state(self, state):
+        if not self.agent_state:
+            self.agent_state =  tuple([
+                feature(state) for feature in self.features])
+        return self.agent_state
+
     def learn(self, state, action, reward):
-        self.learning.learn(state.get_position(), action, reward)
+        self.agent_state = self._get_state(state)
+        self.learning.learn(self.agent_state, action, reward)
 
     def act(self, state, legal_actions, explore):
         if not legal_actions:
             return Directions.STOP
 
-        action = self.learning.act(state.get_position())
+        self.agent_state = self._get_state(state)
+        action = self.learning.act(self.agent_state)
 
         if explore and legal_actions:
             action = self.exploration.explore(action, legal_actions)
 
         self.game_step += 1
+
+        # Reset agent state
+        self.agent_state = None
 
         return self._select_valid_action(action, legal_actions)
 
