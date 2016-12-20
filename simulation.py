@@ -33,11 +33,6 @@ if __name__ == '__main__':
         add_help=False)
     parser.add_argument(
         'module', help='module to execute the simulation (e.g. "pacman")')
-    parser.add_argument(
-        '--main-thread', dest='main_thread', default=False,
-        action='store_true',
-        help=('Run adapter in main thread instead of creating a child one. '
-              'Only required by some GUI libraries.'))
 
     if len(sys.argv) < 2 or sys.argv[1] in ['-h', '--help']:
         parser.print_help()
@@ -64,15 +59,6 @@ if __name__ == '__main__':
     adapter = adapter_module.build_adapter_with_args(adapter_args)
 
     try:
-        if args.main_thread:
-            adapter.run()
-        else:
-            # Wait adapter process terminate
-            adapter_thread = threading.Thread(target=adapter.run)
-            adapter_thread.daemon = True
-            adapter_thread.start()
-            while adapter_thread.isAlive():
-                # Non-blocking join allows to catch keyboard interrupt
-                adapter_thread.join(1)
+        adapter.run()
     except KeyboardInterrupt:
         logger.info('Interrupted')
