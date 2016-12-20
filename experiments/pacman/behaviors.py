@@ -59,11 +59,10 @@ class EatBehavior(BehaviorBase):
 
 class FleeBehavior(BehaviorBase):
     def __call__(self, state, legal_actions):
-        agent_position = state.get_position()
-        enemy_position = state.get_agent_position
-        (state.get_closest_enemy(state))
-
         agent_map = state.get_map()
+        agent_position = state.get_position()
+        enemy_position = state.get_agent_position(
+            state.get_closest_enemy(state))
 
         best_action = None
         max_distance = None
@@ -74,12 +73,12 @@ class FleeBehavior(BehaviorBase):
             diff = agent_map.action_to_pos[action]
             new_position = (agent_position[0] + diff[0],
                             agent_position[1] + diff[1])
-            new_distance = state.calculate_distance
-            (new_position, enemy_position)
+            new_distance = state.calculate_distance(
+                new_position, enemy_position)
 
-            if (best_action is None) or (agent_map._is_valid_position
-                                         (new_position) and
-                                         new_distance > max_distance):
+            if (best_action is None or
+               (agent_map._is_valid_position(new_position) and
+                    new_distance > max_distance)):
                 best_action = action
                 max_distance = new_distance
 
@@ -88,11 +87,10 @@ class FleeBehavior(BehaviorBase):
 
 class SeekBehavior(BehaviorBase):
     def __call__(self, state, legal_actions):
-        agent_position = state.get_position()
-        enemy_position = state.get_agent_position
-        (state.get_closest_enemy(state))
-
         agent_map = state.get_map()
+        agent_position = state.get_position()
+        enemy_position = state.get_agent_position(
+            state.get_closest_enemy(state))
 
         best_action = None
         min_distance = None
@@ -103,12 +101,12 @@ class SeekBehavior(BehaviorBase):
             diff = agent_map.action_to_pos[action]
             new_position = (agent_position[0] + diff[0],
                             agent_position[1] + diff[1])
-            new_distance = state.calculate_distance
-            (new_position, enemy_position)
+            new_distance = state.calculate_distance(
+                new_position, enemy_position)
 
-            if (best_action is None) or (agent_map._is_valid_position
-                                         (new_position) and
-                                         new_distance < min_distance):
+            if (best_action is None or
+               (agent_map._is_valid_position(new_position) and
+                    new_distance < min_distance)):
                 best_action = action
                 min_distance = new_distance
 
@@ -131,8 +129,8 @@ class PursueBehavior(BehaviorBase):
         self.enemy_previous_position = enemy_position
         simulated_steps = 0
 
-        while agent_map._is_valid_position(
-                enemy_position) and simulated_steps < self.n:
+        while (agent_map._is_valid_position(enemy_position) and
+               simulated_steps < self.n):
 
             enemy_position = (enemy_position[0] + enemy_diff[0],
                               enemy_position[1] + enemy_diff[1])
@@ -157,12 +155,12 @@ class PursueBehavior(BehaviorBase):
             new_position = (agent_position[0] + diff[0],
                             agent_position[1] + diff[1])
 
-            new_distance = state.calculate_distance
-            (new_position, enemy_position)
+            new_distance = state.calculate_distance(
+                new_position, enemy_position)
 
-            if (best_action is None) or (agent_map._is_valid_position
-                                         (new_position) and
-                                         new_distance < min_distance):
+            if (best_action is None or
+               (agent_map._is_valid_position(new_position) and
+                    new_distance < min_distance)):
                 best_action = action
                 min_distance = new_distance
 

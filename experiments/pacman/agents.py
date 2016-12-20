@@ -176,7 +176,7 @@ class QLearningPacmanAgent(PacmanAgent):
 
     def _get_state(self, state):
         if not self.agent_state:
-            self.agent_state =  tuple([
+            self.agent_state = tuple([
                 feature(state) for feature in self.features])
         return self.agent_state
 
