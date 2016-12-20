@@ -60,6 +60,4 @@ class LearningAgent(core.BaseControllerAgent):
 
         self.game_step += 1
 
-        print self.learning
-
         return action
