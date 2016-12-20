@@ -14,7 +14,6 @@ from .simulator import WindyWorldSimulator
 
 
 # Logging configuration
-logging.getLogger().setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
 

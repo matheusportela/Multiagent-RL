@@ -1,13 +1,12 @@
 #  -*- coding: utf-8 -*-
-
-"""Define features used by behavior learning agents"""
+"""Features to extract high-level information from simulation state."""
 
 
 class Feature(object):
     """Defines a representation of the current status of a variable in the
     simulated environment.
     """
-    def __call__(self, state, action):
+    def __call__(self, state):
         raise NotImplementedError('Feature must implement __call__')
 
 
@@ -19,15 +18,28 @@ class Feature(object):
 # - Indicator whether Pac-Man captured a capsule, hence, being able to capture
 # the ghost.
 
+
+class XPositionFeature(Feature):
+    def __call__(self, state):
+        agent_position = state.get_position()
+        return agent_position[1]
+
+
+class YPositionFeature(Feature):
+    def __call__(self, state):
+        agent_position = state.get_position()
+        return agent_position[0]
+
+
 class EnemyDistanceFeature(Feature):
     """Defines the distance to an enemy."""
     def __init__(self, enemy_id):
         self.enemy_id = enemy_id
 
-    def __call__(self, state, action):
-        my_position = state.get_position()
+    def __call__(self, state):
+        agent_position = state.get_position()
         enemy_position = state.get_agent_position(self.enemy_id)
-        distance = state.calculate_distance(my_position, enemy_position)
+        distance = state.calculate_distance(agent_position, enemy_position)
 
         if distance == 0.0:
             distance = 1.0
@@ -36,7 +48,7 @@ class EnemyDistanceFeature(Feature):
 
 
 class FoodDistanceFeature(Feature):
-    def __call__(self, state, action):
+    def __call__(self, state):
         distance = state.get_food_distance()
 
         if distance == 0.0:
@@ -52,5 +64,5 @@ class FragileAgentFeature(Feature):
     def __init__(self, agent_id):
         self.agent_id = agent_id
 
-    def __call__(self, state, action):
+    def __call__(self, state):
         return state.get_fragile_agent(self.agent_id)

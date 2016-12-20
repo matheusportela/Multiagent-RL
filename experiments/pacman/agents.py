@@ -145,7 +145,6 @@ class QLearningPacmanAgent(PacmanAgent):
         self.game_step = 1
         self.exploration_rate = 0.1
         self.learning = learning.QLearning(
-            initial_state=(0, 0),
             learning_rate=0.3,
             discount_factor=0.7,
             actions=PACMAN_ACTIONS)
@@ -168,7 +167,7 @@ class QLearningPacmanAgent(PacmanAgent):
         self.learning.learn(state.get_position(), action, reward)
 
     def act(self, state, legal_actions, explore):
-        action = self.learning.act(state)
+        action = self.learning.act(state.get_position())
 
         if explore and legal_actions:
             action = self.exploration.explore(action, legal_actions)
