@@ -1,6 +1,7 @@
 """Collection of reinforcement learning algorithms"""
 
 from __future__ import division
+import copy
 import random
 
 
@@ -91,7 +92,7 @@ class QLearning(LearningAlgorithm):
         Parameters:
         state -- State to which the learning algorithm is going.
         """
-        self.previous_state = state
+        self.previous_state = copy.deepcopy(state)
 
     def initialize_unknown_state(self, state):
         """Initialize Q-values for states that were not previously seen.
@@ -243,7 +244,7 @@ class QLearningWithApproximation(LearningAlgorithm):
                 - self.get_q_value(self.previous_state, action))
             self._update_weights(action, delta)
 
-        self.previous_state = state
+        self.previous_state = copy.deepcopy(state)
 
     def _explore(self):
         return random.choice(self.actions)
