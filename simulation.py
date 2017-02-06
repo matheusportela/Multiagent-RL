@@ -24,7 +24,7 @@ from multiagentrl import controller as controller_module
 # Logging configuration
 logging.basicConfig(
     level=logging.INFO,
-    format=('%(asctime)s.%(msecs)03d | %(name)-30s | %(levelname)-7s | '
+    format=('%(asctime)s.%(msecs)03d | %(levelname)-7s | %(name)-30s | '
             '%(message)s'),
     datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger('simulation')
