@@ -258,7 +258,8 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.communicate(message)
 
     def start_game(self):
-        logger.info('#{} Starting game'.format(self.agent_id))
+        logger.info('#{} Starting game #{}'.format(
+            self.agent_id, self.game_number + 1))
         self._send_start_game_message()
         self._reset_game_data()
         self._load_policy()
@@ -294,9 +295,11 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
             self.agent_class = agents.EaterPacmanAgent
         elif self.agent_algorithm == 'qlearning':
             self.agent_class = agents.QLearningPacmanAgent
+        elif self.agent_algorithm == 'sarsa':
+            self.agent_class = agents.SARSALearningPacmanAgent
         else:
-            raise ValueError('Pac-Man agent must be ai, random, random2 or '
-                             'eater.')
+            raise ValueError('Pac-Man agent must be "ai", "random", "random2",'
+                             ' "eater", "qlearning" or "sarsa".')
 
     def _register_ghost(self):
         if self.agent_algorithm == 'random':
@@ -425,7 +428,7 @@ def build_parser():
                        help='select ghost agent')
     group.add_argument('--pacman-agent', dest='pacman_agent', type=str,
                        choices=['random', 'random2', 'ai', 'eater',
-                                'qlearning'],
+                                'qlearning', 'sarsa'],
                        default='random',
                        help='select Pac-Man agent')
     group.add_argument('--layout', dest='layout', type=str,

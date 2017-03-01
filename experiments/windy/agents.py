@@ -25,18 +25,14 @@ class RandomAgent(core.BaseControllerAgent):
 
 
 class LearningAgent(core.BaseControllerAgent):
-    def __init__(self, agent_id, ally_ids, enemy_ids):
+    def __init__(self, agent_id, ally_ids, enemy_ids, learning_algorithm,
+                 exploration_algorithm):
         super(LearningAgent, self).__init__(agent_id)
         self.game_number = 1
         self.game_step = 1
         self.exploration_rate = 0.1
-        self.learning = learning.QLearning(
-            initial_state=(0, 0),
-            learning_rate=0.1,
-            discount_factor=0.9,
-            actions=range(4))
-        self.exploration = exploration.EGreedy(
-            exploration_rate=self.exploration_rate)
+        self.learning = learning_algorithm
+        self.exploration = exploration_algorithm
 
     def get_policy(self):
         return self.learning.q_values
@@ -62,3 +58,21 @@ class LearningAgent(core.BaseControllerAgent):
         self.game_step += 1
 
         return action
+
+
+class QLearningAgent(LearningAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(QLearningAgent, self).__init__(
+            agent_id, ally_ids, enemy_ids,
+            learning.QLearning(
+                learning_rate=0.1, discount_factor=0.9, actions=range(4)),
+            exploration.EGreedy(exploration_rate=0.1))
+
+
+class SARSAAgent(LearningAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(SARSAAgent, self).__init__(
+            agent_id, ally_ids, enemy_ids,
+            learning.SARSALearning(
+                learning_rate=0.5, discount_factor=0.9, actions=range(4)),
+            exploration.EGreedy(exploration_rate=0.05))

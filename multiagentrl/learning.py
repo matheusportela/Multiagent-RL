@@ -52,40 +52,12 @@ class BaseLearningAlgorithm(object):
                                   % str(type(self)))
 
 
-class QLearning(BaseLearningAlgorithm):
-    """Q-learning algorithm implementation.
-
-    Q-learning is a model free reinforcement learning algorithm that tries and
-    learning state values and chooses actions that maximize the expected
-    discounted reward for the current state.
-
-    Instance variables:
-    previous_state -- State in which the algorithm currently is.
-    q_values -- Storage for (state, action) pair estimated values.
-    learning_rate -- Value in [0, 1] interval that determines how much of the
-        new information overrides the previous value. Deterministic scenarios
-        may have optimal results with learning rate of 1, which means the new
-        information completely replaces the old one.
-    discount_factor -- Value in [0, 1) interval that determines the importance
-        of future rewards. 0 makes the agent myopic and greedy, trying to
-        achieve higher rewards in the next step. Closer to 1 makes the agent
-        maximize long-term rewards. Although values of 1 and higher are
-        possible, it may make the expected discounted reward infinite or
-        divergent.
-    """
+class TDLearning(BaseLearningAlgorithm):
     divergence_threshold = 1e6
 
-    def __init__(self, learning_rate=0.1, discount_factor=0.9,
-                 actions=None):
-        """Constructor.
-
-        Parameters:
-        initial_state -- State where the algorithm begins.
-        num_states -- Number of states to be represented.
-        num_actions -- Number of actions to be represented.
-        """
-        super(QLearning, self).__init__()
+    def __init__(self, learning_rate=0.1, discount_factor=0.9, actions=None):
         self.previous_state = None
+        self.previous_action = None
         self.q_values = {}
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
@@ -121,13 +93,21 @@ class QLearning(BaseLearningAlgorithm):
             results.append('\n')
         return ''.join(results)
 
-    def _update_state(self, state):
-        """Update Q Learning current state.
+    def _update_previous_state(self, state):
+        """Update learning previous state.
 
         Parameters:
         state -- State to which the learning algorithm is going.
         """
         self.previous_state = copy.deepcopy(state)
+
+    def _update_previous_action(self, action):
+        """Update learning previous action.
+
+        Parameters:
+        action -- Action to which the learning algorithm is going.
+        """
+        self.previous_action = copy.deepcopy(action)
 
     def _initialize_unknown_state(self, state):
         """Initialize Q-values for states that were not previously seen.
@@ -158,8 +138,8 @@ class QLearning(BaseLearningAlgorithm):
         action -- Agent action.
         value -- New estimated value.
         """
-        if abs(value) > QLearning.divergence_threshold:
-            logger.warn('Q-learning seems to be diverging')
+        if abs(value) > self.divergence_threshold:
+            logger.warn('Learning seems to be diverging')
 
         self.q_values[state][action] = value
 
@@ -190,6 +170,54 @@ class QLearning(BaseLearningAlgorithm):
         max_action = self._get_max_action(state)
         return self.q_values[state][max_action]
 
+    def act(self, state):
+        """Select the best legal action for the given state.
+
+        Parameters:
+        state -- Agent state to select an action.
+        """
+        return self._get_max_action(state)
+
+
+class SARSALearning(TDLearning):
+    def learn(self, state, action, reward):
+        """Learn by updating the (state, action) reward.
+
+        Learn by applying the reward received when transitioning from the
+        current state to the new one by executing an action.
+
+        Parameters:
+        state -- Agent state after executing the action.
+        action -- Executed action.
+        reward -- Reward received after executing the action.
+        """
+        logger.debug('Previous state: {}'.format(self.previous_state))
+        logger.debug('Previous action: {}'.format(self.previous_action))
+        logger.debug('Current state: {}'.format(state))
+        logger.debug('Current action: {}'.format(action))
+        logger.debug('Reward: {}'.format(reward))
+
+        if self.previous_state and self.previous_action:
+            old_value = self._get_q_value(
+                self.previous_state, self.previous_action)
+            next_value = self._get_q_value(state, action)
+            new_value = (old_value + self.learning_rate*(
+                reward + self.discount_factor*next_value - old_value))
+            self._set_q_value(
+                self.previous_state, self.previous_action, new_value)
+        self._update_previous_state(state)
+        self._update_previous_action(action)
+
+        logger.debug('Q-values:\n{}'.format(self))
+
+
+class QLearning(TDLearning):
+    """Q-learning algorithm implementation.
+
+    Q-learning is a model free reinforcement learning algorithm that tries and
+    learning state values and chooses actions that maximize the expected
+    discounted reward for the current state.
+    """
     def learn(self, state, action, reward):
         """Learn by updating the (state, action) reward.
 
@@ -212,17 +240,9 @@ class QLearning(BaseLearningAlgorithm):
             new_value = (old_value + self.learning_rate*(
                 reward + self.discount_factor*next_expected_value - old_value))
             self._set_q_value(self.previous_state, action, new_value)
-        self._update_state(state)
+        self._update_previous_state(state)
 
         logger.debug('Q-values:\n{}'.format(self))
-
-    def act(self, state):
-        """Select the best legal action for the given state.
-
-        Parameters:
-        state -- Agent state to select an action.
-        """
-        return self._get_max_action(state)
 
 
 class QLearningWithApproximation(BaseLearningAlgorithm):

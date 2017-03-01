@@ -143,9 +143,10 @@ class EaterPacmanAgent(PacmanAgent):
             return random.choice(legal_actions)
 
 
-class QLearningPacmanAgent(PacmanAgent):
-    def __init__(self, agent_id, ally_ids, enemy_ids):
-        super(QLearningPacmanAgent, self).__init__(agent_id)
+class TDLearningPacmanAgent(PacmanAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids, learning_algorithm,
+                 exploration_algorithm):
+        super(TDLearningPacmanAgent, self).__init__(agent_id)
         self.game_number = 1
         self.game_step = 1
         self.exploration_rate = 0.1
@@ -154,12 +155,8 @@ class QLearningPacmanAgent(PacmanAgent):
             features.YPositionFeature(),
             features.VisitedPositionFeature(),
         ]
-        self.learning = learning.QLearning(
-            learning_rate=0.3,
-            discount_factor=0.7,
-            actions=PACMAN_ACTIONS)
-        self.exploration = exploration.EGreedy(
-            exploration_rate=self.exploration_rate)
+        self.learning = learning_algorithm
+        self.exploration = exploration_algorithm
         self.agent_state = None
 
     def get_policy(self):
@@ -206,6 +203,24 @@ class QLearningPacmanAgent(PacmanAgent):
             return action
         else:
             return random.choice(legal_actions)
+
+
+class QLearningPacmanAgent(TDLearningPacmanAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(QLearningPacmanAgent, self).__init__(
+            agent_id, ally_ids, enemy_ids,
+            learning.QLearning(learning_rate=0.3, discount_factor=0.7,
+                               actions=PACMAN_ACTIONS),
+            exploration.EGreedy(exploration_rate=0.1))
+
+
+class SARSALearningPacmanAgent(TDLearningPacmanAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(SARSALearningPacmanAgent, self).__init__(
+            agent_id, ally_ids, enemy_ids,
+            learning.SARSALearning(learning_rate=0.5, discount_factor=0.9,
+                                   actions=PACMAN_ACTIONS),
+            exploration.EGreedy(exploration_rate=0.1))
 
 
 class BehaviorLearningPacmanAgent(PacmanAgent):

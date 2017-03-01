@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 
 
 class WindyExperiment(core.BaseExperiment):
-    def __init__(self, learn_games, test_games, sleep, agent_algorithm,
-                 output_file, policy_file):
+    def __init__(self, learn_games, test_games, graphics, sleep,
+                 agent_algorithm, output_file, policy_file):
         super(WindyExperiment, self).__init__(
             learn_games=learn_games,
             test_games=test_games)
@@ -35,6 +35,7 @@ class WindyExperiment(core.BaseExperiment):
         }
         self.output_file = output_file
         self.policy_file = policy_file
+        self.graphics = graphics
 
     def start(self):
         logger.info('Starting')
@@ -64,7 +65,8 @@ class WindyExperiment(core.BaseExperiment):
             self.simulator.step(action)
 
             # Show simulation state
-            logger.info('Simulator:\n{}'.format(self.simulator))
+            if self.graphics:
+                logger.info('Simulator:\n{}'.format(self.simulator))
 
             # Update state to learn from the received reward
             self.agent.state = self.simulator.get_state()
@@ -116,10 +118,13 @@ class WindyAgent(core.BaseAdapterAgent):
     def _set_agent_class(self, agent_algorithm):
         if agent_algorithm == 'random':
             self.agent_class = agents.RandomAgent
-        elif agent_algorithm == 'ai':
-            self.agent_class = agents.LearningAgent
+        elif agent_algorithm == 'qlearning':
+            self.agent_class = agents.QLearningAgent
+        elif agent_algorithm == 'sarsa':
+            self.agent_class = agents.SARSAAgent
         else:
-            raise ValueError('Windy agent must be random or ai')
+            raise ValueError(
+                'Windy agent must be "random", "qlearning" or "sarsa"')
 
     def start_experiment(self):
         logger.info('Starting experiment')
@@ -139,7 +144,7 @@ class WindyAgent(core.BaseAdapterAgent):
         self.communicate(message)
 
     def start_game(self):
-        logger.info('Starting game')
+        logger.info('Starting game #{}'.format(self.game_number + 1))
         self._send_start_game_message()
         self._send_policy()
         self.game_number += 1
@@ -205,11 +210,14 @@ def build_parser():
         '-t', '--test-games', dest='test_games', type=int, default=1,
         help='number of games to test learned policy')
     parser.add_argument(
+        '-g', '--graphics', dest='graphics', default=False,
+        action='store_true', help='display GUI')
+    parser.add_argument(
         '-s', '--sleep', dest='sleep', type=float, default=0.1,
         help='seconds to sleep between game steps')
     parser.add_argument(
         '-a', '--agent', dest='agent_algorithm', type=str,
-        choices=['random', 'ai'],
+        choices=['random', 'qlearning', 'sarsa'],
         default='random', help='select Reinforcement Learning agent')
     parser.add_argument(
         '-o', '--output', dest='output_file', type=str,
@@ -224,6 +232,7 @@ def build_adapter_with_args(args):
     return WindyExperiment(
         learn_games=args.learn_games,
         test_games=args.test_games,
+        graphics=args.graphics,
         sleep=args.sleep,
         agent_algorithm=args.agent_algorithm,
         output_file=args.output_file,
