@@ -10,6 +10,7 @@ In order to achieve that, all classes must inherit from BaseLearningAlgorithm
 and implement its virtual methods.
 """
 
+import copy
 import logging
 import random
 
@@ -126,7 +127,7 @@ class QLearning(BaseLearningAlgorithm):
         Parameters:
         state -- State to which the learning algorithm is going.
         """
-        self.previous_state = state
+        self.previous_state = copy.deepcopy(state)
 
     def _initialize_unknown_state(self, state):
         """Initialize Q-values for states that were not previously seen.
@@ -293,7 +294,7 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
 
             self._update_weights(action, delta)
 
-        self.previous_state = state
+        self.previous_state = copy.deepcopy(state)
 
     def act(self, state):
         return self._get_max_action(state)
