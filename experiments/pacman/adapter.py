@@ -258,7 +258,8 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.communicate(message)
 
     def start_game(self):
-        logger.info('#{} Starting game'.format(self.agent_id))
+        logger.info('#{} Starting game #{}'.format(
+            self.agent_id, self.game_number + 1))
         self._send_start_game_message()
         self._reset_game_data()
         self._load_policy()
