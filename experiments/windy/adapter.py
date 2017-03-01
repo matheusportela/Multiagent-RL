@@ -116,10 +116,13 @@ class WindyAgent(core.BaseAdapterAgent):
     def _set_agent_class(self, agent_algorithm):
         if agent_algorithm == 'random':
             self.agent_class = agents.RandomAgent
-        elif agent_algorithm == 'ai':
-            self.agent_class = agents.LearningAgent
+        elif agent_algorithm == 'qlearning':
+            self.agent_class = agents.QLearningAgent
+        elif agent_algorithm == 'sarsa':
+            self.agent_class = agents.SARSAAgent
         else:
-            raise ValueError('Windy agent must be random or ai')
+            raise ValueError(
+                'Windy agent must be "random", "qlearning" or "sarsa"')
 
     def start_experiment(self):
         logger.info('Starting experiment')
@@ -209,7 +212,7 @@ def build_parser():
         help='seconds to sleep between game steps')
     parser.add_argument(
         '-a', '--agent', dest='agent_algorithm', type=str,
-        choices=['random', 'ai'],
+        choices=['random', 'qlearning', 'sarsa'],
         default='random', help='select Reinforcement Learning agent')
     parser.add_argument(
         '-o', '--output', dest='output_file', type=str,
