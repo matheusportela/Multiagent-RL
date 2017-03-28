@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class BerkeleyAdapter(core.BaseExperiment):
-    def __init__(self, pacman_agent, ghost_agent, num_ghosts, noise,
+    def __init__(self, pacman_agent, ghost_agent, num_ghosts, noise, max_steps,
                  policy_file, layout_map, learn_games, test_games, output_file,
                  graphics):
 
@@ -71,6 +71,8 @@ class BerkeleyAdapter(core.BaseExperiment):
         self.policy_file = str(policy_file) if policy_file else None
 
         # Runs
+        self.max_steps = max_steps
+
         self.learn_games = int(learn_games)
         assert self.learn_games >= 0
 
@@ -134,10 +136,10 @@ class BerkeleyAdapter(core.BaseExperiment):
     def _run_game(self):
         num_berkeley_games = 1
         record_berkeley_games = False
-        simulated_game = run_berkeley_games(self.layout, self.pacman,
-                                            self.ghosts, self.display,
-                                            num_berkeley_games,
-                                            record_berkeley_games)[0]
+        simulated_game = run_berkeley_games(
+            self.layout, self.pacman, self.ghosts, self.display,
+            num_berkeley_games, record_berkeley_games,
+            maxSteps=self.max_steps)[0]
 
         # Do this so as agents can receive the last reward
         for agent in self.agents:
@@ -434,6 +436,9 @@ def build_parser():
     group.add_argument('--layout', dest='layout', type=str,
                        default='classic', choices=['classic', 'medium'],
                        help='Game layout')
+    group.add_argument('--steps', dest='steps', type=int,
+                       default=None,
+                       help='maximum number of steps per game')
     group.add_argument('--noise', dest='noise', type=int,
                        default=0,
                        help='introduce noise in position measurements')
@@ -454,6 +459,7 @@ def build_adapter_with_args(args):
         ghost_agent=args.ghost_agent,
         num_ghosts=args.num_ghosts,
         noise=args.noise,
+        max_steps=args.steps,
         policy_file=args.policy_file,
         layout_map=args.layout,
         learn_games=args.learn_games,
