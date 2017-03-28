@@ -11,6 +11,7 @@ import logging
 import os
 import pickle
 import random
+import time
 
 from .berkeley.game import Agent as BerkeleyGameAgent, Directions
 from .berkeley.graphicsDisplay import PacmanGraphics as BerkeleyGraphics
@@ -199,6 +200,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         self.results = {
             'scores': [],
         }
+        self.previous_time = time.time()
 
     # BerkeleyGameAgent required methods
 
@@ -389,6 +391,9 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
 
     def receive_action(self):
         logger.debug('#{} Receiving action'.format(self.agent_id))
+
+        self._print_actions_per_second()
+
         action_message = self.send_state()
         self.game_state.predict_agent(self.agent_id, action_message.action)
         return action_message.action
@@ -407,6 +412,12 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
 
     def _calculate_reward(self, current_score):
         return current_score - self.previous_score
+
+    def _print_actions_per_second(self):
+        current_time = time.time()
+        dt = current_time - self.previous_time
+        actions_per_second = 1.0/dt
+        logger.debug('Actions per second: {}'.format(actions_per_second))
 
 
 def build_parser():
@@ -434,7 +445,8 @@ def build_parser():
                        default='random',
                        help='select Pac-Man agent')
     group.add_argument('--layout', dest='layout', type=str,
-                       default='classic', choices=['classic', 'medium'],
+                       default='classic',
+                       choices=['classic', 'medium', 'simple'],
                        help='Game layout')
     group.add_argument('--steps', dest='steps', type=int,
                        default=None,
