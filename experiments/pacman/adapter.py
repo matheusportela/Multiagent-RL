@@ -417,6 +417,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         current_time = time.time()
         dt = current_time - self.previous_time
         actions_per_second = 1.0/dt
+        self.previous_time = current_time
         logger.debug('Actions per second: {}'.format(actions_per_second))
 
 

@@ -21,7 +21,7 @@ class ZMQMessengerBase(object):
 
     def send(self, msg):
         """Sends the given message."""
-        self.socket.send(pickle.dumps(msg))
+        self.socket.send(pickle.dumps(msg, protocol=pickle.HIGHEST_PROTOCOL))
 
 
 class ZMQServer(ZMQMessengerBase):
