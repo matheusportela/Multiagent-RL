@@ -223,139 +223,78 @@ class SARSALearningPacmanAgent(TDLearningPacmanAgent):
             exploration.EGreedy(exploration_rate=0.1))
 
 
-class BehaviorLearningPacmanAgent(PacmanAgent):
+class BehaviorLearningPacmanAgent(TDLearningPacmanAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids, learning_algorithm,
+                 exploration_algorithm):
+        TDLearningPacmanAgent.__init__(
+            self, agent_id, ally_ids, enemy_ids, learning_algorithm,
+            exploration_algorithm)
+
+        self.previous_behavior = None
+        self.K = 1.0  # Learning rate
+
+    def learn(self, state, action, reward):
+        self.agent_state = self._get_state(state)
+
+        if self.previous_behavior:
+            self.learning.learning_rate = self.K / (self.K + self.game_step)
+            self.learning.learn(self.agent_state, self.previous_behavior,
+                                reward)
+
+    def act(self, state, legal_actions, explore):
+        if not legal_actions:
+            return Directions.STOP
+
+        self.agent_state = self._get_state(state)
+        behavior = self.learning.act(self.agent_state)
+        action = behavior(state, legal_actions)
+        self.previous_behavior = behavior
+
+        if explore and legal_actions:
+            action = self.exploration.explore(action, legal_actions)
+
+        self.game_step += 1
+
+        # Reset agent state
+        self.agent_state = None
+
+        return self._select_valid_action(action, legal_actions)
+
+
+class BehaviorQLearningPacmanAgent(BehaviorLearningPacmanAgent):
     def __init__(self, agent_id, ally_ids, enemy_ids):
-        super(BehaviorLearningPacmanAgent, self).__init__(agent_id)
+        super(BehaviorQLearningPacmanAgent, self).__init__(
+            agent_id, ally_ids, enemy_ids,
+            learning.QLearning(
+                learning_rate=0.3, discount_factor=0.7,
+                actions=[
+                    behaviors.EatBehavior(),
+                    behaviors.FleeBehavior(),
+                    behaviors.SeekBehavior(),
+                    behaviors.PursueBehavior()
+                ]),
+            exploration.EGreedy(exploration_rate=0.1))
+
+
+class BayesianBehaviorQLearningPacmanAgent(BehaviorLearningPacmanAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
         self.features = [features.FoodDistanceFeature()]
         for enemy_id in enemy_ids:
             self.features.append(features.EnemyDistanceFeature(enemy_id))
         for id_ in [agent_id] + ally_ids + enemy_ids:
             self.features.append(features.FragileAgentFeature(id_))
 
-        self.behaviors = [behaviors.EatBehavior(),
-                          behaviors.FleeBehavior(),
-                          behaviors.SeekBehavior(),
-                          behaviors.PursueBehavior()]
+        self.behaviors = [
+            behaviors.EatBehavior(),
+            behaviors.FleeBehavior(),
+            behaviors.SeekBehavior(),
+            behaviors.PursueBehavior()
+        ]
 
-        self.K = 1.0  # Learning rate
-        self.exploration_rate = 0.1
-
-        self.learning = learning.QLearningWithApproximation(
-            learning_rate=0.1, discount_factor=0.9, actions=self.behaviors,
-            features=self.features)
-        self.exploration = exploration.EGreedy(
-            exploration_rate=self.exploration_rate)
-        self.previous_behavior = self.behaviors[0]
-        self.behavior_count = {}
-        self.reset_behavior_count()
-
-        self.test_mode = False
-
-    def reset_behavior_count(self):
-        for behavior in self.behaviors:
-            self.behavior_count[str(behavior)] = 0
-
-    def get_policy(self):
-        return self.learning.get_weights()
-
-    def set_policy(self, weights):
-        self.learning.set_weights(weights)
-
-    def learn(self, state, action, reward):
-        self.learning.learning_rate = self.K / (self.K + state.iteration)
-        self.learning.learn(state, self.previous_behavior, reward)
-
-    def act(self, state, legal_actions, explore):
-        if not legal_actions:
-            return Directions.STOP
-
-        behavior = self.learning.act(state)
-        self.previous_behavior = behavior
-        suggested_action = behavior(state, legal_actions)
-
-        if explore:
-            suggested_action = self.exploration.explore(
-                suggested_action, legal_actions)
-
-        self.behavior_count[str(behavior)] += 1
-
-        if suggested_action in legal_actions:
-            return suggested_action
-        else:
-            return random.choice(legal_actions)
-
-    def enable_learn_mode(self):
-        self.test_mode = False
-        self.learning.exploration_rate = self.exploration_rate
-
-    def enable_test_mode(self):
-        self.test_mode = True
-        self.learning.exploration_rate = 0
-
-
-class BehaviorLearningGhostAgent(GhostAgent):
-    def __init__(self, agent_id, ally_ids, enemy_ids):
-        super(BehaviorLearningGhostAgent, self).__init__(agent_id)
-        self.features = [features.FoodDistanceFeature()]
-        for enemy_id in enemy_ids:
-            self.features.append(features.EnemyDistanceFeature(enemy_id))
-        for id_ in [agent_id] + ally_ids + enemy_ids:
-            self.features.append(features.FragileAgentFeature(id_))
-
-        self.behaviors = [behaviors.FleeBehavior(),
-                          behaviors.SeekBehavior(),
-                          behaviors.PursueBehavior()]
-
-        self.K = 1.0  # Learning rate
-        self.exploration_rate = 0.1
-        self.learning = learning.QLearningWithApproximation(
-            learning_rate=0.1, discount_factor=0.9, actions=self.behaviors,
-            features=self.features)
-        self.exploration = exploration.EGreedy(
-            exploration_rate=self.exploration_rate)
-        self.previous_behavior = self.behaviors[0]
-        self.behavior_count = {}
-        self.reset_behavior_count()
-
-        self.test_mode = False
-
-    def reset_behavior_count(self):
-        for behavior in self.behaviors:
-            self.behavior_count[str(behavior)] = 0
-
-    def get_policy(self):
-        return self.learning.get_weights()
-
-    def set_policy(self, weights):
-        self.learning.set_weights(weights)
-
-    def learn(self, state, action, reward):
-        self.learning.learning_rate = self.K / (self.K + state.iteration)
-        self.learning.learn(state, self.previous_behavior, reward)
-
-    def act(self, state, legal_actions, explore):
-        if not legal_actions:
-            return Directions.STOP
-
-        behavior = self.learning.act(state)
-        self.previous_behavior = behavior
-        suggested_action = behavior(state, legal_actions)
-
-        if explore:
-            suggested_action = self.exploration.explore(
-                suggested_action, legal_actions)
-
-        self.behavior_count[str(behavior)] += 1
-
-        if suggested_action in legal_actions:
-            return suggested_action
-        else:
-            return random.choice(legal_actions)
-
-    def enable_learn_mode(self):
-        self.test_mode = False
-        self.learning.exploration_rate = self.exploration_rate
-
-    def enable_test_mode(self):
-        self.test_mode = True
-        self.learning.exploration_rate = 0
+        super(BayesianBehaviorQLearningPacmanAgent, self).__init__(
+            agent_id, ally_ids, enemy_ids,
+            learning.QLearningWithApproximation(
+                learning_rate=0.1, discount_factor=0.9,
+                actions=self.behaviors,
+                features=self.features),
+            exploration.EGreedy(exploration_rate=0.1))
