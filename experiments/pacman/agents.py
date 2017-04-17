@@ -230,6 +230,7 @@ class BehaviorLearningPacmanAgent(TDLearningPacmanAgent):
             self, agent_id, ally_ids, enemy_ids, learning_algorithm,
             exploration_algorithm)
 
+        self.num_behavior_steps = 5
         self.previous_behavior = None
         self.K = 1.0  # Learning rate
 
@@ -246,9 +247,16 @@ class BehaviorLearningPacmanAgent(TDLearningPacmanAgent):
             return Directions.STOP
 
         self.agent_state = self._get_state(state)
-        behavior = self.learning.act(self.agent_state)
+
+        # Select a new behavior every `num_behavior_steps` steps.
+        if (self.previous_behavior is None or
+                self.game_step % self.num_behavior_steps == 0):
+            behavior = self.learning.act(self.agent_state)
+            self.previous_behavior = behavior
+        else:
+            behavior = self.previous_behavior
+
         action = behavior(state, legal_actions)
-        self.previous_behavior = behavior
 
         if explore and legal_actions:
             action = self.exploration.explore(action, legal_actions)
@@ -258,6 +266,40 @@ class BehaviorLearningPacmanAgent(TDLearningPacmanAgent):
         # Reset agent state
         self.agent_state = None
 
+        return self._select_valid_action(action, legal_actions)
+
+
+class BehaviorRandomPacmanAgent(TDLearningPacmanAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        TDLearningPacmanAgent.__init__(
+            self, agent_id, ally_ids, enemy_ids, None, None
+        )
+
+        self.behaviors = [
+            behaviors.EatBehavior(),
+            behaviors.FleeBehavior(),
+            behaviors.SeekBehavior(),
+            behaviors.PursueBehavior()
+        ]
+        self.num_behavior_steps = 5
+        self.previous_behavior = None
+
+    def learn(self, state, action, reward):
+        pass
+
+    def act(self, state, legal_actions, explore):
+        if not legal_actions:
+            return Directions.STOP
+
+        if (self.previous_behavior is None or
+                self.game_step % self.num_behavior_steps == 0):
+            behavior = random.choice(self.behaviors)
+            self.previous_behavior = behavior
+        else:
+            behavior = self.previous_behavior
+
+        action = behavior(state, legal_actions)
+        self.game_step += 1
         return self._select_valid_action(action, legal_actions)
 
 
