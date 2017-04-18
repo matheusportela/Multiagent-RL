@@ -46,6 +46,12 @@ def calculate_regression_y(x, coeff):
                    coeff[i] for i in range(len(coeff))])
 
 
+def print_statistics(learn_scores, test_scores):
+    print('Average score:', np.mean(learn_scores + test_scores))
+    print('  Average learn score:', np.mean(learn_scores))
+    print('  Average test score:', np.mean(test_scores))
+
+
 def plot_scores(learn_scores, test_scores):
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -110,6 +116,7 @@ def plot_behavior_count(agent_id, behavior_count):
 
 def plot(args):
     results = load_results(args.input_filename)
+    print_statistics(results['learn_scores'], results['test_scores'])
     plot_scores(results['learn_scores'], results['test_scores'])
 
     if 'behavior_count' in results:

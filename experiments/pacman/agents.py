@@ -123,6 +123,26 @@ class RandomGhostAgent(GhostAgent):
             return Directions.STOP
 
 
+class SeekerGhostAgent(GhostAgent):
+    """Agent that randomly selects an action."""
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(SeekerGhostAgent, self).__init__(agent_id)
+        self.behavior = behaviors.SeekBehavior()
+
+    def learn(self, state, action, reward):
+        pass
+
+    def act(self, state, legal_actions, explore):
+        action = self.behavior(state, legal_actions)
+
+        if action in legal_actions:
+            return action
+        elif legal_actions:
+            return random.choice(legal_actions)
+        else:
+            return Directions.STOP
+
+
 class EaterPacmanAgent(PacmanAgent):
     def __init__(self, agent_id, ally_ids, enemy_ids):
         super(EaterPacmanAgent, self).__init__(agent_id)
@@ -150,11 +170,15 @@ class TDLearningPacmanAgent(PacmanAgent):
         self.game_number = 1
         self.game_step = 1
         self.exploration_rate = 0.1
-        self.features = [
-            features.XPositionFeature(),
-            features.YPositionFeature(),
-            features.VisitedPositionFeature(),
-        ]
+
+        if enemy_ids:
+            self.features = [
+                features.ClosestEnemyDistanceFeature(enemy_ids),
+                features.FragileAgentFeature(enemy_ids[0])
+            ]
+        else:
+            self.features = []
+
         self.learning = learning_algorithm
         self.exploration = exploration_algorithm
         self.agent_state = None
@@ -313,30 +337,20 @@ class BehaviorQLearningPacmanAgent(BehaviorLearningPacmanAgent):
                     behaviors.EatBehavior(),
                     behaviors.FleeBehavior(),
                     behaviors.SeekBehavior(),
-                    behaviors.PursueBehavior()
                 ]),
             exploration.EGreedy(exploration_rate=0.1))
 
 
 class BayesianBehaviorQLearningPacmanAgent(BehaviorLearningPacmanAgent):
     def __init__(self, agent_id, ally_ids, enemy_ids):
-        self.features = [features.FoodDistanceFeature()]
-        for enemy_id in enemy_ids:
-            self.features.append(features.EnemyDistanceFeature(enemy_id))
-        for id_ in [agent_id] + ally_ids + enemy_ids:
-            self.features.append(features.FragileAgentFeature(id_))
-
-        self.behaviors = [
-            behaviors.EatBehavior(),
-            behaviors.FleeBehavior(),
-            behaviors.SeekBehavior(),
-            behaviors.PursueBehavior()
-        ]
-
         super(BayesianBehaviorQLearningPacmanAgent, self).__init__(
             agent_id, ally_ids, enemy_ids,
             learning.QLearningWithApproximation(
                 learning_rate=0.1, discount_factor=0.9,
-                actions=self.behaviors,
-                features=self.features),
+                actions=[
+                    behaviors.EatBehavior(),
+                    behaviors.FleeBehavior(),
+                    behaviors.SeekBehavior(),
+                ]),
             exploration.EGreedy(exploration_rate=0.1))
+        self.learning.features = self.features

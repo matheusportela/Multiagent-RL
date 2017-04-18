@@ -56,10 +56,33 @@ class EnemyDistanceFeature(Feature):
         enemy_position = state.get_agent_position(self.enemy_id)
         distance = state.calculate_distance(agent_position, enemy_position)
 
-        if distance == 0.0:
-            distance = 1.0
+        if distance > 9:
+            distance = 0.0
 
-        return (1.0 / distance)
+        return distance
+
+
+class ClosestEnemyDistanceFeature(Feature):
+    """Defines the distance to an enemy."""
+    def __init__(self, enemy_ids):
+        self.enemy_ids = enemy_ids
+
+    def __call__(self, state):
+        agent_position = state.get_position()
+
+        min_distance = 10000
+
+        for enemy_id in self.enemy_ids:
+            enemy_position = state.get_agent_position(enemy_id)
+            distance = state.calculate_distance(agent_position, enemy_position)
+
+            if distance < min_distance:
+                min_distance = distance
+
+        if min_distance > 9:
+            min_distance = 10.0
+
+        return min_distance
 
 
 class FoodDistanceFeature(Feature):

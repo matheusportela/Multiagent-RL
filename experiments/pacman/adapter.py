@@ -316,10 +316,10 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
     def _register_ghost(self):
         if self.agent_algorithm == 'random':
             self.agent_class = agents.RandomGhostAgent
-        elif self.agent_algorithm == 'ai':
-            self.agent_class = agents.BehaviorLearningGhostAgent
+        elif self.agent_algorithm == 'seeker':
+            self.agent_class = agents.SeekerGhostAgent
         else:
-            raise ValueError('Ghost agent must be ai or random.')
+            raise ValueError('Ghost agent must be "random" or "seeker".')
 
     def finish_game(self):
         logger.info('#{} Finishing game'.format(self.agent_id))
@@ -445,7 +445,7 @@ def build_parser():
                        default=100,
                        help='number of games to learn from')
     group.add_argument('--ghost-agent', dest='ghost_agent', type=str,
-                       choices=['random', 'ai'], default='ai',
+                       choices=['random', 'seeker'], default='random',
                        help='select ghost agent')
     group.add_argument('--pacman-agent', dest='pacman_agent', type=str,
                        choices=['random', 'random2', 'ai', 'eater',
