@@ -61,8 +61,13 @@ class FleeBehavior(BehaviorBase):
     def __call__(self, state, legal_actions):
         agent_map = state.get_map()
         agent_position = state.get_position()
-        enemy_position = state.get_agent_position(
-            state.get_closest_enemy(state))
+
+        # No enemies in the map
+        try:
+            enemy_position = state.get_agent_position(
+                state.get_closest_enemy(state))
+        except IndexError:
+            return random.choice(legal_actions)
 
         best_action = None
         max_distance = None
@@ -89,8 +94,13 @@ class SeekBehavior(BehaviorBase):
     def __call__(self, state, legal_actions):
         agent_map = state.get_map()
         agent_position = state.get_position()
-        enemy_position = state.get_agent_position(
-            state.get_closest_enemy(state))
+
+        # No enemies in the map
+        try:
+            enemy_position = state.get_agent_position(
+                state.get_closest_enemy(state))
+        except IndexError:
+            return random.choice(legal_actions)
 
         best_action = None
         min_distance = None
@@ -141,9 +151,14 @@ class PursueBehavior(BehaviorBase):
     def __call__(self, state, legal_actions):
         agent_map = state.get_map()
         agent_position = state.get_position()
-        enemy_position = self._estimate_enemy_future_position(
-            state.get_agent_position(state.get_closest_enemy(state)),
-            agent_map)
+
+        # No enemies in the map
+        try:
+            enemy_position = self._estimate_enemy_future_position(
+                state.get_agent_position(state.get_closest_enemy(state)),
+                agent_map)
+        except IndexError:
+            return random.choice(legal_actions)
 
         best_action = None
         min_distance = None

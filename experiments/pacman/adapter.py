@@ -306,7 +306,7 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
         elif self.agent_algorithm == 'behaviorqlearning':
             self.agent_class = agents.BehaviorQLearningPacmanAgent
         elif self.agent_algorithm == 'bayesian':
-            self.agent_class = agents.BehaviorQLearningPacmanAgent
+            self.agent_class = agents.BayesianBehaviorQLearningPacmanAgent
         else:
             raise ValueError('Pac-Man agent must be "ai", "random", "random2",'
                              ' "eater", "qlearning", "sarsa",'
@@ -367,16 +367,15 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
                 if is_wall:
                     wall_positions.append((y, x))
 
-        if self.game_number == 0:
-            self.game_state = state.GameState(
-                agent_id=self.agent_id,
-                width=self.layout.width,
-                height=self.layout.height,
-                ally_ids=self.ally_ids,
-                enemy_ids=self.enemy_ids,
-                walls=wall_positions,
-                eater=(self.agent_type == 'pacman'),
-                iteration=self.game_number)
+        self.game_state = state.GameState(
+            agent_id=self.agent_id,
+            width=self.layout.width,
+            height=self.layout.height,
+            ally_ids=self.ally_ids,
+            enemy_ids=self.enemy_ids,
+            walls=wall_positions,
+            eater=(self.agent_type == 'pacman'),
+            iteration=self.game_number)
         self.game_state.set_food_positions(food_positions)
 
         for id_, pos in agent_positions.items():
