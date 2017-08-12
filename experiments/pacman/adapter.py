@@ -118,8 +118,8 @@ class BerkeleyAdapter(core.BaseExperiment):
 
         if filename and os.path.isfile(filename):
             logger.info('Loading policies from {}'.format(filename))
-            with open(filename) as f:
-                self.policies = pickle.loads(f.read())
+            with open(filename, 'rb') as f:
+                self.policies = pickle.load(f)
 
     def execute_game(self):
         logger.info('Executing game #{}'.format(self.game_number + 1))
