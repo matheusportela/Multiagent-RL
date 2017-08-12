@@ -246,11 +246,21 @@ class QLearningWithApproximation(BaseLearningAlgorithm):
                  discount_factor=0.9):
         super(QLearningWithApproximation, self).__init__()
         self.actions = actions
-        self.features = features
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.previous_state = None
         self.weights = {}
+
+        if features:
+            self.features = features
+
+    @property
+    def features(self):
+        return self._features
+
+    @features.setter
+    def features(self, features):
+        self._features = features
         self._init_weights()
 
     def _init_weights(self):

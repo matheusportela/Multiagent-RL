@@ -41,18 +41,6 @@ class PacmanAgent(core.BaseControllerAgent):
         pass
 
 
-class GhostAgent(core.BaseControllerAgent):
-    def __init__(self, agent_id):
-        assert agent_id != PACMAN_INDEX
-        super(GhostAgent, self).__init__(agent_id)
-
-    def start_game(self):
-        pass
-
-    def finish_game(self):
-        pass
-
-
 class RandomPacmanAgent(PacmanAgent):
     """Agent that randomly selects an action."""
     def __init__(self, agent_id, ally_ids, enemy_ids):
@@ -106,41 +94,6 @@ class RandomPacmanAgentTwo(PacmanAgent):
                         return random.choice(legal_actions)
             else:
                 return self.last_action
-
-
-class RandomGhostAgent(GhostAgent):
-    """Agent that randomly selects an action."""
-    def __init__(self, agent_id, ally_ids, enemy_ids):
-        super(RandomGhostAgent, self).__init__(agent_id)
-
-    def learn(self, state, action, reward):
-        pass
-
-    def act(self, state, legal_actions, explore):
-        if legal_actions:
-            return random.choice(legal_actions)
-        else:
-            return Directions.STOP
-
-
-class SeekerGhostAgent(GhostAgent):
-    """Agent that randomly selects an action."""
-    def __init__(self, agent_id, ally_ids, enemy_ids):
-        super(SeekerGhostAgent, self).__init__(agent_id)
-        self.behavior = behaviors.SeekBehavior()
-
-    def learn(self, state, action, reward):
-        pass
-
-    def act(self, state, legal_actions, explore):
-        action = self.behavior(state, legal_actions)
-
-        if action in legal_actions:
-            return action
-        elif legal_actions:
-            return random.choice(legal_actions)
-        else:
-            return Directions.STOP
 
 
 class EaterPacmanAgent(PacmanAgent):
@@ -259,7 +212,7 @@ class BehaviorLearningPacmanAgent(TDLearningPacmanAgent):
         self.K = 1.0  # Learning rate
 
     def learn(self, state, action, reward):
-        self.agent_state = self._get_state(state)
+        self.agent_state = state
 
         if self.previous_behavior:
             self.learning.learning_rate = self.K / (self.K + self.game_step)
@@ -270,7 +223,7 @@ class BehaviorLearningPacmanAgent(TDLearningPacmanAgent):
         if not legal_actions:
             return Directions.STOP
 
-        self.agent_state = self._get_state(state)
+        self.agent_state = state
 
         # Select a new behavior every `num_behavior_steps` steps.
         if (self.previous_behavior is None or
@@ -354,3 +307,56 @@ class BayesianBehaviorQLearningPacmanAgent(BehaviorLearningPacmanAgent):
                 ]),
             exploration.EGreedy(exploration_rate=0.1))
         self.learning.features = self.features
+
+    def get_policy(self):
+        return self.learning.weights
+
+    def set_policy(self, weights):
+        self.learning.weights = weights
+
+
+class GhostAgent(core.BaseControllerAgent):
+    def __init__(self, agent_id):
+        assert agent_id != PACMAN_INDEX
+        super(GhostAgent, self).__init__(agent_id)
+
+    def start_game(self):
+        pass
+
+    def finish_game(self):
+        pass
+
+
+class RandomGhostAgent(GhostAgent):
+    """Agent that randomly selects an action."""
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(RandomGhostAgent, self).__init__(agent_id)
+
+    def learn(self, state, action, reward):
+        pass
+
+    def act(self, state, legal_actions, explore):
+        if legal_actions:
+            return random.choice(legal_actions)
+        else:
+            return Directions.STOP
+
+
+class SeekerGhostAgent(GhostAgent):
+    """Agent that randomly selects an action."""
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(SeekerGhostAgent, self).__init__(agent_id)
+        self.behavior = behaviors.SeekBehavior()
+
+    def learn(self, state, action, reward):
+        pass
+
+    def act(self, state, legal_actions, explore):
+        action = self.behavior(state, legal_actions)
+
+        if action in legal_actions:
+            return action
+        elif legal_actions:
+            return random.choice(legal_actions)
+        else:
+            return Directions.STOP
