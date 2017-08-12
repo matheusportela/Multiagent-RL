@@ -211,6 +211,10 @@ class BehaviorLearningPacmanAgent(TDLearningPacmanAgent):
         self.previous_behavior = None
         self.K = 1.0  # Learning rate
 
+        self.samples = []
+        self.minibatch_size = 3
+        self.min_samples = 10
+
     def learn(self, state, action, reward):
         self.agent_state = state
 
@@ -218,6 +222,21 @@ class BehaviorLearningPacmanAgent(TDLearningPacmanAgent):
             self.learning.learning_rate = self.K / (self.K + self.game_step)
             self.learning.learn(self.agent_state, self.previous_behavior,
                                 reward)
+
+    def learn_with_experience_replay(self, state, action, reward):
+        if self.previous_behavior:
+            self.samples.append([state, self.previous_behavior, reward])
+
+        if len(self.samples) >= self.min_samples:
+            self.experience_replay()
+            self.samples = []
+
+    def experience_replay(self):
+        self.learning.learning_rate = self.K / (self.K + self.game_step)
+        minibatch = random.sample(self.samples, self.minibatch_size)
+        for sample in minibatch:
+            print(sample)
+            self.learning.learn(sample[0], sample[1], sample[2])
 
     def act(self, state, legal_actions, explore):
         if not legal_actions:
