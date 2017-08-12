@@ -360,3 +360,84 @@ class SeekerGhostAgent(GhostAgent):
             return random.choice(legal_actions)
         else:
             return Directions.STOP
+
+
+class TDLearningGhostAgent(GhostAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids, learning_algorithm,
+                 exploration_algorithm):
+        super(TDLearningGhostAgent, self).__init__(agent_id)
+        self.game_number = 1
+        self.game_step = 1
+        self.exploration_rate = 0.1
+
+        self.features = [
+            features.EnemyDistanceFeature(0),
+            features.FragileAgentFeature(agent_id)
+        ]
+
+        self.learning = learning_algorithm
+        self.exploration = exploration_algorithm
+        self.agent_state = None
+
+    def get_policy(self):
+        return self.learning.q_values
+
+    def set_policy(self, weights):
+        self.learning.q_values = weights
+
+    def start_game(self):
+        self.game_step = 1
+
+    def finish_game(self):
+        self.game_number += 1
+
+    def _get_state(self, state):
+        if not self.agent_state:
+            self.agent_state = tuple([
+                feature(state) for feature in self.features])
+        return self.agent_state
+
+    def learn(self, state, action, reward):
+        self.agent_state = self._get_state(state)
+        self.learning.learn(self.agent_state, action, reward)
+
+    def act(self, state, legal_actions, explore):
+        if not legal_actions:
+            return Directions.STOP
+
+        self.agent_state = self._get_state(state)
+        action = self.learning.act(self.agent_state)
+
+        if explore and legal_actions:
+            action = self.exploration.explore(action, legal_actions)
+
+        self.game_step += 1
+
+        # Reset agent state
+        self.agent_state = None
+
+        return self._select_valid_action(action, legal_actions)
+
+    def _select_valid_action(self, action, legal_actions):
+        if action in legal_actions:
+            return action
+        else:
+            return random.choice(legal_actions)
+
+
+class QLearningGhostAgent(TDLearningGhostAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(QLearningGhostAgent, self).__init__(
+            agent_id, ally_ids, enemy_ids,
+            learning.QLearning(learning_rate=0.3, discount_factor=0.7,
+                               actions=GHOST_ACTIONS),
+            exploration.EGreedy(exploration_rate=0.1))
+
+
+class SARSALearningGhostAgent(TDLearningGhostAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(SARSALearningGhostAgent, self).__init__(
+            agent_id, ally_ids, enemy_ids,
+            learning.SARSALearning(learning_rate=0.5, discount_factor=0.9,
+                                   actions=GHOST_ACTIONS),
+            exploration.EGreedy(exploration_rate=0.1))

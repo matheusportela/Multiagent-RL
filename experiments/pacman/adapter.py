@@ -55,7 +55,7 @@ class BerkeleyAdapter(core.BaseExperiment):
         # Ghosts
         self.num_ghosts = int(num_ghosts)
         if not (0 <= self.num_ghosts <= 4):
-            raise ValueError('Must 0-4 ghost(s).')
+            raise ValueError('Must have 0-4 ghost(s).')
 
         self.ghosts = []
         for i in range(num_ghosts):
@@ -318,8 +318,13 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
             self.agent_class = agents.RandomGhostAgent
         elif self.agent_algorithm == 'seeker':
             self.agent_class = agents.SeekerGhostAgent
+        elif self.agent_algorithm == 'qlearning':
+            self.agent_class = agents.QLearningGhostAgent
+        elif self.agent_algorithm == 'sarsa':
+            self.agent_class = agents.SARSALearningGhostAgent
         else:
-            raise ValueError('Ghost agent must be "random" or "seeker".')
+            raise ValueError('Ghost agent must be "random", "seeker", '
+                             '"qlearning" or "sarsa".')
 
     def finish_game(self):
         logger.info('#{} Finishing game'.format(self.agent_id))
@@ -445,7 +450,8 @@ def build_parser():
                        default=100,
                        help='number of games to learn from')
     group.add_argument('--ghost-agent', dest='ghost_agent', type=str,
-                       choices=['random', 'seeker'], default='random',
+                       choices=['random', 'seeker', 'qlearning', 'sarsa'],
+                       default='random',
                        help='select ghost agent')
     group.add_argument('--pacman-agent', dest='pacman_agent', type=str,
                        choices=['random', 'random2', 'ai', 'eater',
@@ -468,7 +474,7 @@ def build_parser():
                        default=3,
                        help='number of ghosts in game')
     group.add_argument('--policy-file', dest='policy_file',
-                       type=lambda s: unicode(s, 'utf8'),
+                       type=str,
                        help='load and save Pac-Man policy from the given file')
 
     return parser
