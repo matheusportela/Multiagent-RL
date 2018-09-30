@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This repository contains the code used in the undergraduate thesis in Mechatronics Engineering, at the [University of Brasilia](http://www.unb.br), entitled ["Behavior selection for multiple autonomous agents with reinforcement learning in stochastic environments"](https://db.tt/TIvw9aXx).
+This repository contains the code used in the undergraduate thesis in Mechatronics Engineering, at the [University of Brasilia](http://www.unb.br), entitled ["Behavior selection for multiple autonomous agents with reinforcement learning in stochastic environments" (Portuguese only)](http://bdm.unb.br/bitstream/10483/15302/1/2015_MatheusVieiraPortela_tcc.pdf).
 
 The idea is to have multiple simulated robotic agents learning to select appropriate behaviors in a stochastic environment. The uncertainty of a state is handled through [Bayesian Programming](https://en.wikipedia.org/wiki/Bayesian_programming), and the agents learn by applying [Q-learning](https://en.wikipedia.org/wiki/Q-learning) with [function approximation](http://people.csail.mit.edu/agf/Files/13FTML-RLTutorial.pdf).
 
@@ -51,5 +51,5 @@ All documentation are kept in [our wiki](https://github.com/matheusportela/Multi
 
 ## Publications
 
-* Undergraduate thesis: [PORTELA, M.V. - Behavior selection for multiple autonomous agents with reinforcement learning in stochastic environments - University of Brasilia - Brasilia, Brazil - 2015](https://db.tt/TIvw9aXx)
+* Undergraduate thesis: [PORTELA, M.V. - Behavior selection for multiple autonomous agents with reinforcement learning in stochastic environments - University of Brasilia - Brasilia, Brazil - 2015](http://bdm.unb.br/bitstream/10483/15302/1/2015_MatheusVieiraPortela_tcc.pdf)
 * Conference paper: [PORTELA, M. V., RAMOS, G. N. - State estimation and reinforcement learning for behavior selection in stochastic multiagent systems - Proceedings of SBGames 2015 - Teresina, Brazil - 2015](http://www.sbgames.org/sbgames2015/anaispdf/computacao-short/147936.pdf)
